@@ -271,5 +271,5 @@ By volume segment, forecast WAPE is 17.3–18.4% and alert precision 77–84%.
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 72 tests
+python -m pytest -q                 # 79 tests
 ```

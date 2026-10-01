@@ -1,7 +1,7 @@
 """Held-out business impact simulation.
 
 Replays the held-out test period hour by hour for every agent, using the *same*
-exogenous customer demand under three policies:
+exogenous customer demand under four policies:
 
 * ``status_quo``        — no proactive rebalancing (manual 08:00 drawer reset only);
 * ``naive_rebalancing`` — the AgentFlow risk + rebalancing engine fed by naive seasonal forecasts;

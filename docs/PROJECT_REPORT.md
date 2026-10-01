@@ -1,7 +1,7 @@
 # AgentFlow AI — Project Report (outline-ready)
 
 **Explainable Predictive Liquidity Orchestration for MFS Agent Networks** · *Predict. Explain. Rebalance.*
-AI DEV FEST 2026 AI Hackathon (DIU CPC × upay)
+AI DEV FEST 2026 AI Hackathon (DIU CPC × upay) · Track 05 — MFS agent liquidity
 
 > All results are from synthetic data for hackathon prototyping, not production upay data.
 

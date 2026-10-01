@@ -338,7 +338,7 @@ between them. An automated test confirms that no prediction uses future informat
 - **Security:** no secrets in the code (`.env` is excluded from git); strict input checking; error
   messages never show internal code details; allowed website origins are configurable (CORS);
   basic web security headers; the server container runs as a non-root user.
-- **Reproducible and tested:** 72 automated tests, and a GitHub Actions pipeline that rebuilds and
+- **Reproducible and tested:** 79 automated tests, and a GitHub Actions pipeline that rebuilds and
   checks everything on every change.
 
 ## 17. Limitations (be honest about these)
@@ -445,7 +445,7 @@ These are **future steps**, not done today:
     explanation uses fixed templates.
 26. **Can others reproduce your results?** Yes. `python ml/scripts/run_pipeline.py` regenerates the
     data, retrains and re-evaluates; a fresh copy reproduces the metrics files exactly.
-27. **How is it tested?** 72 automated tests (data, leakage, models, risk, rebalancing V1/V2 safety,
+27. **How is it tested?** 79 automated tests (data, leakage, models, risk, rebalancing V1/V2 safety,
     simulation, API, frontend–backend contract). GitHub Actions also checks the frontend build.
 28. **What is the tech stack?** Python (pandas, scikit-learn), FastAPI backend, Next.js + TypeScript +
     Tailwind dashboard. Deployed on Vercel (dashboard) and Railway (API).

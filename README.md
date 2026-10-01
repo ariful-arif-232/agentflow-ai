@@ -7,7 +7,7 @@
 AgentFlow predicts where an MFS agent may run short of liquidity before customers are affected,
 explains why, and recommends a safe, human-reviewed rebalancing action.
 
-Built for the **AI DEV FEST 2026 AI Hackathon** organised by **DIU CPC × upay** by a registered
+Built for the **AI DEV FEST 2026 AI Hackathon** (Track 05 — MFS agent liquidity) organised by **DIU CPC × upay** by a registered
 3-member team. Engineering was carried out by one primary implementer, and the development workflow
 is organised around that. Teammate briefing: [docs/TEAM_BRIEFING.md](docs/TEAM_BRIEFING.md).
 
@@ -90,7 +90,7 @@ A decision-time selector (top bar) lets you replay any hour of the held-out peri
 | Anomaly detection | Isolation Forest + robust deviation rule (hybrid, percentile-averaged) on agent-relative surges |
 | Risk engine | deterministic, monotone, bounded formula (coverage, P90 tail, shortfall, velocity, history) |
 | Rebalancing | V1: greedy nearest-donor optimiser (same district, ≤ 15 km, donor safe surplus, protected level). V2 (default): the same constraints plus a dynamic donor reserve, minimum-benefit gate and benefit–cost–safety donor ranking, with parameters selected on training-period validation folds |
-| Impact | hour-by-hour held-out replay of three policies with identical exogenous demand |
+| Impact | hour-by-hour held-out replay of four policies (status quo, naive-forecast rebalancing, AgentFlow V1, AgentFlow V2) with identical exogenous demand |
 
 No LLM is used in the decision path; the core system has no external API dependency.
 
@@ -117,7 +117,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (72 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (79 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -131,7 +131,7 @@ agentflow-ai/
     scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py
     artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json (committed)
     data/ models/     generated data and model binaries (git-ignored, reproducible)
-  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING
+  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY
   tests/              data, forecast, risk/anomaly, rebalancing, impact, API, contract tests
   .github/workflows/  CI
 ```
@@ -188,7 +188,7 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 72 tests (data, leakage, models, risk, rebalancing V1/V2, policy selection, impact, API, contract)
+python -m pytest -q                       # from repo root: 79 tests (data, leakage, models, risk, rebalancing V1/V2, policy selection, impact, API, contract)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 
@@ -224,6 +224,8 @@ allowed dashboard origins. Everything also runs locally with the commands above.
 * **Anomaly ≠ fraud:** unusual activity triggers manual review, never an automated label or liquidity score change.
 * **Security:** env-based config, `.env` git-ignored, strict validation, structured errors without stack traces, configurable CORS, no code execution from input.
 * **Honest evaluation:** time-based purged split, baselines, reported weaknesses.
+
+Security & prototype threat model: [docs/SECURITY.md](docs/SECURITY.md)
 
 ## Known limitations
 

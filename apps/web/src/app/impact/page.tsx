@@ -3,7 +3,7 @@
 import { Fragment } from "react";
 import { useApi } from "@/lib/api";
 import { bdt, bdtCompact, num, pct, titleCase } from "@/lib/format";
-import type { ImpactResponse, MetricsResponse } from "@/lib/types";
+import type { ImpactResponse, MetricsResponse, PolicyMetrics } from "@/lib/types";
 import { CompareBars, DailyImpactChart } from "@/components/charts";
 import { Card, CardHeader, ErrorState, Loading, PageHeader, SourceTag, cx } from "@/components/ui";
 
@@ -20,6 +20,37 @@ function Delta({ before, after, lowerIsBetter = true, unit = "%" }: { before: nu
   const good = lowerIsBetter ? d < 0 : d > 0;
   const tone = Math.abs(d) < 0.05 ? "text-slate-500" : good ? "text-emerald-600" : "text-red-600";
   return <span className={cx("num text-xs font-semibold", tone)}>{`${d > 0 ? "+" : ""}${d.toFixed(1)}${unit === "pp" ? " pp" : "%"}`}</span>;
+}
+
+function V1V2Glance({ v1, v2 }: { v1: PolicyMetrics; v2: PolicyMetrics }) {
+  const n1 = Math.round(((v1.unnecessary_interventions_pct ?? 0) * v1.interventions) / 100);
+  const n2 = Math.round(((v2.unnecessary_interventions_pct ?? 0) * v2.interventions) / 100);
+  const items: { label: string; a: string; b: string; better: boolean }[] = [
+    { label: "Unmet cash demand", a: bdtCompact(v1.unmet_cash_demand_bdt), b: bdtCompact(v2.unmet_cash_demand_bdt), better: v2.unmet_cash_demand_bdt < v1.unmet_cash_demand_bdt },
+    { label: "Peer transfers", a: num(v1.interventions), b: num(v2.interventions), better: v2.interventions < v1.interventions },
+    { label: "Donor shortage events (6h)", a: num(v1.donor_shortage_events_after_transfer), b: num(v2.donor_shortage_events_after_transfer), better: (v2.donor_shortage_events_after_transfer ?? 0) < (v1.donor_shortage_events_after_transfer ?? 0) },
+    { label: "Estimated logistics cost", a: bdt(v1.estimated_logistics_cost_bdt), b: bdt(v2.estimated_logistics_cost_bdt), better: v2.estimated_logistics_cost_bdt < v1.estimated_logistics_cost_bdt },
+    { label: "Unnecessary-transfer share", a: pct(v1.unnecessary_interventions_pct, 1), b: pct(v2.unnecessary_interventions_pct, 1), better: (v2.unnecessary_interventions_pct ?? 0) < (v1.unnecessary_interventions_pct ?? 0) },
+  ];
+  return (
+    <Card className="mt-4">
+      <CardHeader title="V1 vs V2 at a glance" subtitle="Same held-out period, same demand, same total cash. V2 balances recipient benefit, donor safety and logistics cost." right={<SourceTag kind="sim" />} />
+      <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-5">
+        {items.map((it) => (
+          <div key={it.label} className={cx("rounded-lg border p-3", it.better ? "border-emerald-200 bg-emerald-50/50" : "border-amber-300 bg-amber-50/60")}>
+            <div className="text-xs text-slate-600">{it.label}</div>
+            <div className="num mt-1 text-sm text-slate-500">V1 {it.a}</div>
+            <div className="num text-lg font-semibold text-slate-900">V2 {it.b}</div>
+            <div className={cx("text-xs font-medium", it.better ? "text-emerald-700" : "text-amber-800")}>{it.better ? "✓ better with V2" : "✗ worse with V2"}</div>
+          </div>
+        ))}
+      </div>
+      <p className="border-t border-slate-100 px-4 py-2.5 text-sm text-slate-700">
+        <b>Honest limitation:</b> V2 makes fewer transfers overall, so the absolute number of unnecessary transfers falls ({num(n1)} → {num(n2)}), even
+        though their share is slightly higher. V2 does not improve every metric; it is also slightly worse than V1 for rural agents.
+      </p>
+    </Card>
+  );
 }
 
 export default function ImpactPage() {
@@ -96,6 +127,8 @@ export default function ImpactPage() {
           <div className="text-xs text-slate-500">peer rebalancing only — {num(af.interventions)} simulated transfers (policy {dflt.toUpperCase()})</div>
         </Card>
       </div>
+
+      <V1V2Glance v1={p.agentflow} v2={p.agentflow_v2} />
 
       <Card className="mt-4">
         <CardHeader
@@ -244,6 +277,7 @@ export default function ImpactPage() {
         </Card>
         <Card>
           <CardHeader title="Risk engine as early warning" subtitle={`Does a HIGH/CRITICAL alert anticipate a real shortage in the next 6h? ${num(ra.n_decisions)} held-out decisions, ${pct(100 * ra.shortage_prevalence, 1)} shortage prevalence`} right={<SourceTag kind="calc" />} />
+          <div className="overflow-x-auto">
           <table className="w-full whitespace-nowrap text-sm">
             <thead className="bg-slate-50 text-left text-xs text-slate-500">
               <tr>
@@ -266,6 +300,7 @@ export default function ImpactPage() {
               ))}
             </tbody>
           </table>
+          </div>
           <div className="grid grid-cols-4 gap-2 border-t border-slate-100 p-4 text-center text-xs">
             {Object.entries(ra.calibration_by_level).map(([lvl, c]) => (
               <div key={lvl} className="rounded-md bg-slate-50 p-2">
@@ -278,6 +313,7 @@ export default function ImpactPage() {
         </Card>
         <Card>
           <CardHeader title="Behavioural anomaly detection" subtitle={`Against ${an.n_labelled_anomalies} injected (labelled) anomalous agent-hours in the held-out period`} right={<SourceTag kind="model" />} />
+          <div className="overflow-x-auto">
           <table className="w-full whitespace-nowrap text-sm">
             <thead className="bg-slate-50 text-left text-xs text-slate-500">
               <tr>
@@ -296,6 +332,7 @@ export default function ImpactPage() {
               ))}
             </tbody>
           </table>
+          </div>
           <div className="grid grid-cols-2 gap-3 border-t border-slate-100 p-4 text-xs text-slate-600">
             {Object.entries(an.by_status).map(([k, v]) => (
               <div key={k} className="rounded-md bg-slate-50 p-2">
@@ -318,7 +355,8 @@ export default function ImpactPage() {
         <CardHeader title="Fairness & consistency across operational groups" subtitle="No personal attributes exist in the data; groups are synthetic location clusters and volume segments." />
         <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-2">
           {(["location_cluster", "agent_volume_segment"] as const).map((g) => (
-            <table key={g} className="w-full whitespace-nowrap text-sm">
+            <div key={g} className="overflow-x-auto">
+            <table className="w-full whitespace-nowrap text-sm">
               <thead className="text-left text-xs text-slate-500">
                 <tr>
                   <th className="pb-1 font-medium">{g === "location_cluster" ? "Location cluster" : "Volume segment"}</th>
@@ -343,6 +381,7 @@ export default function ImpactPage() {
                 })}
               </tbody>
             </table>
+            </div>
           ))}
         </div>
         <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">

@@ -70,6 +70,12 @@ export interface Recommendation {
     shortfall_reduction_bdt: number;
     gate_reason: string;
   };
+  candidate_rank_key?: {
+    covers_remaining_need: boolean;
+    risk_points_per_bdt100_cost: number;
+    donor_margin_ratio_after: number;
+    distance_km: number;
+  };
 }
 
 export interface Escalation {

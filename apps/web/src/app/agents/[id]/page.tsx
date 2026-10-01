@@ -74,7 +74,7 @@ export default function AgentDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile label="Current cash" value={bdt(data.liquidity.cash_balance)} sub={`Morning drawer target ${bdt(data.liquidity.morning_target_cash)}`} tag={<SourceTag kind="data" />} />
         <Tile label="Next-6h cash-out demand" value={bdt(f.pred_cash_demand_6h)} sub={`Same window, 7-day avg: ${bdt(f.seasonal_same_window_avg7)}`} tag={<SourceTag kind="model" />} />
         <Tile label="Next-6h peak cash requirement" value={bdt(f.pred_net_requirement_6h)} sub={`P90 scenario: ${bdt(f.pred_net_requirement_p90_6h)}`} tag={<SourceTag kind="model" />} />
@@ -87,8 +87,38 @@ export default function AgentDetailPage() {
         />
       </div>
 
+      <div
+        className={cx(
+          "mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border px-5 py-3 text-sm",
+          shortfall ? "border-red-200 bg-red-50/60" : "border-emerald-200 bg-emerald-50/60",
+        )}
+      >
+        <div>
+          <span className="font-semibold text-slate-900">Without action: </span>
+          {shortfall ? (
+            <span className="text-slate-800">
+              about <b className="num">{bdt(f.expected_shortfall)}</b> of cash-out requests may go unserved in the next 6 hours
+              {f.pred_net_requirement_p90_6h > data.liquidity.cash_balance && (
+                <>
+                  {" "}
+                  (cautious P90 scenario: <span className="num">{bdt(f.pred_net_requirement_p90_6h - data.liquidity.cash_balance)}</span> short)
+                </>
+              )}
+              .
+            </span>
+          ) : (
+            <span className="text-slate-800">current cash covers the forecast 6-hour requirement.</span>
+          )}
+        </div>
+        <div className="text-slate-700">
+          <span className="font-semibold text-slate-900">Recommended: </span>
+          {data.recommended_action.summary}
+        </div>
+      </div>
+
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-3">
+          <span id="why" className="block scroll-mt-24" />
           <CardHeader
             title={bangla ? "কেন এই ঝুঁকি?" : "Why this risk?"}
             subtitle="Every statement below is generated from calculated values — forecasts, balances and agent history."
@@ -96,7 +126,8 @@ export default function AgentDetailPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setBangla(!bangla)}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-50"
+                  aria-pressed={bangla}
+                  className="inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
                 >
                   <Languages className="h-3.5 w-3.5" />
                   {bangla ? "Show in English" : "বাংলায় ব্যাখ্যা করুন"}

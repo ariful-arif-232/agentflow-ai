@@ -1,13 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useAsOf } from "@/lib/asof";
 import { bdt, bdtCompact, dateTime, pct, ratioPct, titleCase } from "@/lib/format";
 import type { Overview } from "@/lib/types";
 import { NetworkTrendChart, RiskDistributionChart } from "@/components/charts";
 import { AnomalyBadge, Card, CardHeader, ErrorState, Kpi, Loading, PageHeader, RiskBadge, SourceTag } from "@/components/ui";
+
+const FLOW = [
+  { label: "Predict", sub: "6-hour ML cash forecast", href: "/agents" },
+  { label: "Explain", sub: "transparent 0–100 risk + reasons", href: "/agents" },
+  { label: "Rebalance", sub: "safe peer transfer (policy V2)", href: "/rebalancing" },
+  { label: "Human review", sub: "approve a simulation only", href: "/rebalancing" },
+  { label: "Measure", sub: "held-out impact vs status quo", href: "/impact" },
+];
+
+function FlowStrip() {
+  return (
+    <nav aria-label="AgentFlow decision loop" className="mb-5 flex flex-wrap items-stretch gap-1.5">
+      {FLOW.map((f, i) => (
+        <div key={f.label} className="flex items-center gap-1.5">
+          <Link
+            href={f.href}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 hover:border-blue-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+          >
+            <div className="text-xs font-semibold text-slate-900">
+              {i + 1}. {f.label}
+            </div>
+            <div className="text-[11px] text-slate-500">{f.sub}</div>
+          </Link>
+          {i < FLOW.length - 1 && <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />}
+        </div>
+      ))}
+    </nav>
+  );
+}
 
 export default function CommandCenter() {
   const { asOf } = useAsOf();
@@ -20,6 +49,7 @@ export default function CommandCenter() {
         subtitle="AgentFlow predicts where an MFS agent may run short of liquidity before customers are affected, explains why, and recommends a safe, human-reviewed rebalancing action."
         right={data && <span className="text-xs text-slate-500">Snapshot: {dateTime(data.as_of)} · next {data.horizon_hours}h horizon</span>}
       />
+      <FlowStrip />
       {error && <ErrorState message={error} onRetry={reload} />}
       {!data && !error && <Loading />}
       {data && (
@@ -38,6 +68,35 @@ export default function CommandCenter() {
             <Kpi label="Forecast 6h cash demand" value={bdtCompact(data.kpis.forecast_cash_demand_6h)} sub={`Expected shortfall ${bdtCompact(data.kpis.total_expected_shortfall)}`} tip={data.kpi_definitions.forecast_cash_demand_6h} />
             <Kpi label="Recommended rebalancing" value={bdtCompact(data.kpis.recommended_rebalancing_value)} tone="good" sub={`${data.kpis.n_recommendations} transfers (policy ${data.kpis.rebalancing_policy.toUpperCase()}) · ${bdtCompact(data.kpis.escalated_amount)} escalated`} />
           </div>
+
+          <Card className="mt-4 border-blue-200 bg-blue-50/40">
+            <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+              <div className="min-w-0">
+                <div className="text-xs font-semibold uppercase tracking-wide text-blue-900">Operator next step</div>
+                <p className="mt-1 text-sm text-slate-800">
+                  Review the policy {data.kpis.rebalancing_policy.toUpperCase()} plan: <b>{data.kpis.n_recommendations} peer transfers</b> (
+                  {bdtCompact(data.kpis.recommended_rebalancing_value)}) for at-risk agents, with need the peers cannot cover escalated to the
+                  distributor ({bdtCompact(data.kpis.escalated_amount)}). Every action is reviewed by a person and approval only runs a simulation.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/rebalancing"
+                  className="inline-flex items-center gap-1 rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+                >
+                  Review recommendations <ArrowRight className="h-3 w-3" />
+                </Link>
+                {data.top_at_risk[0] && (
+                  <Link
+                    href={`/agents/${data.top_at_risk[0].agent_id}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-medium text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+                  >
+                    Review highest-risk agent ({data.top_at_risk[0].agent_id}) <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            </div>
+          </Card>
 
           <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
             <Card className="xl:col-span-2">

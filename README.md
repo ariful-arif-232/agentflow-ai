@@ -7,7 +7,7 @@
 AgentFlow predicts where an MFS agent may run short of liquidity before customers are affected,
 explains why, and recommends a safe, human-reviewed rebalancing action.
 
-Built for the **AI DEV FEST 2026 AI Hackathon** (Track 05 — MFS agent liquidity) organised by **DIU CPC × upay** by a registered
+Built for the **AI DEV FEST 2026 AI Hackathon** (Track 05: Merchant & Agent Intelligence — Agent Liquidity Forecasting) organised by **DIU CPC × upay** by a registered
 3-member team. Engineering was carried out by one primary implementer, and the development workflow
 is organised around that. Teammate briefing: [docs/TEAM_BRIEFING.md](docs/TEAM_BRIEFING.md).
 

@@ -1,6 +1,6 @@
 # Security & Prototype Threat Model — AgentFlow AI
 
-AgentFlow AI is a **decision-support prototype** for MFS agent liquidity (AI DEV FEST 2026, Track 05),
+AgentFlow AI is a **decision-support prototype** for MFS agent networks (AI DEV FEST 2026, Track 05: Merchant & Agent Intelligence — Agent Liquidity Forecasting),
 built on **synthetic data, not real upay data**. It never moves money: approving a recommendation
 only runs a simulation. This document states what is protected today, what is not, and what a
 production version would need. It is not a claim of production readiness.

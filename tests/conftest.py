@@ -19,3 +19,10 @@ def small_data():
 @pytest.fixture(scope="session")
 def small_features(small_data):
     return features.build_features(small_data.hourly, small_data.agents)
+
+
+@pytest.fixture(scope="session")
+def small_bundle(small_features):
+    from agentflow import forecast
+    train, _ = features.time_split(small_features)
+    return forecast.train(train, max_iter=60)

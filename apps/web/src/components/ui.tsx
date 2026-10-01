@@ -90,7 +90,7 @@ export function Kpi({
         {label}
         {tip && <Tooltip text={tip} />}
       </div>
-      <div className={cx("num mt-1.5 whitespace-nowrap text-[22px] font-semibold leading-tight", toneCls)}>{value}</div>
+      <div className={cx("num mt-1.5 text-[22px] font-semibold leading-tight sm:whitespace-nowrap", toneCls)}>{value}</div>
       {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
     </Card>
   );
@@ -119,18 +119,24 @@ export function Loading({ label = "Loading…" }: { label?: string }) {
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <Card className="border-red-200 bg-red-50/50 p-5">
-      <p className="text-sm font-semibold text-red-700">Could not load data</p>
-      <p className="mt-1 text-sm text-red-700/80">{message}</p>
-      <p className="mt-2 text-xs text-slate-600">
-        Make sure the API is running: <code className="rounded bg-white px-1.5 py-0.5">uvicorn app.main:app --port 8000</code> (from <code>apps/api</code>).
-      </p>
+    <div role="alert" className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm">
+      <p className="text-base font-semibold text-slate-900">Live decision service is temporarily unavailable.</p>
+      <p className="mt-1 text-sm text-slate-600">Your data has not changed. Nothing was approved or moved.</p>
+      <p className="mt-1 text-xs text-slate-500">Details: {message}</p>
       {onRetry && (
-        <button onClick={onRetry} className="mt-3 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+        <button
+          onClick={onRetry}
+          className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+        >
           Retry
         </button>
       )}
-    </Card>
+      <details className="mt-4 text-xs text-slate-500">
+        <summary className="cursor-pointer">Running locally?</summary>
+        Start the API with <code className="rounded bg-slate-100 px-1.5 py-0.5">uvicorn app.main:app --port 8000</code> from{" "}
+        <code>apps/api</code>.
+      </details>
+    </div>
   );
 }
 

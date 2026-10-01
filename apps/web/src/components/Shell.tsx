@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Activity, ArrowLeftRight, FlaskConical, Gauge, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Activity, ArrowLeftRight, FlaskConical, Gauge, LayoutDashboard, PlayCircle, RotateCcw, ShieldCheck, Users } from "lucide-react";
 import { useAsOf } from "@/lib/asof";
-import { cx } from "./ui";
+import { DemoGuide } from "./DemoGuide";
+import { ErrorState, Loading, cx } from "./ui";
 
 const NAV = [
   { href: "/", label: "Command Center", icon: LayoutDashboard },
@@ -61,6 +62,44 @@ function AsOfPicker() {
   );
 }
 
+function DemoControls() {
+  const { guideOpen, setGuideOpen, resetDemo, status } = useAsOf();
+  const router = useRouter();
+  if (status !== "ready") return null;
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={() => setGuideOpen(!guideOpen)}
+        aria-pressed={guideOpen}
+        className={cx(
+          "inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium ring-1 ring-inset focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600",
+          guideOpen ? "bg-blue-700 text-white ring-blue-700" : "bg-white text-blue-800 ring-blue-200 hover:bg-blue-50",
+        )}
+      >
+        <PlayCircle className="h-3.5 w-3.5" /> Judge demo
+      </button>
+      <button
+        onClick={() => {
+          resetDemo();
+          router.push("/");
+        }}
+        title="Reset demo: default decision time (Mon 31 Aug 13:00), policy V2, open the guide. Does not change any data."
+        aria-label="Reset demo to the default snapshot"
+        className="inline-flex items-center gap-1 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+      >
+        <RotateCcw className="h-3.5 w-3.5" /> Reset demo
+      </button>
+    </div>
+  );
+}
+
+function ServiceGate({ children }: { children: React.ReactNode }) {
+  const { status, error, retry } = useAsOf();
+  if (status === "error") return <ErrorState message={error || "The live decision service could not be reached."} onRetry={retry} />;
+  if (status === "loading") return <Loading label="Connecting to the live decision service…" />;
+  return <>{children}</>;
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   return (
@@ -112,13 +151,24 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="hidden items-center gap-2 lg:flex">
-            <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">Synthetic data</span>
-            <span className="rounded bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">Simulation only — no real transfers</span>
+          <div className="hidden items-center gap-1.5 xl:flex" aria-label="Operating mode">
+            {["Synthetic data", "Human-reviewed", "Simulation only — no money moves"].map((t) => (
+              <span key={t} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
+                {t}
+              </span>
+            ))}
           </div>
-          <AsOfPicker />
+          <div className="flex flex-wrap items-center gap-3">
+            <AsOfPicker />
+            <DemoControls />
+          </div>
         </header>
-        <main className="mx-auto w-full max-w-[1400px] flex-1 px-6 py-6">{children}</main>
+        <main className="mx-auto w-full min-w-0 max-w-[1400px] flex-1 px-4 py-6 sm:px-6">
+          <ServiceGate>
+            <DemoGuide />
+            {children}
+          </ServiceGate>
+        </main>
       </div>
     </div>
   );

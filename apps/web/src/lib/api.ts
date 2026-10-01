@@ -4,6 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
+/** Requests that take longer than this are treated as "service unavailable" (no endless spinners). */
+export const REQUEST_TIMEOUT_MS = 20_000;
+export const SERVICE_UNAVAILABLE = "The live decision service could not be reached.";
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -24,22 +28,35 @@ function buildUrl(path: string, params?: Params): string {
   return url.toString();
 }
 
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } catch {
+    // network failure, DNS, CORS, timeout: never surface a raw browser error to the user
+    throw new ApiError(0, SERVICE_UNAVAILABLE);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function parse<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => null);
   if (!res.ok) {
-    const msg = body?.error?.message || `Request failed (${res.status})`;
+    const msg = res.status >= 500 ? SERVICE_UNAVAILABLE : body?.error?.message || `Request failed (${res.status})`;
     throw new ApiError(res.status, msg);
   }
   return body as T;
 }
 
 export async function apiGet<T>(path: string, params?: Params): Promise<T> {
-  const res = await fetch(buildUrl(path, params), { cache: "no-store" });
+  const res = await fetchWithTimeout(buildUrl(path, params), { cache: "no-store" });
   return parse<T>(res);
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(buildUrl(path), {
+  const res = await fetchWithTimeout(buildUrl(path), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -58,7 +75,7 @@ export function useApi<T>(path: string | null, params?: Params) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(key, { cache: "no-store" });
+      const res = await fetchWithTimeout(key, { cache: "no-store" });
       setData(await parse<T>(res));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Network error");

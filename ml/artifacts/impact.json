@@ -17,6 +17,14 @@
     ],
     "transfer_delay_hours": 1,
     "rebalancing": "peer-to-peer within district, <= 15 km, donor keeps >= 110% of its P90 requirement",
+    "rebalancing_v2": "V1 constraints plus dynamic donor reserve, recipient target P50+\u03bb(P90-P50), minimum-benefit gate and benefit-cost-safety donor ranking",
+    "v2_config": {
+      "target_quantile_weight": 1.0,
+      "donor_uncertainty_mult": 0.25,
+      "min_risk_drop": 20.0,
+      "require_p50_shortfall": false
+    },
+    "v2_parameters_selected_on": "training-period policy-validation folds (see policy_selection.json)",
     "cash_neutral": true,
     "demand_multiplier": 1.0,
     "anomalous_agents": "held for manual review (not auto-supported)"
@@ -31,7 +39,11 @@
     "total_rebalanced_bdt": "Total cash moved between agents by simulated transfers.",
     "unnecessary_interventions_pct": "Share of transfers whose recipient would NOT have had any shortage in the following 6 hours under the status-quo policy (false alerts).",
     "donor_shortage_events_after_transfer": "Shortage events at donor agents within 6 hours after they gave cash (safety check; should be ~0).",
-    "estimated_logistics_cost_bdt": "Sum of per-transfer cost estimates (fixed BDT 150 + BDT 25/km)."
+    "estimated_logistics_cost_bdt": "Sum of per-transfer cost estimates (fixed BDT 150 + BDT 25/km).",
+    "escalated_need_bdt": "Sum, over all decision points, of at-risk need that peer rebalancing could not cover (handed to distributor replenishment; the same agent can be counted at several decisions).",
+    "unmet_avoided_per_transfer_bdt": "Unmet cash demand avoided vs. status quo divided by the number of transfers.",
+    "unmet_avoided_per_1000_cost_bdt": "Unmet cash demand avoided vs. status quo per BDT 1,000 of estimated logistics cost.",
+    "shortage_events_avoided_per_100_transfers": "Shortage events avoided vs. status quo per 100 transfers."
   },
   "policies": {
     "status_quo": {
@@ -53,8 +65,13 @@
       "interventions": 384,
       "total_rebalanced_bdt": 5709500.0,
       "estimated_logistics_cost_bdt": 122198.0,
+      "escalated_need_bdt": 4603000.0,
       "donor_shortage_events_after_transfer": 65,
-      "unnecessary_interventions_pct": 15.104166666666666
+      "unnecessary_interventions_pct": 15.104166666666666,
+      "unmet_avoided_bdt": 2774690.0,
+      "unmet_avoided_per_transfer_bdt": 7225.755208333333,
+      "unmet_avoided_per_1000_cost_bdt": 22706.50910816871,
+      "shortage_events_avoided_per_100_transfers": 139.0625
     },
     "agentflow": {
       "shortage_events": 1255,
@@ -65,8 +82,30 @@
       "interventions": 501,
       "total_rebalanced_bdt": 7559500.0,
       "estimated_logistics_cost_bdt": 158448.0,
+      "escalated_need_bdt": 7048000.0,
       "donor_shortage_events_after_transfer": 25,
-      "unnecessary_interventions_pct": 21.357285429141715
+      "unnecessary_interventions_pct": 21.357285429141715,
+      "unmet_avoided_bdt": 3709340.0,
+      "unmet_avoided_per_transfer_bdt": 7403.872255489022,
+      "unmet_avoided_per_1000_cost_bdt": 23410.45642734525,
+      "shortage_events_avoided_per_100_transfers": 152.09580838323353
+    },
+    "agentflow_v2": {
+      "shortage_events": 1223,
+      "unmet_cash_demand_bdt": 5690940.0,
+      "agents_with_shortage": 137,
+      "service_availability_pct": 97.94642857142857,
+      "demand_fill_rate_pct": 98.52974397279097,
+      "interventions": 345,
+      "total_rebalanced_bdt": 7511500.0,
+      "estimated_logistics_cost_bdt": 115357.0,
+      "escalated_need_bdt": 6993000.0,
+      "donor_shortage_events_after_transfer": 14,
+      "unnecessary_interventions_pct": 24.347826086956523,
+      "unmet_avoided_bdt": 3845990.0,
+      "unmet_avoided_per_transfer_bdt": 11147.797101449276,
+      "unmet_avoided_per_1000_cost_bdt": 33339.89268098165,
+      "shortage_events_avoided_per_100_transfers": 230.14492753623188
     }
   },
   "agentflow_vs_status_quo": {
@@ -74,6 +113,27 @@
     "unmet_demand_reduction_pct": 38.89448700997072,
     "unmet_demand_avoided_bdt": 3709340.0,
     "service_availability_gain_pp": 1.1683673469387799
+  },
+  "agentflow_v2_vs_status_quo": {
+    "shortage_events_reduction_pct": 39.365394149727315,
+    "unmet_demand_reduction_pct": 40.32733804274541,
+    "unmet_demand_avoided_bdt": 3845990.0,
+    "service_availability_gain_pp": 1.191326530612244
+  },
+  "deployment_decision": {
+    "rule": "V2 default iff retains >=95% of V1 unmet-demand avoided, donor shortage events <= V1, and strictly better on >=2 of {unnecessary %, donor events, unmet avoided per BDT 1,000 cost}",
+    "retention_vs_v1": 1.0368394377436416,
+    "strictly_better": {
+      "unnecessary_interventions_pct": false,
+      "donor_shortage_events_after_transfer": true,
+      "unmet_avoided_per_1000_cost_bdt": true
+    },
+    "checks": {
+      "retains_95pct_of_v1_unmet_avoided": true,
+      "donor_events_not_worse": true,
+      "strictly_better_on_at_least_two": true
+    },
+    "default_policy": "v2"
   },
   "daily": [
     {
@@ -83,7 +143,9 @@
       "naive_rebalancing_unmet_bdt": 237080.0,
       "naive_rebalancing_shortage_events": 53,
       "agentflow_unmet_bdt": 215350.0,
-      "agentflow_shortage_events": 53
+      "agentflow_shortage_events": 53,
+      "agentflow_v2_unmet_bdt": 215350.0,
+      "agentflow_v2_shortage_events": 53
     },
     {
       "date": "2026-08-19",
@@ -92,7 +154,9 @@
       "naive_rebalancing_unmet_bdt": 195950.0,
       "naive_rebalancing_shortage_events": 43,
       "agentflow_unmet_bdt": 186770.0,
-      "agentflow_shortage_events": 44
+      "agentflow_shortage_events": 44,
+      "agentflow_v2_unmet_bdt": 183040.0,
+      "agentflow_v2_shortage_events": 43
     },
     {
       "date": "2026-08-20",
@@ -101,7 +165,9 @@
       "naive_rebalancing_unmet_bdt": 89760.0,
       "naive_rebalancing_shortage_events": 23,
       "agentflow_unmet_bdt": 80760.0,
-      "agentflow_shortage_events": 22
+      "agentflow_shortage_events": 22,
+      "agentflow_v2_unmet_bdt": 86190.0,
+      "agentflow_v2_shortage_events": 22
     },
     {
       "date": "2026-08-21",
@@ -110,7 +176,9 @@
       "naive_rebalancing_unmet_bdt": 8400.0,
       "naive_rebalancing_shortage_events": 8,
       "agentflow_unmet_bdt": 8400.0,
-      "agentflow_shortage_events": 8
+      "agentflow_shortage_events": 8,
+      "agentflow_v2_unmet_bdt": 8400.0,
+      "agentflow_v2_shortage_events": 8
     },
     {
       "date": "2026-08-22",
@@ -119,7 +187,9 @@
       "naive_rebalancing_unmet_bdt": 38010.0,
       "naive_rebalancing_shortage_events": 11,
       "agentflow_unmet_bdt": 38010.0,
-      "agentflow_shortage_events": 11
+      "agentflow_shortage_events": 11,
+      "agentflow_v2_unmet_bdt": 38400.0,
+      "agentflow_v2_shortage_events": 12
     },
     {
       "date": "2026-08-23",
@@ -128,7 +198,9 @@
       "naive_rebalancing_unmet_bdt": 195090.0,
       "naive_rebalancing_shortage_events": 38,
       "agentflow_unmet_bdt": 185400.0,
-      "agentflow_shortage_events": 37
+      "agentflow_shortage_events": 37,
+      "agentflow_v2_unmet_bdt": 187900.0,
+      "agentflow_v2_shortage_events": 37
     },
     {
       "date": "2026-08-24",
@@ -137,7 +209,9 @@
       "naive_rebalancing_unmet_bdt": 225800.0,
       "naive_rebalancing_shortage_events": 33,
       "agentflow_unmet_bdt": 251800.0,
-      "agentflow_shortage_events": 36
+      "agentflow_shortage_events": 36,
+      "agentflow_v2_unmet_bdt": 251800.0,
+      "agentflow_v2_shortage_events": 36
     },
     {
       "date": "2026-08-25",
@@ -146,7 +220,9 @@
       "naive_rebalancing_unmet_bdt": 303140.0,
       "naive_rebalancing_shortage_events": 81,
       "agentflow_unmet_bdt": 277200.0,
-      "agentflow_shortage_events": 74
+      "agentflow_shortage_events": 74,
+      "agentflow_v2_unmet_bdt": 280280.0,
+      "agentflow_v2_shortage_events": 75
     },
     {
       "date": "2026-08-26",
@@ -155,7 +231,9 @@
       "naive_rebalancing_unmet_bdt": 310090.0,
       "naive_rebalancing_shortage_events": 89,
       "agentflow_unmet_bdt": 259390.0,
-      "agentflow_shortage_events": 73
+      "agentflow_shortage_events": 73,
+      "agentflow_v2_unmet_bdt": 266100.0,
+      "agentflow_v2_shortage_events": 72
     },
     {
       "date": "2026-08-27",
@@ -164,7 +242,9 @@
       "naive_rebalancing_unmet_bdt": 1806610.0,
       "naive_rebalancing_shortage_events": 262,
       "agentflow_unmet_bdt": 1397040.0,
-      "agentflow_shortage_events": 205
+      "agentflow_shortage_events": 205,
+      "agentflow_v2_unmet_bdt": 1302440.0,
+      "agentflow_v2_shortage_events": 197
     },
     {
       "date": "2026-08-28",
@@ -173,7 +253,9 @@
       "naive_rebalancing_unmet_bdt": 415860.0,
       "naive_rebalancing_shortage_events": 185,
       "agentflow_unmet_bdt": 361580.0,
-      "agentflow_shortage_events": 158
+      "agentflow_shortage_events": 158,
+      "agentflow_v2_unmet_bdt": 345880.0,
+      "agentflow_v2_shortage_events": 143
     },
     {
       "date": "2026-08-29",
@@ -182,7 +264,9 @@
       "naive_rebalancing_unmet_bdt": 943510.0,
       "naive_rebalancing_shortage_events": 208,
       "agentflow_unmet_bdt": 829620.0,
-      "agentflow_shortage_events": 162
+      "agentflow_shortage_events": 162,
+      "agentflow_v2_unmet_bdt": 848450.0,
+      "agentflow_v2_shortage_events": 170
     },
     {
       "date": "2026-08-30",
@@ -191,7 +275,9 @@
       "naive_rebalancing_unmet_bdt": 1110700.0,
       "naive_rebalancing_shortage_events": 223,
       "agentflow_unmet_bdt": 918050.0,
-      "agentflow_shortage_events": 178
+      "agentflow_shortage_events": 178,
+      "agentflow_v2_unmet_bdt": 875480.0,
+      "agentflow_v2_shortage_events": 175
     },
     {
       "date": "2026-08-31",
@@ -200,7 +286,9 @@
       "naive_rebalancing_unmet_bdt": 882240.0,
       "naive_rebalancing_shortage_events": 226,
       "agentflow_unmet_bdt": 818220.0,
-      "agentflow_shortage_events": 194
+      "agentflow_shortage_events": 194,
+      "agentflow_v2_unmet_bdt": 801230.0,
+      "agentflow_v2_shortage_events": 180
     }
   ],
   "groups": {
@@ -217,6 +305,10 @@
         "agentflow": {
           "unmet_cash_demand_bdt": 3255060.0,
           "shortage_events": 707
+        },
+        "agentflow_v2": {
+          "unmet_cash_demand_bdt": 3311660.0,
+          "shortage_events": 715
         }
       },
       "urban_core": {
@@ -231,6 +323,10 @@
         "agentflow": {
           "unmet_cash_demand_bdt": 470590.0,
           "shortage_events": 44
+        },
+        "agentflow_v2": {
+          "unmet_cash_demand_bdt": 445290.0,
+          "shortage_events": 40
         }
       },
       "urban_periphery": {
@@ -245,6 +341,10 @@
         "agentflow": {
           "unmet_cash_demand_bdt": 2101940.0,
           "shortage_events": 504
+        },
+        "agentflow_v2": {
+          "unmet_cash_demand_bdt": 1933990.0,
+          "shortage_events": 468
         }
       }
     },
@@ -261,6 +361,10 @@
         "agentflow": {
           "unmet_cash_demand_bdt": 1554600.0,
           "shortage_events": 218
+        },
+        "agentflow_v2": {
+          "unmet_cash_demand_bdt": 1449840.0,
+          "shortage_events": 197
         }
       },
       "low": {
@@ -275,6 +379,10 @@
         "agentflow": {
           "unmet_cash_demand_bdt": 808990.0,
           "shortage_events": 422
+        },
+        "agentflow_v2": {
+          "unmet_cash_demand_bdt": 809100.0,
+          "shortage_events": 413
         }
       },
       "medium": {
@@ -289,6 +397,10 @@
         "agentflow": {
           "unmet_cash_demand_bdt": 3464000.0,
           "shortage_events": 615
+        },
+        "agentflow_v2": {
+          "unmet_cash_demand_bdt": 3432000.0,
+          "shortage_events": 613
         }
       }
     }

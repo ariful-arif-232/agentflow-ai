@@ -5,7 +5,9 @@ exogenous customer demand under three policies:
 
 * ``status_quo``        — no proactive rebalancing (manual 08:00 drawer reset only);
 * ``naive_rebalancing`` — the AgentFlow risk + rebalancing engine fed by naive seasonal forecasts;
-* ``agentflow``         — the full AgentFlow loop with ML forecasts.
+* ``agentflow``         — the full AgentFlow loop with ML forecasts and rebalancing policy V1;
+* ``agentflow_v2``      — the same loop with rebalancing policy V2 (cost-, uncertainty- and
+  safety-aware; parameters selected on training-period policy-validation folds only).
 
 At each decision hour the engine sees only information available at that hour (current
 simulated cash + forecasts built from past data). Approved transfers are assumed to
@@ -19,7 +21,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from . import config, data_gen, rebalance, risk
+from . import config, data_gen, rebalance, rebalance_v2, risk
 
 DECISION_HOURS = (9, 11, 13, 15, 17, 19)
 OPERATING_HOURS = range(8, 22)
@@ -38,6 +40,11 @@ METRIC_DEFINITIONS = {
     "donor_shortage_events_after_transfer": ("Shortage events at donor agents within 6 hours after they gave cash "
                                              "(safety check; should be ~0)."),
     "estimated_logistics_cost_bdt": "Sum of per-transfer cost estimates (fixed BDT 150 + BDT 25/km).",
+    "escalated_need_bdt": ("Sum, over all decision points, of at-risk need that peer rebalancing could not cover "
+                           "(handed to distributor replenishment; the same agent can be counted at several decisions)."),
+    "unmet_avoided_per_transfer_bdt": "Unmet cash demand avoided vs. status quo divided by the number of transfers.",
+    "unmet_avoided_per_1000_cost_bdt": "Unmet cash demand avoided vs. status quo per BDT 1,000 of estimated logistics cost.",
+    "shortage_events_avoided_per_100_transfers": "Shortage events avoided vs. status quo per 100 transfers.",
 }
 
 
@@ -54,8 +61,13 @@ def simulate_policy(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFra
                     hist_rate: pd.Series, anomaly_status: pd.DataFrame | None = None,
                     forecast_source: str = "ml", start: pd.Timestamp = config.TEST_START,
                     end: pd.Timestamp | None = None, cfg: rebalance.RebalanceConfig = rebalance.RebalanceConfig(),
-                    demand_multiplier: float = 1.0) -> dict:
-    """Simulate one policy. forecast_source in {"none", "ml", "naive"}."""
+                    demand_multiplier: float = 1.0, policy: str = "v1",
+                    policy_cfg: rebalance_v2.RebalanceV2Config | None = None) -> dict:
+    """Simulate one policy. forecast_source in {"none", "ml", "naive"}; policy in {"v1", "v2"}."""
+    if policy not in ("v1", "v2"):
+        raise ValueError("policy must be 'v1' or 'v2'")
+    if policy == "v2" and policy_cfg is None:
+        policy_cfg = rebalance_v2.selected_config()
     agent_ids = list(agents["agent_id"])
     end = end or feats["timestamp"].max()
     hours = pd.date_range(start, end, freq="h")
@@ -87,6 +99,7 @@ def simulate_policy(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFra
     cash_end = np.zeros((n_h, n_a))
     pending = np.zeros(n_a)
     log = []
+    escalated_need = 0.0
     for t in range(n_h):
         if hod[t] == data_gen.OPENING_HOUR:
             cash = target.copy()
@@ -109,7 +122,11 @@ def simulate_policy(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFra
                 "velocity_ratio_3h": mats["velocity_ratio_3h"][t], "hist_shortage_rate": hist,
                 "anomaly_status": anom[t] if anomaly_status is not None else "NORMAL",
             }).join(r[["risk_score", "risk_level", "expected_shortfall"]])
-            plan = rebalance.recommend(snap, cfg, with_details=False)
+            if policy == "v1":
+                plan = rebalance.recommend(snap, cfg, with_details=False)
+            else:
+                plan = rebalance_v2.recommend_v2(snap, policy_cfg, with_details=False)
+            escalated_need += plan["summary"]["escalated_amount"]
             idx = {a: i for i, a in enumerate(agent_ids)}
             for rec in plan["recommendations"]:
                 # Transfer leaves the donor and reaches the recipient at the start of the next hour.
@@ -119,7 +136,8 @@ def simulate_policy(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFra
     # donors cannot go negative: transfers are bounded by surplus measured at decision time,
     # but demand in the decision hour has already been served, so cash >= amount holds.
     return {"hours": hours, "agent_ids": agent_ids, "unmet": unmet, "cash_end": cash_end,
-            "out_req": out_req, "log": log}
+            "out_req": out_req, "log": log, "escalated_need_bdt": escalated_need,
+            "policy": policy if forecast_source != "none" else None}
 
 
 def summarize(sim: dict, baseline_unmet: np.ndarray | None = None) -> dict:
@@ -137,6 +155,8 @@ def summarize(sim: dict, baseline_unmet: np.ndarray | None = None) -> dict:
         "total_rebalanced_bdt": float(sum(x["recommended_amount"] for x in sim["log"])),
         "estimated_logistics_cost_bdt": float(sum(x["estimated_cost_bdt"] for x in sim["log"])),
     }
+    if sim.get("policy"):
+        res["escalated_need_bdt"] = float(sim.get("escalated_need_bdt", 0.0))
     if sim["log"]:
         idx = {a: i for i, a in enumerate(sim["agent_ids"])}
         donor_short = 0
@@ -180,7 +200,11 @@ def group_breakdown(sims: dict[str, dict], agents: pd.DataFrame) -> dict:
     return out
 
 
-def run_impact(feats, agents, preds, hist_rate, anomaly_status=None, demand_multiplier: float = 1.0) -> dict:
+def run_impact(feats, agents, preds, hist_rate, anomaly_status=None, demand_multiplier: float = 1.0,
+               v2_cfg: rebalance_v2.RebalanceV2Config | None = None) -> dict:
+    from . import policy_selection
+
+    v2_cfg = v2_cfg or rebalance_v2.selected_config()
     sims = {
         "status_quo": simulate_policy(feats, agents, None, hist_rate, forecast_source="none",
                                       demand_multiplier=demand_multiplier),
@@ -188,13 +212,25 @@ def run_impact(feats, agents, preds, hist_rate, anomaly_status=None, demand_mult
                                              demand_multiplier=demand_multiplier),
         "agentflow": simulate_policy(feats, agents, preds, hist_rate, anomaly_status, "ml",
                                      demand_multiplier=demand_multiplier),
+        "agentflow_v2": simulate_policy(feats, agents, preds, hist_rate, anomaly_status, "ml",
+                                        demand_multiplier=demand_multiplier, policy="v2", policy_cfg=v2_cfg),
     }
     base = sims["status_quo"]["unmet"]
     policies = {k: summarize(v, base) for k, v in sims.items()}
-    sq, af = policies["status_quo"], policies["agentflow"]
+    sq, af, af2 = policies["status_quo"], policies["agentflow"], policies["agentflow_v2"]
+    for k in ("naive_rebalancing", "agentflow", "agentflow_v2"):
+        policies[k].update(policy_selection.efficiency(policies[k], sq))
 
     def pct(a, b):
         return 100 * (a - b) / a if a else 0.0
+
+    def vs_sq(m):
+        return {
+            "shortage_events_reduction_pct": pct(sq["shortage_events"], m["shortage_events"]),
+            "unmet_demand_reduction_pct": pct(sq["unmet_cash_demand_bdt"], m["unmet_cash_demand_bdt"]),
+            "unmet_demand_avoided_bdt": sq["unmet_cash_demand_bdt"] - m["unmet_cash_demand_bdt"],
+            "service_availability_gain_pp": m["service_availability_pct"] - sq["service_availability_pct"],
+        }
 
     return {
         "label": "Synthetic held-out simulation",
@@ -203,17 +239,18 @@ def run_impact(feats, agents, preds, hist_rate, anomaly_status=None, demand_mult
         "assumptions": {
             "decision_hours": list(DECISION_HOURS), "transfer_delay_hours": 1,
             "rebalancing": "peer-to-peer within district, <= 15 km, donor keeps >= 110% of its P90 requirement",
+            "rebalancing_v2": ("V1 constraints plus dynamic donor reserve, recipient target P50+λ(P90-P50), "
+                               "minimum-benefit gate and benefit-cost-safety donor ranking"),
+            "v2_config": {k: getattr(v2_cfg, k) for k in rebalance_v2.RebalanceV2Config.tunable_fields()},
+            "v2_parameters_selected_on": "training-period policy-validation folds (see policy_selection.json)",
             "cash_neutral": True, "demand_multiplier": demand_multiplier,
             "anomalous_agents": "held for manual review (not auto-supported)",
         },
         "metric_definitions": METRIC_DEFINITIONS,
         "policies": policies,
-        "agentflow_vs_status_quo": {
-            "shortage_events_reduction_pct": pct(sq["shortage_events"], af["shortage_events"]),
-            "unmet_demand_reduction_pct": pct(sq["unmet_cash_demand_bdt"], af["unmet_cash_demand_bdt"]),
-            "unmet_demand_avoided_bdt": sq["unmet_cash_demand_bdt"] - af["unmet_cash_demand_bdt"],
-            "service_availability_gain_pp": af["service_availability_pct"] - sq["service_availability_pct"],
-        },
+        "agentflow_vs_status_quo": vs_sq(af),
+        "agentflow_v2_vs_status_quo": vs_sq(af2),
+        "deployment_decision": policy_selection.deployment_decision(af, af2),
         "daily": daily_series(sims),
         "groups": group_breakdown(sims, agents),
     }

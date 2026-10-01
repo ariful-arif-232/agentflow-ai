@@ -184,3 +184,31 @@ def explain(r: dict) -> list[dict]:
         d["evidence"] = {k: (round(float(v), 4) if isinstance(v, (int, float, np.floating)) and not isinstance(v, bool) else v)
                          for k, v in d["evidence"].items()}
     return reasons
+
+
+def risk_scalar(cash: float, req_p50: float, req_p90: float, velocity_ratio: float = 1.0,
+                hist_shortage_rate: float = 0.0) -> tuple[float, str]:
+    """Pure-Python equivalent of :func:`compute_risk` for one agent (used in inner loops).
+
+    Returns (risk_score rounded to 0.1, risk_level). Tested to match compute_risk exactly.
+    """
+    cash = max(float(cash), 0.0)
+    req = max(float(req_p50), 0.0)
+    req90 = max(float(req_p90), req)
+    vel = 1.0 if velocity_ratio is None or np.isnan(velocity_ratio) else float(velocity_ratio)
+    hist = 0.0 if hist_shortage_rate is None or np.isnan(hist_shortage_rate) else float(hist_shortage_rate)
+
+    def clip01(x: float) -> float:
+        return min(max(x, 0.0), 1.0)
+
+    cov_pts = WEIGHTS["coverage"] * clip01((COVERAGE_SAFE - cash / max(req, 1.0)) / COVERAGE_SAFE) if req >= MIN_REQUIREMENT else 0.0
+    tail_pts = WEIGHTS["tail_risk"] * clip01(1.0 - cash / max(req90, 1.0)) if req90 >= MIN_REQUIREMENT else 0.0
+    deficit_pts = WEIGHTS["deficit_size"] * clip01(max(req - cash, 0.0) / DEFICIT_SCALE_BDT)
+    vel_pts = WEIGHTS["velocity"] * clip01(vel - 1.0)
+    hist_pts = WEIGHTS["history"] * clip01(hist / HISTORY_SCALE)
+    score = round(min(max(cov_pts + tail_pts + deficit_pts + vel_pts + hist_pts, 0.0), 100.0), 1)
+    level = next(name for name, lo in LEVELS if score >= lo)
+    return score, level
+
+
+LEVEL_RANK = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}

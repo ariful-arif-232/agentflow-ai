@@ -44,9 +44,12 @@ def main() -> None:
     for name, m in imp["policies"].items():
         print(f"[impact:{name}] shortage_events={m['shortage_events']:,} unmet=BDT {m['unmet_cash_demand_bdt']:,.0f} "
               f"availability={m['service_availability_pct']:.2f}% interventions={m['interventions']}")
-    d = imp["agentflow_vs_status_quo"]
-    print(f"AgentFlow vs status quo: shortage events -{d['shortage_events_reduction_pct']:.1f}%, "
-          f"unmet demand -{d['unmet_demand_reduction_pct']:.1f}%")
+    for key, name in (("agentflow_vs_status_quo", "V1"), ("agentflow_v2_vs_status_quo", "V2")):
+        d = imp[key]
+        print(f"AgentFlow {name} vs status quo: shortage events -{d['shortage_events_reduction_pct']:.1f}%, "
+              f"unmet demand -{d['unmet_demand_reduction_pct']:.1f}%")
+    dec = imp["deployment_decision"]
+    print("deployment decision:", dec["default_policy"], dec["checks"])
     print("impact ->", config.ARTIFACTS_DIR / "impact.json")
 
 

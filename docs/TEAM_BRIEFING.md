@@ -465,6 +465,28 @@ These are **future steps**, not done today:
 
 ---
 
+## 19b. If a judge interrupts and asks…
+
+Keep answers to one or two sentences. The same table is in `docs/DEMO_SCRIPT.md`.
+
+| Question | Short, accurate answer |
+|---|---|
+| Is this real upay data? | No. It's synthetic data from our own seeded generator, with no personal information. |
+| Why ML? | Demand depends on hour, weekday, salary days and agent history together. ML cuts 6-hour cash-demand error by 22% versus the best simple rule. |
+| Why not a simple rule? | We tested that. The same V1 decision engine fed a simple seasonal forecast leaves BDT 67.6 lakh unmet, versus 58.3 lakh with the ML forecast. |
+| Why V2? | V1 picked the nearest donor. V2 adds a benefit gate, a safer dynamic donor reserve and cost-aware ranking: 345 vs 501 transfers, 14 vs 25 donor shortages, lower cost, slightly more benefit. |
+| Is this fraud detection? | No. Anomalies mean "unusual for this agent". They route the case to manual review and never label fraud. |
+| Does it transfer money? | No. Approval runs a simulation and writes an audit entry. No payment instruction exists. |
+| What if the forecast is wrong? | We plan for a cautious P90 scenario, donors keep a reserve, and a person reviews. It still happens: 14 donor shortage events in 345 simulated transfers. |
+| Why is unnecessary-transfer % higher in V2? | V2 makes fewer, larger transfers. The number of unnecessary ones fell (107 → 84) but their share rose (21.4% → 24.3%). |
+| How did you avoid tuning on the test set? | V2 settings were chosen on two earlier validation windows inside the training period. The 14-day test window was used once, with a decision rule written beforehand. |
+| What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot and re-tuning. |
+
+**Demo controls you may be asked to use:** **Reset demo** (top right) restores the default snapshot
+(Mon 31 Aug, 13:00, policy V2) on this browser only. It changes no server data. **Judge demo** shows
+or hides the six-step guide. If the page says *"Live decision service is temporarily unavailable"*,
+click **Retry**; nothing was changed or approved.
+
 ## 20. Things teammates must NOT claim
 
 - ❌ Do **not** claim we used real upay customer data, or any real data. It is all synthetic.

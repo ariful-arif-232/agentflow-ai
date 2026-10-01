@@ -1,119 +1,146 @@
-# Demo Script — AgentFlow AI (3–5 minutes)
+# Demo Script — AgentFlow AI (final)
 
 **One-line story:** *AgentFlow predicts where an MFS agent may run short of liquidity before
 customers are affected, explains why, and recommends a safe, human-reviewed rebalancing action.*
 
-## Before you start (2 minutes, once)
-
-```bash
-python ml/scripts/run_pipeline.py              # only if ml/models is empty
-cd apps/api && uvicorn app.main:app --port 8000
-cd apps/web && npm run dev                     # open http://localhost:3000
-```
-
-* Decision time in the top bar: **Mon, 31 Aug · 13:00** (default; click *Reset* if changed).
-* Restart the API right before recording so the simulation audit log is empty.
-* Backup: screenshots of each step + a screen recording; `ml/artifacts/*.json` hold every number.
-
-All values below are from the default decision time and are deterministic.
+All numbers below are the live outputs at the **default snapshot (Mon 31 Aug 2026, 13:00, policy V2)**.
+They are deterministic, so you will see exactly these values.
 
 ---
 
-## 1. Command Center — "what is likely to happen?" (≈ 40 s)
+## Before you start (once, 2 minutes)
 
-Say:
-> "It's 1 pm on a salary-period Monday across a network of 200 synthetic agents. AgentFlow has
-> forecast every agent's cash needs for the next 6 hours."
+| Check | How |
+|---|---|
+| Dashboard loads | open **https://agentflow-ai-nine.vercel.app** (local: `npm run dev` in `apps/web`) |
+| API is up | **https://agentflow-api-production.up.railway.app/health** returns `"status":"ok"` |
+| Clean demo state | click **Reset demo** (top right). This sets 13:00 and policy V2, opens the **Judge demo** guide, and returns to the Command Center. It changes nothing on the server. |
+| Projector | 1366×768 or larger; browser zoom 100%. The layout is tested at 1366×768 and 1440×900. |
+| Backup | screenshots of every step plus a short screen recording on the laptop desktop |
 
-Point at:
-* **25 at-risk agents, 7 critical**, 32 more at MEDIUM.
-* **Projected service readiness 71.5% → 77.5% with the recommended plan** (rebalancing policy V2).
-* **Recommended rebalancing BDT 4.7 lakh** across 14 peer transfers; BDT 5.0 lakh escalated.
-* The 48-hour chart: the blue 6-hour forecast line tracks the dotted actual line.
-* Tags on each card: *ML prediction* vs. *deterministic calculation*.
+The **Judge demo** strip (6 steps, live values) is your route map. Click a step to jump to its page.
 
-## 2. Agent Intelligence — one high-risk agent (≈ 60 s)
+**Don't** explain the decision-time selector, Scenario Lab, Agents table filters or anomaly scores unless asked.
 
-Agents → filter **HIGH** → open **AG-0171** (Rangpur, urban periphery).
+---
 
-> "AG-0171 still has cash and no customer has been turned away yet. That's the point: we see it coming."
+## A. 90-second emergency demo
 
-* Current cash **BDT 20,640**.
-* Forecast 6-hour cash-out demand **BDT 82,200**; forecast *peak cash requirement* **BDT 38,675**
-  (P90 scenario **BDT 59,387**).
-* Expected shortfall **BDT 18,035**, coverage **53%**, risk **53 / 100 — HIGH**.
+| # | Page / click | Say | Point at |
+|---|---|---|---|
+| 1 | **Command Center** | "200 synthetic agents, 6 hours ahead. 25 are HIGH or CRITICAL right now." | *At-risk agents 25* |
+| 2 | Guide step **2 · Open AG-0171** | "This agent still has cash, so no customer has been turned away yet. But its forecast need is almost double what it holds." | *Current cash BDT 20,640* vs *peak requirement BDT 38,675*; **HIGH 53** |
+| 3 | Same page, red **Without action** strip | "If nothing happens, about BDT 18,035 of withdrawals may fail in the next 6 hours." | *Without action* strip |
+| 4 | **Review recommendation →** then **Review Recommendation** on **RB-013** | "Policy V2 picks one nearby donor that stays LOW risk and keeps BDT 4,430 above its safety reserve. AG-0171 goes from HIGH to LOW." | *Why this recipient / Why this donor* boxes |
+| 5 | Tick the box → **Approve Simulation** | "A person approves. It's a simulation only — no money moves." | *Simulation approved — no money moved* |
+| 6 | Guide step **6 · Measure impact** | "On 14 held-out days: 40% less unmet cash demand, with 31% fewer transfers than our first policy. Synthetic simulation, not real upay results." | *V1 vs V2 at a glance* |
 
-## 3. "Why this risk?" (≈ 30 s)
+**Don't** explain the risk formula, the models or V1 in detail.
 
-Read the evidence list (generated from the numbers, not a chatbot):
-1. Forecast peak requirement BDT 38,675 (P90 BDT 59,387).
-2. Current cash covers about 53%.
-3. Expected shortfall BDT 18,035.
-4. In a P90 scenario the gap widens to BDT 38,747.
-5. Short of cash in 18.5% of operating hours historically.
-Context: this window historically sees 58% more cash-out than average; salary period.
+---
 
-Point at the component bars: coverage 25.8 / 45, tail 13.0 / 20, deficit 9.0 / 20, history 5 / 5.
-> "Anomalies don't change this score; unusual activity changes the review route, not the liquidity math."
+## B. 3-minute standard demo
 
-Click **বাংলায় ব্যাখ্যা করুন**: the same evidence rendered deterministically in Bangla for field and
-agent-facing staff, with no language model involved.
+**1. Command Center (30 s).** The flow strip says *Predict → Explain → Rebalance → Human review → Measure*.
+> "AgentFlow forecasts every agent's cash needs for the next 6 hours."
 
-## 4. Safe rebalancing recommendation (≈ 40 s)
+Point at: **25 at-risk, 7 critical**, **projected service readiness 71.5% → 77.5% with the V2 plan**,
+**14 peer transfers, BDT 4.7 lakh**.
+*Transition:* "Let's look at one of these agents."
 
-Click **Review recommendation** → Rebalancing Center (policy **V2**, the default; AG-0171 row
-highlighted) → **Review Recommendation** on **RB-013** (AG-0181 → AG-0171, BDT 38,500, 12.2 km, Rangpur).
+**2. AG-0171 (45 s)** (guide step 2).
+> "AG-0171 in Rangpur has BDT 20,640. Our ML forecast says it will need BDT 38,675 at peak in the
+> next 6 hours, and BDT 59,387 in a cautious scenario. That's 53% coverage, so risk is HIGH, 53/100."
 
-Explain why this donor was chosen and why it stays safe:
-* one transfer covers the whole need, taking AG-0171 **HIGH 53 → LOW 5** and cutting the expected shortfall
-  by BDT 18,035, so it passes the minimum-benefit gate;
-* the donor is LOW risk, in the same district, and stays LOW; the red marker is its **dynamic protected
-  reserve** (BDT 48,420), which grows with forecast uncertainty, velocity and shortage history. It keeps
-  BDT 4,430 above it;
-* toggle to **V1** for comparison: V1 needs two transfers (RB-019 + RB-020, from the nearest donors) to
-  reach the same result.
+Point at the red **Without action** strip: about **BDT 18,035** of cash-out may go unserved.
+*Transition:* "And it tells us why."
 
-## 5. Approve Simulation (≈ 20 s)
+**3. Why this risk? (30 s).** Read reasons 1–3. Point at the component bars (coverage 25.8/45).
+> "Every sentence is generated from the numbers — no chatbot. The risk score is a fixed, auditable formula."
 
-Tick *"I have reviewed the evidence above"* → **Approve Simulation**.
-> "Nothing moved. This is a what-if, written to the audit log with my note. A human stays accountable."
+Optional: click **বাংলায় ব্যাখ্যা করুন** for two seconds.
+*Transition:* "So what should operations do?"
 
-## 6. Risk before vs. estimated risk after (≈ 15 s)
+**4. V2 recommendation (45 s).** **Review recommendation →** opens the Rebalancing Center with AG-0171
+highlighted, policy V2. Click **Review Recommendation** on **RB-013**.
+- *Why this recipient?* HIGH 53 → LOW 5; expected shortfall BDT 18,035 → 0; P90 coverage 35% → 100%.
+- *Why this donor?* AG-0181 stays LOW; dynamic reserve BDT 48,420; **BDT 4,430 margin left** after the whole plan.
+- *Why this amount?* need BDT 38,747 → one transfer of BDT 38,500 covers it; about 12 km, est. BDT 456.
+*Transition:* "A human has to approve it."
 
-The simulation card shows AG-0171 and AG-0181 cash and risk before → after, plus portfolio
-at-risk agents, expected shortfall and service readiness before → after.
+**5. Approve Simulation (15 s).** Tick *"I have reviewed the evidence above"* → **Approve Simulation**.
+> "Simulation approved — nothing moved; it's recorded in the audit log."
 
-Optional (10 s): move the decision time to **19:00** and reopen AG-0171 — without action its cash hits
-**BDT 0 at 19:00 and BDT 11,830 of cash-out is turned away** (red bar), exactly inside the 6-hour
-window flagged at 13:00.
+Point at AG-0171 **HIGH 53 → LOW 5** and network at-risk **25 → 24**.
 
-## 7. Impact page — "what measurable outcome improves?" (≈ 45 s)
+**6. Impact (35 s)** (guide step 6). Point at *V1 vs V2 at a glance*:
+> "We replayed 14 held-out days with identical demand and identical total cash. V2 cuts unmet demand
+> to BDT 56.9 lakh, from 95.4 without AgentFlow, with 345 transfers instead of V1's 501, 14 donor
+> shortages instead of 25, and lower logistics cost. One honest caveat: a slightly larger share of V2's
+> transfers turn out unnecessary — 24.3% vs 21.4% — though fewer in number."
 
-Open **Impact & Model Health**.
-> "We replayed the last 14 days — never seen in training — hour by hour with identical customer
-> demand and identical total cash."
+**Close (10 s):**
+> "Synthetic data, explainable risk, human-approved simulations, and a held-out evaluation we can reproduce."
 
-* With the default policy V2: shortage events **2,017 → 1,223 (−39.4%)**.
-* Unmet cash demand **−40.3%, BDT 38.5 lakh avoided**, with **BDT 0** extra cash injected.
-* Service availability **96.76% → 97.95%**.
-* Policy comparison: the naive forecast reaches only 1,483 events, so the ML matters. V2 vs V1: slightly
-  more benefit with **345 vs 501 transfers**, **14 vs 25 donor shortages** and **BDT 1.15 vs 1.58 lakh**
-  logistics cost. V2's settings were chosen on training-period practice windows only.
-* Be upfront: 24.3% of V2's transfers weren't strictly needed (V1: 21.4%), and donors still ran short
-  14 times.
+**Don't** spend time on: the anomaly panel, Scenario Lab, the 48-h chart axes, fairness tables.
 
-## 8. Baseline vs. ML (≈ 20 s)
+---
 
-Scroll to Model health:
-* cash-demand MAE **BDT 6,138** vs. 9,691 naive / 7,890 seasonal (**−22%** vs. the best baseline);
-* P90 band covers **89.5%** (target 90%);
-* HIGH+ alerts: **81.5% precision**, ROC-AUC 0.935.
+## C. 5-minute full demo
 
-## 9. Close — responsible AI (≈ 20 s)
+Do B, then add:
 
-> "Synthetic data, no PII. Every risk is explained from evidence. Every action is human-reviewed and
-> only simulated. Unusual activity is routed to manual review, never labelled fraud. The pipeline is
-> reproducible and ready for validation on real, consented data in shadow mode."
+1. **Without action, proven (20 s).** Set decision time to **19:00** and reopen AG-0171. Without
+   action its cash hits **BDT 0 at 19:00** and **BDT 11,830** of cash-out is turned away (red bar),
+   inside the window flagged at 13:00. Then click **Reset demo**.
+2. **V1 vs V2 on the same agent (20 s).** In the Rebalancing Center click **V1 — nearest donor**. V1
+   needs **two** transfers (RB-019 + RB-020, est. BDT 305 + 343) for the same result. V2 uses one
+   (BDT 456). Click **V2** again.
+3. **Model health (40 s).** Impact page → *Model health*: cash-demand MAE **BDT 6,138** vs 7,890 for
+   the best simple rule (−22%). P90 band covers **89.5%** (target 90%). HIGH+ alerts are right
+   **81.5%** of the time (ROC-AUC 0.935).
+4. **Held for review (15 s).** Rebalancing Center → *Held for manual review*: **AG-0111** has unusual
+   activity, so no automatic support is proposed. "Anomaly is not fraud; it means a person looks first."
+5. **Scenario Lab (20 s, optional).** Apply **+25%** demand: at-risk agents **25 → 31**, and more need
+   is escalated to the distributor.
 
-Optional if time allows: **Scenario Lab** → +25% demand shock → at-risk agents 25 → 31 and escalated
-need grows; this shows where peer rebalancing stops being enough.
+---
+
+## IF INTERNET / API FAILS
+
+1. **The page says "Live decision service is temporarily unavailable. Your data has not changed."**
+   Click **Retry** once. Say: *"The live API is a hosted prototype; let me reconnect."*
+2. **Still failing after about 20 seconds:** switch to the local copy (`uvicorn app.main:app --port 8000`
+   in `apps/api`, `npm run dev` in `apps/web`). It shows the same deterministic numbers.
+3. **No laptop network at all:** use the backup screenshots or recording, and say so clearly:
+   *"These are recorded screens of the same build."*
+4. **Never** claim recorded screens are live, and never improvise numbers. Use the ones in this script.
+
+There is deliberately no fake "offline mode": the app never presents cached numbers as live data.
+
+---
+
+## If a judge interrupts and asks…
+
+| Question | Short, accurate answer |
+|---|---|
+| Is this real upay data? | No. It's synthetic data from our own seeded generator, with no personal information. |
+| Why ML? | Demand depends on hour, weekday, salary days and agent history together. ML cuts 6-hour cash-demand error by 22% versus the best simple rule. |
+| Why not a simple rule? | We tested that. The same V1 decision engine fed a simple seasonal forecast leaves BDT 67.6 lakh unmet, versus 58.3 lakh with the ML forecast. |
+| Why V2? | V1 picked the nearest donor. V2 adds a benefit gate, a safer dynamic donor reserve and cost-aware ranking: 345 vs 501 transfers, 14 vs 25 donor shortages, lower cost, slightly more benefit. |
+| Is this fraud detection? | No. Anomalies mean "unusual for this agent". They route the case to manual review and never label fraud. |
+| Does it transfer money? | No. Approval runs a simulation and writes an audit entry. No payment instruction exists. |
+| What if the forecast is wrong? | We plan for a cautious P90 scenario, donors keep a reserve, and a person reviews. It still happens: 14 donor shortage events in 345 simulated transfers. |
+| Why is unnecessary-transfer % higher in V2? | V2 makes fewer, larger transfers. The number of unnecessary ones fell (107 → 84) but their share rose (21.4% → 24.3%). The gate removes low-value moves; it can't fix forecast false alarms. |
+| How did you avoid tuning on the test set? | V2 settings were chosen on two earlier validation windows inside the training period, with forecast models retrained on even earlier data. The 14-day test window was used once, with a decision rule written beforehand. |
+| What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot with operations staff, and re-tuning. |
+
+---
+
+## What NOT to say
+
+- "This is upay's data" / "upay uses this" / "this is in production".
+- "It moves money automatically" / "transfer completed".
+- "Fraud detected".
+- "V2 is better on every metric".
+- "Proven in the real world".

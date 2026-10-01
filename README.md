@@ -196,7 +196,11 @@ CI runs the full pipeline, backend tests and frontend lint / typecheck / build o
 
 ## Demo
 
-A 3–5 minute walkthrough is in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md). Short version (decision
+Demo scripts (90 s / 3 min / 5 min), an API-failure plan and judge Q&A are in
+[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md). In the app, **Reset demo** restores the default snapshot
+(client-side only), **Judge demo** shows a six-step guide with live values, and if the API is
+unreachable the app shows a clear *"Live decision service is temporarily unavailable"* message with
+**Retry**. It never shows cached numbers as live. Short version (decision
 time Mon 31 Aug 13:00): Command Center → agent **AG-0171** (BDT 20,640 cash vs. BDT 38,675 forecast
 requirement, HIGH) → *Why this risk?* → Rebalancing Center (policy V2) → review **RB-013** → Approve
 Simulation → Impact page policy comparison.

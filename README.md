@@ -196,8 +196,13 @@ Impact page.
 
 ## Deployment
 
-The project runs fully from this repository with the commands above. Live deployment links will be
-added here when available.
+| Component | URL | Platform |
+|---|---|---|
+| Dashboard | https://agentflow-ai-nine.vercel.app | Vercel (root directory `apps/web`, `NEXT_PUBLIC_API_URL` set to the API) |
+| API | https://agentflow-api-production.up.railway.app (`/health`, `/docs`) | Railway (root `Dockerfile`; data generation + training run at image build) |
+
+Both redeploy automatically on every push to `main`. The API reads `AGENTFLOW_CORS_ORIGINS` for the
+allowed dashboard origins. Everything also runs locally with the commands above.
 
 ## Responsible AI
 
@@ -216,7 +221,7 @@ added here when available.
 * HIGH+ alerts catch ~42% of shortage windows; sudden spikes remain hard to anticipate.
 * ~21% of simulated transfers were not strictly needed; 25 donor shortage events in 501 transfers.
 * Simulator assumes exogenous demand, 1-hour transfers and simple costs; e-float not binding.
-* Audit log is in memory; no authentication (out of scope for the prototype).
+* Audit log is in memory (resets when the API restarts); no authentication (out of scope for the prototype).
 
 ## Future real-data validation path
 

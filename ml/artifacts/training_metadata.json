@@ -1,0 +1,63 @@
+{
+  "algorithm": "sklearn.ensemble.HistGradientBoostingRegressor",
+  "model_specs": {
+    "cash_demand": {
+      "target": "future_6h_cash_demand",
+      "loss": "poisson",
+      "quantile": null
+    },
+    "net_requirement": {
+      "target": "future_6h_net_cash_demand",
+      "loss": "squared_error",
+      "quantile": null
+    },
+    "net_requirement_p90": {
+      "target": "future_6h_net_cash_demand",
+      "loss": "quantile",
+      "quantile": 0.9
+    }
+  },
+  "n_train_rows": 262800,
+  "train_start": "2026-06-24 00:00:00",
+  "train_end": "2026-08-17 17:00:00",
+  "fit_seconds": {
+    "cash_demand": 7.66,
+    "net_requirement": 5.6,
+    "net_requirement_p90": 9.42
+  },
+  "seed": 2026,
+  "horizon_hours": 6,
+  "features": [
+    "hour",
+    "day_of_week",
+    "is_weekend",
+    "is_salary_period",
+    "day_of_month",
+    "is_market_day",
+    "next_day_is_market_day",
+    "district_code",
+    "location_cluster_code",
+    "agent_volume_segment_code",
+    "agent_type_code",
+    "out_last_1h",
+    "out_sum_3h",
+    "out_sum_6h",
+    "out_sum_24h",
+    "out_rolling_mean_24h",
+    "out_rolling_std_24h",
+    "out_rolling_mean_168h",
+    "out_same_window_1d",
+    "out_same_window_7d",
+    "out_same_window_avg7",
+    "in_sum_6h",
+    "in_sum_24h",
+    "in_rolling_mean_168h",
+    "in_same_window_1d",
+    "in_same_window_avg7",
+    "net_req_same_window_1d",
+    "net_req_same_window_7d",
+    "net_req_same_window_avg7",
+    "txn_count_3h",
+    "velocity_ratio_3h"
+  ]
+}

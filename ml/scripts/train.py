@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import _bootstrap  # noqa: F401
 
-from agentflow import config, data_gen, features, forecast
+from agentflow import anomaly, config, data_gen, features, forecast
 
 
 def main() -> None:
@@ -26,6 +26,12 @@ def main() -> None:
                         {**bundle.metadata, "features": bundle.features})
     print("forecast models saved ->", forecast.MODEL_PATH)
     print("fit seconds:", bundle.metadata["fit_seconds"])
+
+    # Behavioural anomaly detector: fitted on training-period behaviour only.
+    anom_feats = anomaly.anomaly_features(feats)
+    detector = anomaly.AnomalyDetector().fit(anom_feats[feats["timestamp"] < config.TEST_START])
+    detector.save()
+    print("anomaly detector saved ->", anomaly.MODEL_PATH, "thresholds:", detector.thresholds)
 
 
 if __name__ == "__main__":

@@ -21,9 +21,9 @@
   "train_start": "2026-06-24 00:00:00",
   "train_end": "2026-08-17 17:00:00",
   "fit_seconds": {
-    "cash_demand": 7.66,
+    "cash_demand": 7.48,
     "net_requirement": 5.6,
-    "net_requirement_p90": 9.42
+    "net_requirement_p90": 9.68
   },
   "seed": 2026,
   "horizon_hours": 6,

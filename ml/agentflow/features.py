@@ -127,6 +127,7 @@ def build_features(hourly: pd.DataFrame, agents: pd.DataFrame) -> pd.DataFrame:
         df[f"{name}_same_window_1d"] = lags[0]
         df[f"{name}_same_window_7d"] = lags[6]
         df[f"{name}_same_window_avg7"] = pd.concat(lags, axis=1).mean(axis=1, skipna=False)
+        df[f"{name}_same_window_max7"] = pd.concat(lags, axis=1).max(axis=1, skipna=False)
 
     cnt = df["transaction_count"].astype(float)
     g_cnt = cnt.groupby(gid)

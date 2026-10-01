@@ -40,7 +40,7 @@ Responsible AI.
 | Where will cash be needed? | gradient-boosted forecasts of 6-h cash-out and peak cash requirement, P90 quantile | demand patterns interact (hour × weekday × salary × agent); ML beats naive and seasonal rules by 22–37% MAE |
 | Is behaviour unusual? | Isolation Forest + robust deviation hybrid | unsupervised detection of surges, odd-hour activity, churn |
 | How urgent? | deterministic risk engine | transparent, auditable prioritisation |
-| What to do? | constrained greedy optimiser | turns predictions into safe, concrete actions |
+| What to do? | constrained optimiser: policy V2 (default: benefit gate, dynamic donor reserve, benefit–cost–safety ranking) and the original nearest-donor V1 | turns predictions into safe, concrete actions |
 
 No LLM is used for decisions; the core system works without any external AI service.
 
@@ -58,7 +58,10 @@ Time-based purged split: train 2026-06-24 → 08-17, test 2026-08-18 → 08-31. 
   error), peak requirement P90 (quantile).
 * Hybrid anomaly detector on agent-relative one-sided deviations.
 * Risk = coverage (45) + P90 tail (20) + shortfall size (20) + velocity (10) + history (5).
-* Rebalancing: same district, ≤ 15 km, LOW-risk donors keep ≥ 110% of their own P90 requirement.
+* Rebalancing: same district, ≤ 15 km, LOW-risk donors keep ≥ 110% of their own P90 requirement (V1). The
+  default V2 adds a dynamic donor reserve that grows with uncertainty, velocity and shortage history; a
+  minimum-benefit gate; and donor ranking by benefit, safety and cost. Its parameters were selected on
+  training-period validation folds.
 See `MODEL_CARD.md`.
 
 ## 8. Product architecture
@@ -96,16 +99,22 @@ See `EVALUATION.md`.
 
 Same demand, same total cash, 14 days, 200 agents:
 
-| | Without AgentFlow | With AgentFlow |
-|---|---:|---:|
-| Shortage events | 2,017 | **1,255 (−37.8%)** |
-| Unmet cash demand | BDT 95.4 lakh | **BDT 58.3 lakh (−38.9%)** |
-| Service availability | 96.76% | **97.92%** |
-| Extra cash injected | — | **BDT 0** (peer rebalancing only) |
+| | Without AgentFlow | AgentFlow V1 | **AgentFlow V2 (default)** |
+|---|---:|---:|---:|
+| Shortage events | 2,017 | 1,255 (−37.8%) | **1,223 (−39.4%)** |
+| Unmet cash demand | BDT 95.4 lakh | BDT 58.3 lakh (−38.9%) | **BDT 56.9 lakh (−40.3%)** |
+| Service availability | 96.76% | 97.92% | **97.95%** |
+| Transfers | — | 501 | **345** |
+| Donor shortage events within 6 h | — | 25 | **14** |
+| Estimated logistics cost | — | BDT 1.58 lakh | **BDT 1.15 lakh** |
+| Unnecessary transfers | — | **21.4%** | 24.3% |
+| Extra cash injected | — | BDT 0 | BDT 0 (peer rebalancing only) |
 
-Costs: 501 simulated transfers (BDT 75.6 lakh moved, est. logistics BDT 1.58 lakh), 21.4% not
-strictly needed, 25 donor shortage events. Rebalancing fed by a naive forecast achieves −26.5% events,
-isolating the ML contribution.
+V2 delivers slightly more benefit than V1 with 31% fewer transfers, 27% lower logistics cost and 44%
+fewer donor shortage events. The share of unnecessary transfers did not improve (24.3% vs 21.4%), and V2
+is slightly worse than V1 for rural agents. It became the default under a deployment rule written before
+the held-out evaluation. Rebalancing fed by a naive forecast achieves −26.5% events, isolating the ML
+contribution.
 
 ## 12. Responsible AI
 

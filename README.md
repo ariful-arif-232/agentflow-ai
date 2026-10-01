@@ -24,7 +24,8 @@ is organised around that. Teammate briefing: [docs/TEAM_BRIEFING.md](docs/TEAM_B
 | Peak cash-requirement forecast | MAE BDT 5,147 vs. 5,524 seasonal (−6.8%), RMSE −12.7%; P90 band coverage **89.5%** (nominal 90%) |
 | Risk early warning (HIGH+ alerts → shortage within 6 h) | precision **81.5%**, recall 41.7%, ROC-AUC **0.935** (vs. 0.911 when fed naive forecasts) |
 | Behavioural anomaly detection | ROC-AUC **0.981**, average precision 0.671 on injected anomalies |
-| **Business impact** (same demand, same total cash) | shortage events **−37.8%**, unmet cash demand **−38.9% (BDT 37.1 lakh avoided)**, service availability 96.76% → **97.92%** |
+| **Business impact, rebalancing policy V2 (default)** (same demand, same total cash) | shortage events **−39.4%**, unmet cash demand **−40.3% (BDT 38.5 lakh avoided)**, service availability 96.76% → **97.95%**, with 345 transfers, 14 donor shortage events and BDT 1.15 lakh logistics cost |
+| Business impact, original policy V1 | shortage events −37.8%, unmet cash demand −38.9% (BDT 37.1 lakh avoided), 501 transfers, 25 donor shortage events, BDT 1.58 lakh logistics cost |
 
 Every number is produced by `python ml/scripts/run_pipeline.py` and stored in
 [`ml/artifacts/`](ml/artifacts/); a fresh clone reproduces them byte-for-byte. Full details and
@@ -57,8 +58,11 @@ measurable operational recommendation:
 2. **Why?** A transparent 0–100 risk score with five bounded components and evidence-based reasons
    ("Current cash of BDT 20,640 covers about 53% of the forecast requirement…").
 3. **What should operations consider doing?** A constrained optimiser recommends peer rebalancing
-   from nearby LOW-risk agents who keep ≥ 110% of their own P90 requirement, escalates the rest to
-   the distributor, and holds agents with unusual activity for manual review.
+   from nearby LOW-risk agents, escalates the rest to the distributor, and holds agents with unusual
+   activity for manual review. The default **Policy V2** only proposes transfers that materially reduce
+   the recipient's risk. It protects donors with a dynamic reserve (forecast uncertainty, velocity,
+   shortage history) and ranks donors by benefit, safety and logistics cost. The original nearest-donor
+   **Policy V1** remains selectable for comparison.
 4. **What improves?** A held-out simulation measures shortage events, unmet demand and service
    availability with and without AgentFlow.
 
@@ -69,9 +73,9 @@ measurable operational recommendation:
 | **Command Center** | Active / at-risk / critical agents, projected service readiness (now and after the recommended plan), 6-h forecast demand, recommended rebalancing value, 48-h forecast-vs-actual trend, risk distribution, top at-risk agents, urgent recommendations, district overview |
 | **Agents** | Sortable, filterable table (risk level, behaviour, district, location cluster, volume segment, search) |
 | **Agent Intelligence** | Current cash, 6-h forecasts (P50/P90), expected gap, risk score with component breakdown, *Why this risk?* (with a deterministic **বাংলায় ব্যাখ্যা করুন** Bangla toggle), recommended action, behavioural drivers, 72-h history, model evidence |
-| **Rebalancing Center** | Recommendations with source/destination reserves and risk before/after → **Review Recommendation** → evidence drawer → acknowledgement → **Approve Simulation** → portfolio before/after + audit log; escalations and held-for-review lists |
+| **Rebalancing Center** | V2 (default) / V1 policy toggle; recommendations with source/destination reserves, risk before/after and V2 evidence (expected recipient benefit, donor margin above its dynamic reserve) → **Review Recommendation** → evidence drawer → acknowledgement → **Approve Simulation** → portfolio before/after + audit log; escalations and held-for-review lists |
 | **Scenario Lab** | Network (+10/25/40%) and district demand shocks; risk, shortfall, rebalancing and escalation recomputed live |
-| **Impact & Model Health** | Without vs. with AgentFlow (and naive-forecast rebalancing), daily unmet demand, group breakdown, baseline vs. ML metrics, feature importance, alert precision/recall, anomaly metrics, fairness checks |
+| **Impact & Model Health** | Policy comparison (without AgentFlow / naive forecast / V1 / V2) with safety and efficiency metrics, daily unmet demand, group breakdown, baseline vs. ML metrics, feature importance, alert precision/recall, anomaly metrics, fairness checks |
 | **Responsible AI** | Privacy, explainability, oversight, safety constraints, anomaly ≠ fraud, limits of trust |
 
 A decision-time selector (top bar) lets you replay any hour of the held-out period.
@@ -85,7 +89,7 @@ A decision-time selector (top bar) lets you replay any hour of the held-out peri
 | Forecasting | scikit-learn `HistGradientBoostingRegressor` (Poisson / squared error) + 0.9-quantile model |
 | Anomaly detection | Isolation Forest + robust deviation rule (hybrid, percentile-averaged) on agent-relative surges |
 | Risk engine | deterministic, monotone, bounded formula (coverage, P90 tail, shortfall, velocity, history) |
-| Rebalancing | greedy constrained optimiser (same district, ≤ 15 km, donor safe surplus, protected level) |
+| Rebalancing | V1: greedy nearest-donor optimiser (same district, ≤ 15 km, donor safe surplus, protected level). V2 (default): the same constraints plus a dynamic donor reserve, minimum-benefit gate and benefit–cost–safety donor ranking, with parameters selected on training-period validation folds |
 | Impact | hour-by-hour held-out replay of three policies with identical exogenous demand |
 
 No LLM is used in the decision path; the core system has no external API dependency.
@@ -113,7 +117,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (49 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (72 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -123,7 +127,7 @@ agentflow-ai/
     api/app/          FastAPI service (main.py routes, schemas.py, service.py)
     web/src/          Next.js dashboard (app/ pages, components/, lib/)
   ml/
-    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance, impact, engine, evaluation
+    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation
     scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py
     artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json (committed)
     data/ models/     generated data and model binaries (git-ignored, reproducible)
@@ -142,13 +146,14 @@ cd agentflow-ai
 pip install -r requirements.txt
 ```
 
-### 1. Generate data, train and evaluate (≈ 1 minute)
+### 1. Generate data, train, select the rebalancing policy and evaluate (≈ 4 minutes)
 
 ```bash
 python ml/scripts/run_pipeline.py
 # or step by step:
 python ml/scripts/generate_data.py   # synthetic dataset -> ml/data/
 python ml/scripts/train.py           # models -> ml/models/
+python ml/scripts/select_policy.py   # V2 parameters on training-period validation folds -> policy_selection.json
 python ml/scripts/evaluate.py        # metrics.json + impact.json -> ml/artifacts/
 ```
 
@@ -183,7 +188,7 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 49 tests (data, leakage, models, risk, rebalancing, impact, API, contract)
+python -m pytest -q                       # from repo root: 72 tests (data, leakage, models, risk, rebalancing V1/V2, policy selection, impact, API, contract)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 
@@ -193,8 +198,8 @@ CI runs the full pipeline, backend tests and frontend lint / typecheck / build o
 
 A 3–5 minute walkthrough is in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md). Short version (decision
 time Mon 31 Aug 13:00): Command Center → agent **AG-0171** (BDT 20,640 cash vs. BDT 38,675 forecast
-requirement, HIGH) → *Why this risk?* → Rebalancing Center → review **RB-019** → Approve Simulation →
-Impact page.
+requirement, HIGH) → *Why this risk?* → Rebalancing Center (policy V2) → review **RB-013** → Approve
+Simulation → Impact page policy comparison.
 
 ## Deployment
 
@@ -221,7 +226,8 @@ allowed dashboard origins. Everything also runs locally with the commands above.
 * Synthetic data; results demonstrate the method, not real-world upay performance.
 * Peak-requirement forecast improves on a strong seasonal baseline only modestly (−6.8% MAE).
 * HIGH+ alerts catch ~42% of shortage windows; sudden spikes remain hard to anticipate.
-* ~21% of simulated transfers were not strictly needed; 25 donor shortage events in 501 transfers.
+* Policy V2: 24.3% of its 345 simulated transfers were not strictly needed (V1: 21.4% of 501), and there
+  were still 14 donor shortage events (V1: 25). V2 is slightly worse than V1 for rural agents.
 * Simulator assumes exogenous demand, 1-hour transfers and simple costs; e-float not binding.
 * Audit log is in memory (resets when the API restarts); no authentication (out of scope for the prototype).
 

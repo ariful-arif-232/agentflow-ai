@@ -1,9 +1,9 @@
 # Evaluation — AgentFlow AI
 
 > **Synthetic held-out evaluation.** All numbers come from `python ml/scripts/evaluate.py`
-> (machine-readable: `ml/artifacts/metrics.json`, `ml/artifacts/impact.json`). They are
+> (machine-readable: `ml/artifacts/metrics.json`, `ml/artifacts/impact.json`, `ml/artifacts/policy_selection.json`). They are
 > results on synthetic data, **not** measured real-world upay results. A fresh clone reproduces
-> both files byte-for-byte.
+> these files byte-for-byte.
 
 ## 1. Dataset and split
 
@@ -98,19 +98,23 @@ recall could act on MEDIUM+ at the cost of more interventions.
 ## 5. Held-out business impact simulation
 
 `ml/agentflow/impact.py` replays the 14-day held-out period hour by hour for all 200 agents with
-**identical exogenous customer demand** under three policies:
+**identical exogenous customer demand** under four policies:
 
 1. **Without AgentFlow (status quo)** — manual 08:00 drawer reset only. The replay reproduces the
    historical simulation exactly (tested), which validates the simulator.
 2. **Rebalancing with naive forecast** — the same risk + rebalancing engine, fed by the seasonal baseline.
-3. **With AgentFlow** — ML forecast → risk → rebalancing.
+3. **AgentFlow V1** — ML forecast → risk → rebalancing with the original nearest-donor optimiser.
+4. **AgentFlow V2** — the same ML forecast and risk engine with the cost-, uncertainty- and
+   safety-aware rebalancing policy described in §5a (the deployed default since this evaluation).
 
 Assumptions: decisions at 09, 11, 13, 15, 17, 19 h; approved transfers arrive 1 hour later;
 peer-to-peer only (same district, ≤ 15 km, donor keeps ≥ 110% of its P90 requirement), so the
 **total cash in the network is identical across policies**; agents with unusual activity are held
 for manual review; every simulated transfer stands in for a human-approved action.
 
-| Metric | Without AgentFlow | Naive-forecast rebalancing | **With AgentFlow** |
+Results for the original policy (V1); V2 is compared in §5a.
+
+| Metric | Without AgentFlow | Naive-forecast rebalancing | **AgentFlow V1** |
 |---|---:|---:|---:|
 | Shortage events (agent-hours) | 2,017 | 1,483 | **1,255 (−37.8%)** |
 | Unmet cash demand | BDT 95.4 lakh | BDT 67.6 lakh | **BDT 58.3 lakh (−38.9%)** |
@@ -126,10 +130,94 @@ for manual review; every simulated transfer stands in for a human-approved actio
 moving existing cash to where the forecast says it will be needed. The ML forecast adds value over
 the naive forecast inside the same decision engine (unmet demand 58.3 vs 67.6 lakh).
 
-Trade-offs reported honestly: AgentFlow makes more transfers, about one in five would not have been
+Trade-offs reported honestly: AgentFlow V1 makes more transfers, about one in five would not have been
 strictly needed, and donors are not perfectly safe (25 donor shortage events across 501 transfers,
 caused by forecast error on the donor side). The number of agents with *at least one* shortage does
 not fall; AgentFlow reduces frequency and severity, not the existence of stress.
+
+## 5a. Rebalancing Policy V2 — cost-, uncertainty- and safety-aware
+
+**Why V2 exists.** V1 serves every HIGH/CRITICAL agent from the *nearest* eligible donors and protects
+donors with a flat 110% of their P90 requirement. That produced many small multi-leg transfers and
+25 donor shortage events. V2 changes the *decision policy only*; the forecasts, the risk formula and
+every V1 hard constraint are unchanged (`ml/agentflow/rebalance_v2.py`). V1 remains available and selectable.
+
+**Deterministic V2 logic.**
+
+1. *Recipient target:* cash up to `P50 + λ·(P90 − P50)`.
+2. *Dynamic donor reserve*, never weaker than V1:
+   `max(BDT 5,000, 1.10·P90, (P90 + u·(P90 − P50)) × (1 + 0.5·clip(velocity − 1, 0, 1)) × (1 + 0.5·clip(history / 0.15, 0, 1)))`.
+   Only cash above this reserve can be given, and after the complete plan the donor must still be LOW risk.
+3. *Minimum-benefit gate:* a transfer leg is proposed only if it lowers the recipient's risk level, or
+   cuts its risk score by ≥ `min_risk_drop` points, or removes ≥ 50% of its P50 expected shortfall.
+   Otherwise the need is escalated to distributor replenishment instead of moving a token amount.
+4. *Lexicographic donor ranking:* donors that can cover the remaining need alone first (fewer legs);
+   then most recipient risk points removed per BDT 100 of logistics cost; then largest donor margin
+   above its reserve; then distance.
+
+Each recommendation carries its evidence: expected risk change and shortfall reduction, donor margin
+above its dynamic reserve after the plan, and the ranking key. The text explanation is generated from
+those numbers.
+
+**How parameters were selected (held-out test period not used).**
+
+| Period | Dates | Use |
+|---|---|---|
+| Policy-development | data before each validation window (fold A: 128,400 rows to 07-20 17:00; fold B: 195,600 rows to 08-03 17:00) | forecast models re-trained out-of-sample for each fold |
+| Policy-validation | fold A 2026-07-21 → 08-03 (contains a salary period), fold B 2026-08-04 → 08-17 | evaluate V1 and 36 V2 configurations |
+| Final held-out test | 2026-08-18 → 08-31 | evaluated once, after selection |
+
+Grid: λ ∈ {0.5, 0.75, 1.0}, u ∈ {0.25, 0.5, 1.0}, `min_risk_drop` ∈ {10, 20},
+`require_p50_shortfall` ∈ {no, yes}. The pre-registered selection rule considers a configuration
+*feasible* if, across both folds, it retains ≥ 95% of V1's unmet demand avoided and has no more
+donor shortage events than V1. Among feasible configurations it chooses the one with the most unmet
+demand avoided per BDT 1,000 of logistics cost. 24 of 36 configurations were feasible.
+**Selected: λ = 1.0, u = 0.25, min_risk_drop = 20.** `require_p50_shortfall` made no difference,
+because HIGH/CRITICAL agents are always below their P50 requirement. The velocity and history
+weights (0.5), the 50% shortfall cut and the "donor stays LOW" rule were fixed a priori. Artifact:
+`ml/artifacts/policy_selection.json` (`python ml/scripts/select_policy.py`).
+
+On validation (both folds), the selected V2 retained 101.8% of V1's unmet demand avoided with
+664 vs 977 transfers, 20 vs 80 donor shortage events and BDT 34,692 vs 24,779 avoided per BDT 1,000
+cost. Unnecessary transfers were essentially unchanged (21.8% vs 21.2%).
+
+**Held-out comparison (synthetic held-out simulation).**
+
+| Metric | Without AgentFlow | Naive forecast | AgentFlow V1 | **AgentFlow V2** |
+|---|---:|---:|---:|---:|
+| Unmet cash demand | BDT 95.4 lakh | BDT 67.6 lakh | BDT 58.3 lakh (−38.9%) | **BDT 56.9 lakh (−40.3%)** |
+| Shortage events | 2,017 | 1,483 | 1,255 (−37.8%) | **1,223 (−39.4%)** |
+| Service availability | 96.76% | 97.64% | 97.92% | **97.95%** |
+| Demand fill rate | 97.54% | 98.25% | 98.49% | **98.53%** |
+| Agents with ≥ 1 shortage | 140 | 143 | 140 | **137** |
+| Transfers | — | 384 | 501 | **345** |
+| Total rebalanced | — | BDT 57.1 lakh | BDT 75.6 lakh | BDT 75.1 lakh |
+| Unnecessary transfers | — | 15.1% | **21.4%** (107) | 24.3% (84) |
+| Donor shortage events within 6 h | — | 65 | 25 | **14** |
+| Estimated logistics cost | — | BDT 1.22 lakh | BDT 1.58 lakh | **BDT 1.15 lakh** |
+| Need escalated to distributor (summed over decisions) | — | BDT 46.0 lakh | BDT 70.5 lakh | BDT 69.9 lakh |
+| Unmet demand avoided per transfer | — | BDT 7,226 | BDT 7,404 | **BDT 11,148** |
+| Unmet demand avoided per BDT 1,000 cost | — | BDT 22,707 | BDT 23,410 | **BDT 33,340** |
+| Shortage events avoided per 100 transfers | — | 139.1 | 152.1 | **230.1** |
+
+**Pre-registered deployment rule.** V2 becomes the default only if it retains ≥ 95% of V1's unmet
+demand avoided, has no more donor shortage events, and is strictly better on at least two of
+{unnecessary-transfer %, donor shortage events, unmet demand avoided per BDT 1,000 cost}. Held-out
+result: retention 103.7%; donor events 14 vs 25 (better); avoided per BDT 1,000 cost 33,340 vs
+23,410 (better); unnecessary-transfer share 24.3% vs 21.4% (**worse**). Two of three are better, so
+**V2 is the default** and V1 stays selectable in the dashboard and the API (`policy=v1`).
+
+**Honest reading of the trade-off.**
+
+* V2 does about as much good as V1 (slightly more: −40.3% vs −38.9% unmet demand) with 31% fewer
+  transfers, 27% lower logistics cost and 44% fewer donor shortage events.
+* V2 did **not** reduce the *share* of unnecessary transfers; it rose from 21.4% to 24.3%. In absolute
+  terms there were fewer unnecessary transfers (84 vs 107), because V2 makes fewer, larger transfers.
+  The gate filters small, low-benefit legs; it cannot remove forecast false alarms.
+* Donor risk is reduced, not eliminated: 14 donor shortage events across 345 transfers.
+* By location (unmet demand, status quo → V1 → V2): urban periphery 45.6 → 21.0 → 19.3 lakh;
+  urban core 6.0 → 4.7 → 4.5 lakh; **rural 43.8 → 32.6 → 33.1 lakh**, so V2 is slightly worse than
+  V1 for rural agents, where donors are sparse and stricter reserves leave less to share.
 
 ### Metric definitions
 
@@ -142,12 +230,15 @@ not fall; AgentFlow reduces frequency and severity, not the existence of stress.
 | Unnecessary transfer | recipient would have had no shortage in the following 6 h under the status quo |
 | Donor shortage after transfer | shortage events at a donor in the 6 h after it gave cash |
 | Projected service readiness (dashboard) | share of agents whose current cash covers their forecast 6-h peak requirement |
+| Need escalated to distributor | sum, over all decision points, of at-risk need peer rebalancing could not cover (the same agent can be counted at several decisions) |
+| Unmet demand avoided per transfer / per BDT 1,000 cost | unmet cash demand avoided vs. status quo divided by transfers / by estimated logistics cost in thousands |
+| Shortage events avoided per 100 transfers | shortage events avoided vs. status quo per 100 transfers |
 
 ## 6. Fairness / consistency across operational groups
 
 No personal or sensitive attributes exist; groups are synthetic operational segments.
 
-| Location cluster | Forecast WAPE ML / naive | Alert precision | Alert recall | Shortage prevalence | Unmet demand without → with AgentFlow |
+| Location cluster | Forecast WAPE ML / naive | Alert precision | Alert recall | Shortage prevalence | Unmet demand without → with AgentFlow V1 |
 |---|---|---:|---:|---:|---|
 | Rural | 17.1% / 28.5% | 82.6% | 44.7% | 13.2% | 43.8 → 32.6 lakh (−26%) |
 | Urban core | 17.5% / 28.1% | 73.8% | 26.4% | 1.4% | 6.0 → 4.7 lakh (−22%) |
@@ -171,11 +262,14 @@ By volume segment, forecast WAPE is 17.3–18.4% and alert precision 77–84%.
 * E-float is tracked but not used as a binding constraint.
 * The peak-requirement model improves on the seasonal baseline only modestly (−6.8% MAE).
 * Anomaly labels are injected patterns; detection performance on real behaviour is unknown.
+* Rebalancing V2 parameters were chosen on two 14-day validation folds of the same synthetic world;
+  a real deployment would re-select them on real history and monitor drift. V2 did not lower the
+  share of unnecessary transfers and is slightly worse than V1 for rural agents.
 
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
-python ml/scripts/run_pipeline.py   # generate -> train -> evaluate (~1 min on 4 cores)
-python -m pytest -q                 # 49 tests
+python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
+python -m pytest -q                 # 72 tests
 ```

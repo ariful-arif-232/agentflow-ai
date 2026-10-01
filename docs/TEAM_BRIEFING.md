@@ -32,8 +32,9 @@ AgentFlow does four things:
 1. **Predicts** each agent's cash demand and peak cash need for the next 6 hours using machine learning.
 2. **Scores risk** (0–100, LOW / MEDIUM / HIGH / CRITICAL) with a transparent formula and lists the reasons.
 3. **Recommends** moving cash from a nearby agent who has a safe surplus, with strict safety rules.
-4. **Measures impact**: on 14 held-out days the model never saw, it cut shortage events by
-   **37.8%** and unmet cash demand by **38.9%**, without adding any extra cash to the network.
+4. **Measures impact**: on 14 held-out days the model never saw, the default rebalancing policy (V2)
+   cut shortage events by **39.4%** and unmet cash demand by **40.3%**, without adding any extra cash to
+   the network. It used 345 transfers; the original policy V1 achieved −37.8% / −38.9% with 501.
 
 All data is **synthetic** (computer-generated). These are simulation results, not real upay results.
 
@@ -57,22 +58,24 @@ FORECAST → RISK → EXPLAIN → RECOMMEND → HUMAN REVIEW → SIMULATE → ME
    "Current cash of BDT 20,640 covers about 53% of that requirement". A Bangla button shows the same
    reasons in Bangla.
 4. **Recommend.** The system suggests moving cash from a nearby agent who has more than they need,
-   in the same district and within 15 km. That donor always keeps at least 110% of its own cautious
-   forecast need.
+   in the same district and within 15 km. With the default **policy V2**, a transfer is only suggested
+   if it really helps the recipient. The donor keeps a safety reserve that grows when its own forecast
+   is uncertain or it is busier than usual, and it must stay LOW risk.
 5. **Human review.** A reviewer opens the evidence, ticks "I have reviewed the evidence above", and
    clicks **Approve Simulation**. That runs a what-if calculation and writes an audit-log entry.
    Nothing is sent and no money moves.
 6. **Measure.** We replayed the last 14 days hour by hour, with exactly the same customer demand,
-   once without AgentFlow and once with it.
+   without AgentFlow and with each version of its rebalancing policy.
 
 **Results (synthetic held-out simulation):**
 
-| | Without AgentFlow | With AgentFlow |
-|---|---:|---:|
-| Shortage events (agent-hours) | 2,017 | 1,255 (−37.8%) |
-| Unmet cash demand | BDT 95.4 lakh | BDT 58.3 lakh (BDT 37.1 lakh avoided) |
-| Service availability | 96.76% | 97.92% |
-| Extra cash added to the network | — | BDT 0 |
+| | Without AgentFlow | AgentFlow V1 | **AgentFlow V2 (default)** |
+|---|---:|---:|---:|
+| Shortage events (agent-hours) | 2,017 | 1,255 (−37.8%) | **1,223 (−39.4%)** |
+| Unmet cash demand | BDT 95.4 lakh | BDT 58.3 lakh | **BDT 56.9 lakh (BDT 38.5 lakh avoided)** |
+| Service availability | 96.76% | 97.92% | **97.95%** |
+| Transfers | — | 501 | **345** |
+| Extra cash added to the network | — | BDT 0 | BDT 0 |
 
 **Why it is credible.** We compare the ML model against simple baselines and report where it is only
 slightly better. We report the costs (unnecessary transfers, donor risk). Anyone can rerun everything
@@ -106,18 +109,20 @@ any hour in the 14-day test period.
 
 | Page | What it shows |
 |---|---|
-| **Command Center** | At the default time: 200 active agents, **25 at risk** (HIGH or CRITICAL), **7 critical**, 32 at MEDIUM, 15 with unusual activity. Projected service readiness **71.5% → 77.0%** with the recommended plan. Recommended rebalancing **BDT 4.0 lakh** in **21 transfers**; BDT 5.8 lakh escalated to the distributor. Also a 48-hour forecast-vs-actual chart, a risk chart, top at-risk agents and a district table. |
+| **Command Center** | At the default time: 200 active agents, **25 at risk** (HIGH or CRITICAL), **7 critical**, 32 at MEDIUM, 15 with unusual activity. Projected service readiness **71.5% → 77.5%** with the recommended plan (policy V2). Recommended rebalancing **BDT 4.7 lakh** in **14 transfers**; BDT 5.0 lakh escalated to the distributor. (With policy V1 the same moment needs 21 transfers for BDT 4.0 lakh, reaching 77.0%.) Also a 48-hour forecast-vs-actual chart, a risk chart, top at-risk agents and a district table. |
 | **Agents** | Table of all 200 agents; sort and filter by risk, behaviour, district, location type, volume and ID. |
 | **Agent Intelligence** (click an agent) | Current cash, 6-hour forecasts, expected gap, risk score with its 5 parts, "Why this risk?" (with Bangla button), recommended action, unusual-activity panel, 72-hour history chart, model accuracy. |
-| **Rebalancing Center** | All recommended transfers → **Review Recommendation** → evidence drawer → tick acknowledgement → **Approve Simulation** → before/after results and audit log. Also lists escalations and agents held for manual review. |
+| **Rebalancing Center** | Policy toggle (**V2**, the default, or **V1**). All recommended transfers → **Review Recommendation** → evidence drawer → tick acknowledgement → **Approve Simulation** → before/after results and audit log. Also lists escalations and agents held for manual review. |
 | **Scenario Lab** | "What if demand rises 10/25/40%?" or "what if one district spikes?" Everything is recalculated live. Example: +25% demand → at-risk agents 25 → 31. |
-| **Impact & Model Health** | Without vs. with AgentFlow, daily chart, results by group, baseline vs. ML accuracy, alert accuracy, anomaly accuracy, fairness tables. |
+| **Impact & Model Health** | Policy comparison (without AgentFlow / naive forecast / V1 / V2), daily chart, results by group, baseline vs. ML accuracy, alert accuracy, anomaly accuracy, fairness tables. |
 | **Responsible AI** | Our principles and when *not* to trust the system blindly. |
 
 **Demo agent: AG-0171** (Rangpur). At 13:00 it has BDT 20,640 cash, but the forecast peak need for
-the next 6 hours is BDT 38,675, so coverage is 53% and risk is **HIGH (53/100)**. The recommendation is
-RB-019 (BDT 22,500 from AG-0183) plus RB-020 (BDT 16,000 from AG-0178), which would take it to
-**LOW (5)**. Set the decision time to 19:00 and you can see that, without action, its cash hits zero
+the next 6 hours is BDT 38,675, so coverage is 53% and risk is **HIGH (53/100)**. The V2 recommendation
+is **RB-013**: BDT 38,500 from AG-0181 (12.2 km) in one transfer, which would take it to **LOW (5)**. The
+donor stays LOW with BDT 4,430 above its safety reserve. (Policy V1 would use two transfers, BDT 22,500
+from AG-0183 and BDT 16,000 from AG-0178, which reach the same result at a higher estimated logistics
+cost.) Set the decision time to 19:00 and you can see that, without action, its cash hits zero
 at 19:00 and BDT 11,830 of cash-out is turned away.
 
 ## 7. What the ML model actually predicts
@@ -191,16 +196,39 @@ Risk is a **fixed formula**, not a black box, and not invented by AI. It adds up
 
 For agents at **HIGH or CRITICAL** risk:
 
-1. **How much is needed:** enough to reach the cautious (90th-percentile) forecast need.
+There are two policies. **V2 is the default**; **V1** (the original) can still be selected for comparison.
+
+**Rules shared by both:**
+
+1. **How much is needed:** enough to reach the cautious (90th-percentile) forecast need. V2 uses the
+   same target, because its selected setting λ = 1.0 means "go to the cautious forecast".
 2. **Who can give:** only agents that are **LOW risk**, show **no unusual activity**, are in the
    **same district** and are **within 15 km**.
-3. **How much a donor can give:** only cash above its *protected level*, which is **110% of its own
-   cautious forecast need** (minimum BDT 5,000). Amounts are in steps of BDT 500, at least BDT 2,000,
-   and from at most 2 donors per agent.
-4. **Order:** highest-risk agents first; nearest donor first.
+3. Amounts are in steps of BDT 500, at least BDT 2,000, and come from at most 2 donors per agent.
+4. Highest-risk agents are served first.
 5. **If no donor qualifies**, the remaining need is **escalated to the distributor** (a human process).
 6. Each recommendation shows the reason, both agents' cash before and after, risk before and after,
    distance and an estimated logistics cost (assumed BDT 150 + BDT 25 per km).
+
+**V1:** the donor keeps **110% of its own cautious forecast need** (minimum BDT 5,000); the *nearest*
+donor is chosen first.
+
+**V2 (default) adds four things:**
+
+- **Bigger safety reserve when needed:** the donor's reserve grows if its own forecast is uncertain,
+  if it is busier than usual right now, or if it has run short before. It is never smaller than V1's.
+  The donor must still be **LOW risk** after all its transfers.
+- **Minimum-benefit gate:** a transfer is only suggested if it lowers the recipient's risk level, or cuts
+  its risk score by at least 20 points, or removes at least half its expected shortfall. Tiny "token"
+  transfers are not suggested; the need is escalated instead.
+- **Smarter donor choice:** first a donor who can cover the whole need alone (fewer trips); then the one
+  that removes the most risk per taka of transport cost; then the one left with the biggest safety
+  margin; then the nearest.
+- **Evidence on screen:** expected risk drop for the recipient, and how much the donor keeps above its reserve.
+
+**How V2's settings were chosen:** only on training data. We used two "practice" periods
+(21 Jul–3 Aug and 4–17 Aug) with forecast models trained on even earlier data. The 14 test days were
+used once, at the end, with a rule written down beforehand.
 
 These are **peer-to-peer** moves, so the total cash in the network does not change.
 
@@ -217,26 +245,34 @@ These are **peer-to-peer** moves, so the total cash in the network does not chan
 
 - It replays the **14 test days** (18–31 Aug 2026) **hour by hour for all 200 agents**.
 - Customer demand is **exactly the same** in every policy, which makes the comparison fair.
-- Three policies are compared:
+- Four policies are compared:
   1. **Without AgentFlow:** only the 08:00 daily reset. The replay reproduces the original data
      exactly, which shows the simulator is correct.
-  2. **Rebalancing with a naive forecast:** the same risk and rebalancing engine, but fed a simple
+  2. **Rebalancing with a naive forecast:** the same risk and rebalancing engine (V1), but fed a simple
      forecast instead of ML.
-  3. **With AgentFlow:** ML forecast → risk → rebalancing.
+  3. **AgentFlow V1:** ML forecast → risk → original rebalancing policy.
+  4. **AgentFlow V2 (default):** ML forecast → risk → improved rebalancing policy.
 - Decisions happen at 09, 11, 13, 15, 17 and 19 h; transfers arrive 1 hour later.
 - Agents with unusual activity are held for review, not supported automatically.
 
-| | Without | Naive-forecast rebalancing | With AgentFlow |
-|---|---:|---:|---:|
-| Shortage events | 2,017 | 1,483 | **1,255** |
-| Unmet cash demand | BDT 95.4 lakh | BDT 67.6 lakh | **BDT 58.3 lakh** |
-| Service availability | 96.76% | 97.64% | **97.92%** |
-| Transfers | — | 384 | 501 |
-| Transfers not strictly needed | — | 15.1% | 21.4% |
-| Donor shortages within 6 h of giving | — | 65 | 25 |
-| Estimated logistics cost | — | BDT 1.22 lakh | BDT 1.58 lakh |
+| | Without | Naive forecast | AgentFlow V1 | **AgentFlow V2** |
+|---|---:|---:|---:|---:|
+| Shortage events | 2,017 | 1,483 | 1,255 | **1,223** |
+| Unmet cash demand | BDT 95.4 lakh | BDT 67.6 lakh | BDT 58.3 lakh | **BDT 56.9 lakh** |
+| Service availability | 96.76% | 97.64% | 97.92% | **97.95%** |
+| Transfers | — | 384 | 501 | **345** |
+| Transfers not strictly needed | — | 15.1% | **21.4%** | 24.3% |
+| Donor shortages within 6 h of giving | — | 65 | 25 | **14** |
+| Estimated logistics cost | — | BDT 1.22 lakh | BDT 1.58 lakh | **BDT 1.15 lakh** |
+| Unmet demand avoided per BDT 1,000 cost | — | BDT 22,707 | BDT 23,410 | **BDT 33,340** |
 
-The middle column shows that the ML forecast adds value beyond the decision rules alone.
+- The naive-forecast column shows that the ML forecast adds value beyond the decision rules alone.
+- **V2 vs V1:** slightly more benefit, with 31% fewer transfers, 27% lower cost and 44% fewer donor
+  shortages.
+- **But** a slightly higher *share* of V2's transfers turned out unnecessary (24.3% vs 21.4%), even
+  though the *number* was lower (84 vs 107). V2 is also slightly worse than V1 for rural agents.
+- V2 became the default because a rule written in advance said so: it keeps ≥ 95% of V1's benefit,
+  has no more donor shortages, and is better on at least 2 of 3 efficiency/safety measures.
 
 **Definitions:**
 - *Shortage event* = an agent-hour where at least one cash-out request could not be served.
@@ -288,18 +324,21 @@ between them. An automated test confirms that no prediction uses future informat
 - **Privacy:** synthetic data only; tests check that no personal-data fields exist.
 - **Explainability:** fixed risk formula; every reason is built from real numbers; source tags on screen.
 - **Human oversight:** review + acknowledgement + "Approve Simulation"; simulation only; audit log.
-- **Safety rules:** donors keep ≥ 110% of their own cautious forecast need; never a negative balance;
-  never more than the donor's safe surplus. All of these are covered by automated tests.
+- **Safety rules:** donors keep at least their protected reserve (V1: 110% of their own cautious forecast
+  need; V2: a dynamic reserve that is never smaller than that) and, in V2, must stay LOW risk. There is
+  never a negative balance, and a donor never gives more than its safe surplus. All of these are covered
+  by automated tests.
 - **Anomaly ≠ fraud:** unusual activity triggers manual review, never a fraud label.
 - **Fairness checks:** results are compared across urban-core / urban-periphery / rural and
   low / medium / high volume. Forecast error is similar across groups (WAPE about 17–18%). Alerts
   catch fewer shortages for urban-core agents (26.4%), where shortages are rare (about 1.4%). Rural
-  agents gain less from peer rebalancing (−26% unmet demand) than urban-periphery agents (−54%),
-  because rural donors are fewer and farther apart.
+  agents gain less from peer rebalancing than urban-periphery agents (unmet demand −26% vs −54% with
+  V1; −24% vs −58% with V2), because rural donors are fewer and farther apart. V2 is slightly worse
+  than V1 for rural agents.
 - **Security:** no secrets in the code (`.env` is excluded from git); strict input checking; error
   messages never show internal code details; allowed website origins are configurable (CORS);
   basic web security headers; the server container runs as a non-root user.
-- **Reproducible and tested:** 49 automated tests, and a GitHub Actions pipeline that rebuilds and
+- **Reproducible and tested:** 72 automated tests, and a GitHub Actions pipeline that rebuilds and
   checks everything on every change.
 
 ## 17. Limitations (be honest about these)
@@ -309,8 +348,11 @@ between them. An automated test confirms that no prediction uses future informat
 - The peak-cash-need forecast is only **6.8%** better than a strong simple rule.
 - HIGH/CRITICAL alerts catch about **42%** of shortage windows; sudden spikes are hard to predict
   6 hours ahead.
-- **21.4%** of simulated transfers were not strictly needed, and donors still ran short **25** times
-  across 501 transfers.
+- With the default policy V2, **24.3%** of simulated transfers were not strictly needed, and donors still
+  ran short **14** times across 345 transfers (V1: 21.4% and 25 across 501). V2 reduced donor risk; it
+  did not eliminate it, and it did not lower the share of unnecessary transfers.
+- V2's settings were tuned on two 14-day practice periods of the same synthetic world. Real data would
+  need re-tuning.
 - The simulator assumes customers don't retry or go to another agent, transfers take 1 hour, and a
   simple cost model. E-float is tracked but not used as a limit.
 - The number of agents with *at least one* shortage did not fall (140 → 140). AgentFlow reduces how
@@ -372,23 +414,30 @@ These are **future steps**, not done today:
 15. **How good is anomaly detection?** On 204 injected anomalous hours in the test period, ROC-AUC is
     0.981. When we flag ANOMALOUS we are right 52.9% of the time and catch 67.2%. A simple rule alone
     scores about the same, and we say so.
-16. **How are rebalancing donors chosen?** LOW-risk, no unusual activity, same district, within
-    15 km, nearest first. Each donor keeps at least 110% of its own cautious forecast need.
-17. **Can a donor end up short?** In the 14-day simulation, donors ran short 25 times across 501
-    transfers, because forecasts can be wrong. We report this as a known risk.
+16. **How are rebalancing donors chosen?** Always: LOW risk, no unusual activity, same district,
+    within 15 km. With the default policy V2, the donor must keep a dynamic safety reserve and stay LOW
+    risk. Donors are ranked first by whether one donor can cover the whole need, then by risk removed
+    per taka of transport cost, then by the safety margin left, then by distance. V1 simply picks the
+    nearest donor and keeps 110% of its cautious forecast need.
+17. **Can a donor end up short?** Yes, sometimes, because forecasts can be wrong. In the 14-day
+    simulation donors ran short 14 times across 345 transfers with V2 (25 across 501 with V1). We report
+    this as a known risk.
 18. **Does the system move money?** No. "Approve Simulation" only runs a what-if calculation and
     writes an audit-log entry. No instruction is sent.
 19. **Why require a human?** Cash movement is consequential. A person can catch what the model
     cannot and remains accountable.
 20. **How did you measure business impact?** By replaying the 14 test days hour by hour with
-    identical demand: without AgentFlow, with naive-forecast rebalancing, and with AgentFlow.
-21. **What were the impact results?** Shortage events 2,017 → 1,255 (−37.8%). Unmet cash demand BDT
-    95.4 → 58.3 lakh (−38.9%, BDT 37.1 lakh avoided). Service availability 96.76% → 97.92%. No extra
-    cash added. These are synthetic simulation results, not real-world results.
+    identical demand: without AgentFlow, with naive-forecast rebalancing, with AgentFlow V1 and with
+    AgentFlow V2.
+21. **What were the impact results?** With the default policy V2: shortage events 2,017 → 1,223
+    (−39.4%); unmet cash demand BDT 95.4 → 56.9 lakh (−40.3%, BDT 38.5 lakh avoided); service
+    availability 96.76% → 97.95%. V1: −37.8% events, −38.9% unmet demand. No extra cash added. These are
+    synthetic simulation results, not real-world results.
 22. **Where does the improvement come from if no cash is added?** From moving existing cash from
     agents with surplus to agents who are forecast to need it, before they run out.
-23. **What does it cost?** 501 simulated transfers moving BDT 75.6 lakh, estimated logistics cost
-    BDT 1.58 lakh (assumed BDT 150 + BDT 25/km). 21.4% of transfers were not strictly needed.
+23. **What does it cost?** With V2: 345 simulated transfers moving BDT 75.1 lakh, estimated logistics cost
+    BDT 1.15 lakh (assumed BDT 150 + BDT 25/km); 24.3% of transfers were not strictly needed. V1 needed 501
+    transfers and BDT 1.58 lakh, and 21.4% were not strictly needed.
 24. **Is it fair across areas?** Forecast error is similar across groups (WAPE about 17–18%). Alerts
     catch fewer shortages in urban-core areas, where shortages are rare. Rural agents gain less from
     peer rebalancing because donors are sparser. These differences are documented.
@@ -396,7 +445,7 @@ These are **future steps**, not done today:
     explanation uses fixed templates.
 26. **Can others reproduce your results?** Yes. `python ml/scripts/run_pipeline.py` regenerates the
     data, retrains and re-evaluates; a fresh copy reproduces the metrics files exactly.
-27. **How is it tested?** 49 automated tests (data, leakage, models, risk, rebalancing safety,
+27. **How is it tested?** 72 automated tests (data, leakage, models, risk, rebalancing V1/V2 safety,
     simulation, API, frontend–backend contract). GitHub Actions also checks the frontend build.
 28. **What is the tech stack?** Python (pandas, scikit-learn), FastAPI backend, Next.js + TypeScript +
     Tailwind dashboard. Deployed on Vercel (dashboard) and Railway (API).
@@ -409,6 +458,10 @@ These are **future steps**, not done today:
     shortage recall, some unnecessary transfers and donor risk, and a simplified logistics model.
 32. **Who built it?** We are a registered 3-member team. One primary implementer did the engineering.
     AI-assisted development tools were used and are disclosed in the README.
+33. **Why did you build V2, and did you tune it on the test data?** V1 made many small transfers and its
+    donors sometimes ran short. V2 adds a benefit gate, a dynamic donor reserve and cost-aware donor
+    choice. Its settings were chosen only on two earlier "practice" periods inside the training data. The
+    test period was used once, with a decision rule written down in advance.
 
 ---
 
@@ -428,8 +481,11 @@ These are **future steps**, not done today:
 - ❌ Do **not** claim upay currently has a liquidity problem. We present a *future-ready capability*.
 - ❌ Do **not** claim the model is "99% accurate" or similar. Quote the specific metrics above.
 - ❌ Do **not** claim the peak-cash forecast is much better than the baseline. It is 6.8% better.
-- ❌ Do **not** claim shortages were eliminated. They fell by 37.8%, and 140 agents still had at
-  least one shortage.
+- ❌ Do **not** claim shortages were eliminated. They fell by 39.4% with V2 (37.8% with V1), and 137
+  agents (V1: 140) still had at least one shortage.
+- ❌ Do **not** claim V2 reduced unnecessary transfers. Their *share* rose slightly (24.3% vs 21.4%); V2's
+  gains are fewer transfers, lower cost and fewer donor shortages.
+- ❌ Do **not** claim donors are now risk-free. There were still 14 donor shortage events with V2.
 - ❌ Do **not** claim AgentFlow is in production or used by upay.
 
 **Safe phrases to use:**

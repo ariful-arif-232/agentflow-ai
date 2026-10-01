@@ -29,7 +29,8 @@ decision about individual customers.
 | Uncertainty model | `HistGradientBoostingRegressor`, quantile loss α = 0.9 | P90 of the peak requirement |
 | Behavioural anomaly detector | Isolation Forest + robust deviation rule (percentile average) | score ∈ [0, 1], NORMAL / WATCH / ANOMALOUS |
 | Liquidity risk engine | deterministic formula | 0–100 score, LOW / MEDIUM / HIGH / CRITICAL, reasons |
-| Rebalancing engine | greedy constrained optimiser | peer transfers, escalations, holds |
+| Rebalancing policy V1 | greedy nearest-donor optimiser | peer transfers, escalations, holds |
+| Rebalancing policy V2 (default) | constrained optimiser with dynamic donor reserve, minimum-benefit gate, benefit–cost–safety ranking | peer transfers with benefit and safety evidence, escalations, holds |
 
 ## 4. Features (forecasting, 31 total — all observable at decision time)
 
@@ -92,6 +93,24 @@ percentile. Agent status uses the worst hour in the last 6 hours. Anomalies **do
 liquidity risk score; they raise review priority, and at-risk agents with ANOMALOUS status are held
 for manual review rather than receiving rebalancing recommendations.
 
+## 8a. Rebalancing policy V2
+
+* **Dynamic donor reserve**, never weaker than V1:
+  `max(5,000, 1.10·P90, (P90 + u·(P90−P50)) × (1 + 0.5·clip(velocity−1,0,1)) × (1 + 0.5·clip(history/0.15,0,1)))`.
+  Donors must still be LOW risk after the complete plan.
+* **Recipient target:** `P50 + λ·(P90 − P50)`.
+* **Minimum-benefit gate:** a leg must lower the recipient's risk level, cut its score by ≥ `min_risk_drop`
+  points, or remove ≥ 50% of its P50 expected shortfall; otherwise the need is escalated.
+* **Donor ranking (lexicographic):** covers the remaining need alone → recipient risk points removed per
+  BDT 100 of cost → donor margin above reserve → distance.
+* **Parameters:** λ = 1.0, u = 0.25, `min_risk_drop` = 20. They were selected on two chronological
+  validation folds inside the training period, with out-of-sample fold models. The held-out test
+  period was used once.
+* **Held-out result** (synthetic) vs V1: unmet demand −40.3% vs −38.9%; 345 vs 501 transfers; 14 vs 25
+  donor shortage events; BDT 1.15 vs 1.58 lakh logistics cost. The unnecessary-transfer share was
+  24.3% vs 21.4% (worse). V2 is the default under a pre-registered rule; V1 remains selectable.
+  See `docs/EVALUATION.md` §5a.
+
 ## 9. Explainability
 
 * **Local:** every "Why this risk?" statement is generated from computed evidence — forecast P50/P90,
@@ -121,8 +140,10 @@ for manual review rather than receiving rebalancing recommendations.
 * Peak-requirement forecast gain over the seasonal baseline is modest.
 * HIGH+ alerts catch ~42% of shortage windows; many shortages arise from short spikes that are hard
   to anticipate 6 hours ahead.
-* Donor protection relies on the donor's own forecast; 25 donor shortage events occurred across
-  501 simulated transfers.
+* Donor protection relies on the donor's own forecast. Donor shortage events still occur: 14 across
+  345 simulated transfers with V2 (V1: 25 across 501).
+* V2 did not reduce the share of unnecessary transfers (24.3% vs 21.4%) and is slightly worse than V1
+  for rural agents.
 * No modelling of e-float limits, distributor capacity, travel time or cash-in-transit security.
 
 ## 12. When not to trust the system blindly

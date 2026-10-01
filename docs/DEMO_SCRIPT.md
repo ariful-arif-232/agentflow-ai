@@ -27,8 +27,8 @@ Say:
 
 Point at:
 * **25 at-risk agents, 7 critical**, 32 more at MEDIUM.
-* **Projected service readiness 71.5% → 77.0% with the recommended plan.**
-* **Recommended rebalancing BDT 4.0 lakh** across 21 peer transfers; BDT 5.8 lakh escalated.
+* **Projected service readiness 71.5% → 77.5% with the recommended plan** (rebalancing policy V2).
+* **Recommended rebalancing BDT 4.7 lakh** across 14 peer transfers; BDT 5.0 lakh escalated.
 * The 48-hour chart: the blue 6-hour forecast line tracks the dotted actual line.
 * Tags on each card: *ML prediction* vs. *deterministic calculation*.
 
@@ -61,13 +61,17 @@ agent-facing staff, with no language model involved.
 
 ## 4. Safe rebalancing recommendation (≈ 40 s)
 
-Click **Review recommendation** → Rebalancing Center (AG-0171 rows highlighted) → **Review
-Recommendation** on **RB-019** (AG-0183 → AG-0171, BDT 22,500, 6.2 km, Rangpur).
+Click **Review recommendation** → Rebalancing Center (policy **V2**, the default; AG-0171 row
+highlighted) → **Review Recommendation** on **RB-013** (AG-0181 → AG-0171, BDT 38,500, 12.2 km, Rangpur).
 
-Explain why the donor stays safe:
-* donor is LOW risk, same district, nearest eligible surplus agent;
-* the red marker = donor protected level (110% of its own P90 requirement) — never crossed;
-* together with RB-020 (AG-0178, BDT 16,000) AG-0171 goes **HIGH 53 → LOW 5**.
+Explain why this donor was chosen and why it stays safe:
+* one transfer covers the whole need, taking AG-0171 **HIGH 53 → LOW 5** and cutting the expected shortfall
+  by BDT 18,035, so it passes the minimum-benefit gate;
+* the donor is LOW risk, in the same district, and stays LOW; the red marker is its **dynamic protected
+  reserve** (BDT 48,420), which grows with forecast uncertainty, velocity and shortage history. It keeps
+  BDT 4,430 above it;
+* toggle to **V1** for comparison: V1 needs two transfers (RB-019 + RB-020, from the nearest donors) to
+  reach the same result.
 
 ## 5. Approve Simulation (≈ 20 s)
 
@@ -76,7 +80,7 @@ Tick *"I have reviewed the evidence above"* → **Approve Simulation**.
 
 ## 6. Risk before vs. estimated risk after (≈ 15 s)
 
-The simulation card shows AG-0171 and AG-0183 cash and risk before → after, plus portfolio
+The simulation card shows AG-0171 and AG-0181 cash and risk before → after, plus portfolio
 at-risk agents, expected shortfall and service readiness before → after.
 
 Optional (10 s): move the decision time to **19:00** and reopen AG-0171 — without action its cash hits
@@ -89,11 +93,14 @@ Open **Impact & Model Health**.
 > "We replayed the last 14 days — never seen in training — hour by hour with identical customer
 > demand and identical total cash."
 
-* Shortage events **2,017 → 1,255 (−37.8%)**.
-* Unmet cash demand **−38.9%, BDT 37.1 lakh avoided** — with **BDT 0** extra cash injected.
-* Service availability **96.76% → 97.92%**.
-* Middle column: the same engine with a naive forecast only reaches 1,483 events → the ML matters.
-* Be upfront: ~21% of transfers weren't strictly needed; 25 donor shortage events in 501 transfers.
+* With the default policy V2: shortage events **2,017 → 1,223 (−39.4%)**.
+* Unmet cash demand **−40.3%, BDT 38.5 lakh avoided**, with **BDT 0** extra cash injected.
+* Service availability **96.76% → 97.95%**.
+* Policy comparison: the naive forecast reaches only 1,483 events, so the ML matters. V2 vs V1: slightly
+  more benefit with **345 vs 501 transfers**, **14 vs 25 donor shortages** and **BDT 1.15 vs 1.58 lakh**
+  logistics cost. V2's settings were chosen on training-period practice windows only.
+* Be upfront: 24.3% of V2's transfers weren't strictly needed (V1: 21.4%), and donors still ran short
+  14 times.
 
 ## 8. Baseline vs. ML (≈ 20 s)
 

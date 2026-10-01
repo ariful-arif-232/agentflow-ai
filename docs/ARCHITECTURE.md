@@ -16,7 +16,8 @@
                 ▼
  Explainability (evidence-based reasons)       ml/agentflow/risk.py · anomaly.py
                 ▼
- Rebalancing engine (constrained greedy)       ml/agentflow/rebalance.py
+ Rebalancing engine: V1 nearest-donor greedy  ml/agentflow/rebalance.py
+   and V2 benefit/cost/safety-aware (default)  ml/agentflow/rebalance_v2.py · policy_selection.py
                 ▼
  Decision engine snapshots (per decision time) ml/agentflow/engine.py
                 ▼
@@ -41,12 +42,12 @@
 | **Anomaly detector** | Unusual behaviour (bursts, odd-hour activity, churn) should change *how* a case is handled — manual review before liquidity support — without being conflated with liquidity risk or with fraud. |
 | **Risk engine** | A deterministic, monotone, bounded formula turns forecasts into an operational priority that can be audited and explained line by line. Keeping it separate from the ML makes the decision logic transparent and testable. |
 | **Explainability** | Operators will only act on recommendations they understand. Reasons are generated from the same numbers that produced the score. |
-| **Rebalancing engine** | Prediction alone does not prevent shortages; an action does. A transparent greedy optimiser respects hard safety constraints (donor safe surplus, protected level, distance, district) and escalates what peers cannot cover. |
+| **Rebalancing engine** | Prediction alone does not prevent shortages; an action does. V1 is a transparent greedy optimiser that respects hard safety constraints (donor safe surplus, protected level, distance, district) and escalates what peers cannot cover. V2 (default) keeps those constraints and adds a dynamic donor reserve (uncertainty, velocity, shortage history), a minimum-benefit gate, and lexicographic benefit–cost–safety donor ranking. Its parameters are selected on training-period validation folds (`select_policy.py`), never on the held-out test period. Both policies share one output schema, so the API, UI and simulator can switch between them. |
 | **Decision engine** | Joins data, forecasts, anomaly scores, risk and plans into a per-agent snapshot for any decision timestamp, so the dashboard, the API and the simulator share one implementation. |
 | **FastAPI service** | Clean, validated, documented contract (`/docs` OpenAPI) between ML and product. Models are loaded once; snapshots are cached per decision time. Structured errors; no stack traces. |
 | **Dashboard** | The operations product: Command Center, Agents, Agent Intelligence, Rebalancing Center, Scenario Lab, Impact & Model Health, Responsible AI. All analytics come from the API. |
 | **Human review** | Consequential financial actions require an accountable person. Approval requires reviewing evidence and an explicit acknowledgement; it only simulates and is logged. |
-| **Impact simulation** | Model accuracy is not business value. Replaying the held-out period under identical demand quantifies shortage events and unmet demand avoided — and the cost (transfers, false alerts, donor risk). |
+| **Impact simulation** | Model accuracy is not business value. Replaying the held-out period under identical demand quantifies shortage events and unmet demand avoided — and the cost (transfers, false alerts, donor risk, logistics). It compares status quo, naive-forecast rebalancing, V1 and V2. A pre-registered rule decides which policy is the default. |
 | **Evaluation artifacts** | Machine-readable, reproducible evidence for every number shown in the UI and docs. |
 
 ## Runtime view
@@ -78,8 +79,8 @@ served from memory (overview ≈ tens of ms; a new decision time ≈ 0.3 s).
 | GET | `/api/agents` | filterable / sortable agent list (risk level, district, cluster, segment, anomaly, search) |
 | GET | `/api/agents/{id}` | agent intelligence: liquidity, forecast, risk components, reasons, anomaly drivers, action, 72-h history |
 | GET | `/api/agents/{id}/forecast` | forecast and history only |
-| GET | `/api/rebalancing/recommendations` | rebalancing plan, escalations, held-for-review |
-| POST | `/api/rebalancing/simulate` | simulate approval of selected recommendations (no state change) |
+| GET | `/api/rebalancing/recommendations` | rebalancing plan, escalations, held-for-review; `policy=v1\|v2` (default from the held-out deployment decision) |
+| POST | `/api/rebalancing/simulate` | simulate approval of selected recommendations (no state change); optional `policy` |
 | GET | `/api/rebalancing/audit` | simulated approvals log |
 | POST | `/api/scenario` | demand-shock what-if (network and/or district) |
 | GET | `/api/impact` | held-out impact simulation results |
@@ -98,5 +99,5 @@ All analytics endpoints accept `as_of` (a held-out hour, 06:00–21:00).
   audit logs and approvals to a database and put the service behind authentication / RBAC.
 * **Integration:** recommendations could be pushed to an existing distributor / field-officer
   workflow tool via webhook *after* human approval; AgentFlow itself never executes transfers.
-* **Rebalancing:** the greedy optimiser is O(recipients × donors per district); a min-cost-flow or
+* **Rebalancing:** both policies are O(recipients × donors per district) per decision (V2 re-scores candidates per leg, at most 2 legs); a min-cost-flow or
   MILP formulation can replace it behind the same interface if routing constraints are added.

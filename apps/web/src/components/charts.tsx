@@ -126,7 +126,8 @@ export function DailyImpactChart({ data }: { data: Record<string, number | strin
         <Legend wrapperStyle={{ fontSize: 11 }} />
         <Bar dataKey="status_quo_unmet_bdt" name="Without AgentFlow" fill="#cbd5e1" isAnimationActive={false} />
         <Bar dataKey="naive_rebalancing_unmet_bdt" name="Rebalancing w/ naive forecast" fill="#93c5fd" isAnimationActive={false} />
-        <Bar dataKey="agentflow_unmet_bdt" name="With AgentFlow (ML)" fill="#1d4ed8" isAnimationActive={false} />
+        <Bar dataKey="agentflow_unmet_bdt" name="AgentFlow V1" fill="#1d4ed8" isAnimationActive={false} />
+        <Bar dataKey="agentflow_v2_unmet_bdt" name="AgentFlow V2" fill="#0f766e" isAnimationActive={false} />
       </ComposedChart>
     </ResponsiveContainer>
   );

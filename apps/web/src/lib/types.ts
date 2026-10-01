@@ -58,6 +58,18 @@ export interface Recommendation {
   source_risk_before: RiskSnapshot;
   source_risk_after: RiskSnapshot;
   reason: string;
+  // V2-only evidence
+  policy?: "v1" | "v2";
+  donor_margin_after_plan?: number;
+  destination_target_cash?: number;
+  expected_benefit?: {
+    risk_score_before: number;
+    risk_score_after: number;
+    risk_level_before: RiskLevel;
+    risk_level_after: RiskLevel;
+    shortfall_reduction_bdt: number;
+    gate_reason: string;
+  };
 }
 
 export interface Escalation {
@@ -85,7 +97,12 @@ export interface PlanSummary {
   estimated_cost_bdt: number;
 }
 
+export type PolicyName = "v1" | "v2";
+
 export interface Plan extends Meta {
+  policy: PolicyName;
+  default_policy: PolicyName;
+  available_policies: PolicyName[];
   recommendations: Recommendation[];
   escalations: Escalation[];
   held_for_review: HeldForReview[];
@@ -117,6 +134,7 @@ export interface Overview extends Meta {
     recommended_rebalancing_value: number;
     n_recommendations: number;
     escalated_amount: number;
+    rebalancing_policy: PolicyName;
   };
   kpi_definitions: Record<string, string>;
   risk_distribution: { level: RiskLevel; count: number }[];
@@ -252,6 +270,18 @@ export interface PolicyMetrics {
   estimated_logistics_cost_bdt: number;
   donor_shortage_events_after_transfer?: number;
   unnecessary_interventions_pct?: number;
+  escalated_need_bdt?: number;
+  unmet_avoided_bdt?: number;
+  unmet_avoided_per_transfer_bdt?: number | null;
+  unmet_avoided_per_1000_cost_bdt?: number | null;
+  shortage_events_avoided_per_100_transfers?: number | null;
+}
+
+export interface VsStatusQuo {
+  shortage_events_reduction_pct: number;
+  unmet_demand_reduction_pct: number;
+  unmet_demand_avoided_bdt: number;
+  service_availability_gain_pp: number;
 }
 
 export interface ImpactResponse {
@@ -259,12 +289,15 @@ export interface ImpactResponse {
   period: { start: string; end: string; hours: number; agents: number };
   assumptions: Record<string, unknown>;
   metric_definitions: Record<string, string>;
-  policies: Record<"status_quo" | "naive_rebalancing" | "agentflow", PolicyMetrics>;
-  agentflow_vs_status_quo: {
-    shortage_events_reduction_pct: number;
-    unmet_demand_reduction_pct: number;
-    unmet_demand_avoided_bdt: number;
-    service_availability_gain_pp: number;
+  policies: Record<"status_quo" | "naive_rebalancing" | "agentflow" | "agentflow_v2", PolicyMetrics>;
+  agentflow_vs_status_quo: VsStatusQuo;
+  agentflow_v2_vs_status_quo: VsStatusQuo;
+  deployment_decision: {
+    rule: string;
+    retention_vs_v1: number;
+    checks: Record<string, boolean>;
+    strictly_better: Record<string, boolean>;
+    default_policy: PolicyName;
   };
   daily: Record<string, number | string>[];
   groups: Record<string, Record<string, Record<string, { unmet_cash_demand_bdt: number; shortage_events: number }>>>;

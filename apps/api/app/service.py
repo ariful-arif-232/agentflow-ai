@@ -22,7 +22,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "ml"))
 
-from agentflow import config, engine, rebalance, risk  # noqa: E402
+from agentflow import config, engine, rebalance, rebalance_v2, risk  # noqa: E402
 from agentflow.engine import DEFAULT_AS_OF  # noqa: E402
 
 DATA_LABEL = "Synthetic data for hackathon prototyping — not production upay data"
@@ -84,6 +84,9 @@ class AgentFlowService:
         self._plan_cache: dict = {}
         self.metrics = self._read_json("metrics.json")
         self.impact = self._read_json("impact.json")
+        # Default rebalancing policy comes from the pre-registered held-out deployment rule.
+        self.default_policy = self.impact.get("deployment_decision", {}).get("default_policy", "v1")
+        self.v2_cfg = rebalance_v2.selected_config()
         self.training = self._read_json("training_metadata.json")
         self.dataset = self._read_json("dataset_summary.json")
 
@@ -116,12 +119,22 @@ class AgentFlowService:
                 self._snap_cache[as_of] = self.engine.snapshot(as_of)
             return self._snap_cache[as_of]
 
-    def plan(self, as_of: pd.Timestamp) -> dict:
+    def resolve_policy(self, policy: str | None) -> str:
+        policy = policy or self.default_policy
+        if policy not in ("v1", "v2"):
+            raise ValueError("policy must be 'v1' or 'v2'")
+        return policy
+
+    def plan(self, as_of: pd.Timestamp, policy: str | None = None) -> dict:
+        policy = self.resolve_policy(policy)
         snap = self.snapshot(as_of)
         with self._lock:
-            if as_of not in self._plan_cache:
-                self._plan_cache[as_of] = rebalance.recommend(snap)
-            return self._plan_cache[as_of]
+            key = (as_of, policy)
+            if key not in self._plan_cache:
+                plan = rebalance.recommend(snap) if policy == "v1" else rebalance_v2.recommend_v2(snap, self.v2_cfg)
+                plan["summary"]["policy"] = policy
+                self._plan_cache[key] = plan
+            return self._plan_cache[key]
 
     def meta(self, as_of: pd.Timestamp) -> dict:
         return {"as_of": as_of.isoformat(), "data_label": DATA_LABEL, "currency": config.CURRENCY,
@@ -168,6 +181,7 @@ class AgentFlowService:
                 "total_expected_shortfall": float(snap["expected_shortfall"].sum()),
                 "recommended_rebalancing_value": plan["summary"]["total_recommended_amount"],
                 "n_recommendations": plan["summary"]["n_recommendations"],
+                "rebalancing_policy": self.default_policy,
                 "escalated_amount": plan["summary"]["escalated_amount"],
             },
             "kpi_definitions": {
@@ -300,11 +314,15 @@ class AgentFlowService:
                                                        "pred_net_requirement_p90_6h")},
                       "history": hist.to_dict("records")})
 
-    def recommendations(self, as_of) -> dict:
-        return clean({**self.meta(as_of), **self.plan(as_of), "simulation_only": True})
+    def recommendations(self, as_of, policy: str | None = None) -> dict:
+        policy = self.resolve_policy(policy)
+        return clean({**self.meta(as_of), **self.plan(as_of, policy), "policy": policy,
+                      "default_policy": self.default_policy, "available_policies": ["v2", "v1"],
+                      "simulation_only": True})
 
-    def simulate(self, as_of, ids: list[str], reviewer_note: str | None) -> dict:
-        plan = self.plan(as_of)
+    def simulate(self, as_of, ids: list[str], reviewer_note: str | None, policy: str | None = None) -> dict:
+        policy = self.resolve_policy(policy)
+        plan = self.plan(as_of, policy)
         by_id = {r["id"]: r for r in plan["recommendations"]}
         unknown = [i for i in ids if i not in by_id]
         if unknown:
@@ -333,7 +351,8 @@ class AgentFlowService:
 
         entry = {"simulation_id": f"SIM-{uuid.uuid4().hex[:8].upper()}",
                  "created_at": datetime.now(timezone.utc).isoformat(), "as_of": as_of.isoformat(),
-                 "recommendation_ids": ids, "total_amount": float(sum(r["recommended_amount"] for r in chosen)),
+                 "recommendation_ids": ids, "policy": policy,
+                 "total_amount": float(sum(r["recommended_amount"] for r in chosen)),
                  "reviewer_note": reviewer_note, "status": "SIMULATED — no money moved"}
         with self._lock:
             self.audit_log.insert(0, entry)
@@ -348,7 +367,8 @@ class AgentFlowService:
         if district:
             mult[snap0.set_index("agent_id")["district"] == district] *= 1.0 + regional_shock_pct / 100.0
         snap = self.engine.snapshot(as_of, demand_multiplier=mult)
-        plan = rebalance.recommend(snap, with_details=False)
+        plan = (rebalance.recommend(snap, with_details=False) if self.default_policy == "v1"
+                else rebalance_v2.recommend_v2(snap, self.v2_cfg, with_details=False))
 
         def summary(s, p):
             cov = s["coverage_ratio"].isna() | (s["coverage_ratio"] >= 1.0)

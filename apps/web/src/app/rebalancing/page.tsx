@@ -7,7 +7,7 @@ import { ArrowRight, CheckCircle2, ShieldCheck, X } from "lucide-react";
 import { apiPost, useApi } from "@/lib/api";
 import { useAsOf } from "@/lib/asof";
 import { bdt, bdtCompact, dateTime, pct, ratioPct } from "@/lib/format";
-import type { Plan, Recommendation, SimulationResult } from "@/lib/types";
+import type { Plan, PolicyName, Recommendation, SimulationResult } from "@/lib/types";
 import { Card, CardHeader, ErrorState, Kpi, Loading, PageHeader, RiskBadge, SourceTag, cx } from "@/components/ui";
 
 interface AuditEntry {
@@ -42,7 +42,19 @@ function ReserveBar({ before, after, protectedLevel, label }: { before: number; 
   );
 }
 
-function ReviewPanel({ rec, onClose, onApproved, asOf }: { rec: Recommendation; onClose: () => void; onApproved: (r: SimulationResult) => void; asOf: string }) {
+function ReviewPanel({
+  rec,
+  onClose,
+  onApproved,
+  asOf,
+  policy,
+}: {
+  rec: Recommendation;
+  onClose: () => void;
+  onApproved: (r: SimulationResult) => void;
+  asOf: string;
+  policy: PolicyName;
+}) {
   const [note, setNote] = useState("");
   const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -51,7 +63,7 @@ function ReviewPanel({ rec, onClose, onApproved, asOf }: { rec: Recommendation; 
     setBusy(true);
     setErr(null);
     try {
-      const res = await apiPost<SimulationResult>("/api/rebalancing/simulate", { recommendation_ids: [rec.id], reviewer_note: note || null, as_of: asOf });
+      const res = await apiPost<SimulationResult>("/api/rebalancing/simulate", { recommendation_ids: [rec.id], reviewer_note: note || null, as_of: asOf, policy });
       onApproved(res);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Simulation failed");
@@ -99,6 +111,24 @@ function ReviewPanel({ rec, onClose, onApproved, asOf }: { rec: Recommendation; 
             <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Why this source?</h3>
             <p className="text-sm leading-relaxed text-slate-800">{rec.reason}</p>
           </div>
+          {rec.expected_benefit && (
+            <div className="grid grid-cols-2 gap-3 rounded-lg border border-teal-200 bg-teal-50/40 p-3 text-sm">
+              <div>
+                <div className="text-xs text-slate-500">Expected recipient benefit (this transfer)</div>
+                <div className="mt-1 flex items-center gap-1">
+                  <RiskBadge level={rec.expected_benefit.risk_level_before} score={rec.expected_benefit.risk_score_before} />
+                  <ArrowRight className="h-3 w-3 text-slate-400" />
+                  <RiskBadge level={rec.expected_benefit.risk_level_after} score={rec.expected_benefit.risk_score_after} />
+                </div>
+                <div className="num mt-1 text-xs text-slate-600">Expected shortfall −{bdt(rec.expected_benefit.shortfall_reduction_bdt)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500">Donor margin above its dynamic reserve (after plan)</div>
+                <div className="num mt-1 font-semibold text-slate-900">{bdt(rec.donor_margin_after_plan)}</div>
+                <div className="text-xs text-slate-600">Reserve scales with forecast uncertainty, velocity and shortage history</div>
+              </div>
+            </div>
+          )}
           <div className="space-y-4">
             <ReserveBar label={`Destination ${rec.destination_agent} cash (whole plan)`} before={rec.destination_cash_before} after={rec.destination_cash_after} />
             <div className="text-xs text-slate-500">
@@ -228,7 +258,9 @@ function RebalancingInner() {
   const { asOf } = useAsOf();
   const params = useSearchParams();
   const focus = params.get("focus");
-  const { data, error, loading, reload } = useApi<Plan>(asOf ? "/api/rebalancing/recommendations" : null, { as_of: asOf });
+  const [policy, setPolicy] = useState<PolicyName | null>(null);
+  const { data, error, loading, reload } = useApi<Plan>(asOf ? "/api/rebalancing/recommendations" : null, { as_of: asOf, policy });
+  const activePolicy: PolicyName = policy ?? data?.policy ?? "v2";
   const [auditKey, setAuditKey] = useState(0);
   const audit = useApi<{ simulations: AuditEntry[] }>("/api/rebalancing/audit", { k: auditKey });
   const [reviewing, setReviewing] = useState<Recommendation | null>(null);
@@ -238,7 +270,7 @@ function RebalancingInner() {
   useEffect(() => {
     setApproved(new Set());
     setSim(null);
-  }, [asOf]);
+  }, [asOf, policy]);
 
   const recs = useMemo(() => {
     if (!data) return [];
@@ -252,6 +284,27 @@ function RebalancingInner() {
 
   return (
     <div className={loading ? "opacity-60" : ""}>
+      <div className="mb-4 flex flex-wrap items-center gap-3 text-xs">
+        <span className="font-medium text-slate-500">Rebalancing policy</span>
+        {(["v2", "v1"] as PolicyName[]).map((p) => (
+          <button
+            key={p}
+            onClick={() => setPolicy(p)}
+            className={cx(
+              "rounded-md px-3 py-1.5 ring-1 ring-inset",
+              activePolicy === p ? "bg-slate-900 text-white ring-slate-900" : "bg-white text-slate-700 ring-slate-300 hover:bg-slate-50",
+            )}
+          >
+            {p === "v2" ? "V2 — benefit · safety · cost" : "V1 — nearest donor"}
+            {data.default_policy === p && " (default)"}
+          </button>
+        ))}
+        <span className="text-slate-500">
+          {activePolicy === "v2"
+            ? "V2 balances recipient benefit, donor safety and logistics cost."
+            : "V1 picks the nearest eligible donors (kept for comparison)."}
+        </span>
+      </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Kpi label="Recommended transfers" value={s.n_recommendations} sub={`${s.recipients_supported} at-risk agents supported`} />
         <Kpi label="Recommended value" value={bdtCompact(s.total_recommended_amount)} tone="good" sub="peer-to-peer, cash-neutral" />
@@ -269,7 +322,11 @@ function RebalancingInner() {
       <Card className="mt-4">
         <CardHeader
           title="Recommended liquidity rebalancing"
-          subtitle="Highest-risk recipients first. Each donor keeps at least 110% of its own P90 forecast requirement. Nothing executes automatically."
+          subtitle={
+            activePolicy === "v2"
+              ? "Highest-risk recipients first. A transfer is only proposed if it materially helps the recipient; each donor keeps a dynamic reserve (≥110% of its P90 requirement) and stays LOW risk. Nothing executes automatically."
+              : "Highest-risk recipients first. Each donor keeps at least 110% of its own P90 forecast requirement. Nothing executes automatically."
+          }
           right={<SourceTag kind="rec" />}
         />
         <div className="overflow-x-auto">
@@ -393,6 +450,7 @@ function RebalancingInner() {
         <ReviewPanel
           rec={reviewing}
           asOf={asOf}
+          policy={activePolicy}
           onClose={() => setReviewing(null)}
           onApproved={(res) => {
             setSim(res);

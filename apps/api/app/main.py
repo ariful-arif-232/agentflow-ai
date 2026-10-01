@@ -130,8 +130,9 @@ def agent_forecast(agent_id: str, as_of: Optional[str] = AsOf):
 
 
 @app.get("/api/rebalancing/recommendations")
-def recommendations(as_of: Optional[str] = AsOf):
-    return get_service().recommendations(_as_of(as_of))
+def recommendations(as_of: Optional[str] = AsOf, policy: Optional[Literal["v1", "v2"]] = None):
+    """Rebalancing plan. ``policy`` defaults to the policy chosen by the held-out deployment rule."""
+    return get_service().recommendations(_as_of(as_of), policy)
 
 
 @app.post("/api/rebalancing/simulate")
@@ -140,7 +141,7 @@ def simulate(req: SimulateRequest):
         raise HTTPException(status_code=400, detail="recommendation ids must look like RB-001")
     ids = list(dict.fromkeys(req.recommendation_ids))
     try:
-        return get_service().simulate(_as_of(req.as_of), ids, req.reviewer_note)
+        return get_service().simulate(_as_of(req.as_of), ids, req.reviewer_note, req.policy)
     except LookupError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

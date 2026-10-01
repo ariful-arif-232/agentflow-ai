@@ -36,7 +36,7 @@ export default function CommandCenter() {
               tip={data.kpi_definitions.projected_service_availability_pct}
             />
             <Kpi label="Forecast 6h cash demand" value={bdtCompact(data.kpis.forecast_cash_demand_6h)} sub={`Expected shortfall ${bdtCompact(data.kpis.total_expected_shortfall)}`} tip={data.kpi_definitions.forecast_cash_demand_6h} />
-            <Kpi label="Recommended rebalancing" value={bdtCompact(data.kpis.recommended_rebalancing_value)} tone="good" sub={`${data.kpis.n_recommendations} transfers · ${bdtCompact(data.kpis.escalated_amount)} escalated`} />
+            <Kpi label="Recommended rebalancing" value={bdtCompact(data.kpis.recommended_rebalancing_value)} tone="good" sub={`${data.kpis.n_recommendations} transfers (policy ${data.kpis.rebalancing_policy.toUpperCase()}) · ${bdtCompact(data.kpis.escalated_amount)} escalated`} />
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">

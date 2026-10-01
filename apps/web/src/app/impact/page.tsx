@@ -7,11 +7,13 @@ import type { ImpactResponse, MetricsResponse } from "@/lib/types";
 import { CompareBars, DailyImpactChart } from "@/components/charts";
 import { Card, CardHeader, ErrorState, Loading, PageHeader, SourceTag, cx } from "@/components/ui";
 
-const POLICY_LABEL = {
-  status_quo: "Without AgentFlow",
-  naive_rebalancing: "Rebalancing with naive forecast",
-  agentflow: "With AgentFlow (ML)",
-} as const;
+type PolicyKey = "status_quo" | "naive_rebalancing" | "agentflow" | "agentflow_v2";
+const COLS: { key: PolicyKey; label: string }[] = [
+  { key: "status_quo", label: "Without AgentFlow" },
+  { key: "naive_rebalancing", label: "Naive forecast" },
+  { key: "agentflow", label: "AgentFlow V1" },
+  { key: "agentflow_v2", label: "AgentFlow V2" },
+];
 
 function Delta({ before, after, lowerIsBetter = true, unit = "%" }: { before: number; after: number; lowerIsBetter?: boolean; unit?: string }) {
   const d = unit === "pp" ? after - before : before ? (100 * (after - before)) / before : 0;
@@ -27,19 +29,38 @@ export default function ImpactPage() {
   if (!imp.data || !met.data) return <Loading />;
   const p = imp.data.policies;
   const sq = p.status_quo;
-  const af = p.agentflow;
-  const nv = p.naive_rebalancing;
+  const dflt = imp.data.deployment_decision.default_policy;
+  const af = dflt === "v2" ? p.agentflow_v2 : p.agentflow;
+  const vs = dflt === "v2" ? imp.data.agentflow_v2_vs_status_quo : imp.data.agentflow_vs_status_quo;
+  const dfltKey: PolicyKey = dflt === "v2" ? "agentflow_v2" : "agentflow";
   const fc = met.data.metrics.forecast;
   const ra = met.data.metrics.risk_alerts;
   const an = met.data.metrics.anomaly;
 
-  const rows: { label: string; key: keyof typeof sq; fmt: (x: number) => string; lower?: boolean; pp?: boolean }[] = [
-    { label: "Liquidity shortage events (agent-hours)", key: "shortage_events", fmt: (x) => num(x) },
+  type Row = { label: string; key: keyof typeof sq; fmt: (x: number) => string; lower?: boolean; pp?: boolean; tip?: string };
+  const fmtN = (x: number) => num(x);
+  const rows: Row[] = [
     { label: "Unmet cash demand", key: "unmet_cash_demand_bdt", fmt: bdt },
-    { label: "Agents with ≥1 shortage", key: "agents_with_shortage", fmt: (x) => num(x) },
+    { label: "Liquidity shortage events (agent-hours)", key: "shortage_events", fmt: fmtN },
     { label: "Service availability", key: "service_availability_pct", fmt: (x) => pct(x, 2), lower: false, pp: true },
     { label: "Cash-out demand fill rate", key: "demand_fill_rate_pct", fmt: (x) => pct(x, 2), lower: false, pp: true },
+    { label: "Agents with ≥1 shortage", key: "agents_with_shortage", fmt: fmtN },
   ];
+  const opRows: Row[] = [
+    { label: "Simulated transfers", key: "interventions", fmt: fmtN },
+    { label: "Total rebalanced", key: "total_rebalanced_bdt", fmt: bdtCompact },
+    { label: "Unnecessary transfers (false alerts)", key: "unnecessary_interventions_pct", fmt: (x) => pct(x, 1) },
+    { label: "Donor shortage events within 6h of giving", key: "donor_shortage_events_after_transfer", fmt: fmtN },
+    { label: "Estimated logistics cost", key: "estimated_logistics_cost_bdt", fmt: bdt },
+    { label: "Need escalated to distributor (summed over decisions)", key: "escalated_need_bdt", fmt: bdtCompact },
+    { label: "Unmet demand avoided per transfer", key: "unmet_avoided_per_transfer_bdt", fmt: bdt, lower: false },
+    { label: "Unmet demand avoided per BDT 1,000 cost", key: "unmet_avoided_per_1000_cost_bdt", fmt: bdt, lower: false },
+    { label: "Shortage events avoided per 100 transfers", key: "shortage_events_avoided_per_100_transfers", fmt: (x) => num(x, 1), lower: false },
+  ];
+  const cell = (k: PolicyKey, r: Row) => {
+    const v = p[k][r.key];
+    return v === undefined || v === null ? "—" : r.fmt(v as number);
+  };
 
   return (
     <>
@@ -52,41 +73,47 @@ export default function ImpactPage() {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
         <Card className="p-4 md:col-span-1">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Shortage events avoided</div>
-          <div className="num mt-1 text-3xl font-semibold text-emerald-600">−{imp.data.agentflow_vs_status_quo.shortage_events_reduction_pct.toFixed(1)}%</div>
+          <div className="num mt-1 text-3xl font-semibold text-emerald-600">−{vs.shortage_events_reduction_pct.toFixed(1)}%</div>
           <div className="text-xs text-slate-500">
             {num(sq.shortage_events)} → {num(af.shortage_events)} agent-hours
           </div>
         </Card>
         <Card className="p-4">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Unmet cash demand avoided</div>
-          <div className="num mt-1 text-3xl font-semibold text-emerald-600">{bdtCompact(imp.data.agentflow_vs_status_quo.unmet_demand_avoided_bdt)}</div>
-          <div className="text-xs text-slate-500">−{imp.data.agentflow_vs_status_quo.unmet_demand_reduction_pct.toFixed(1)}% vs. without AgentFlow</div>
+          <div className="num mt-1 text-3xl font-semibold text-emerald-600">{bdtCompact(vs.unmet_demand_avoided_bdt)}</div>
+          <div className="text-xs text-slate-500">−{vs.unmet_demand_reduction_pct.toFixed(1)}% vs. without AgentFlow</div>
         </Card>
         <Card className="p-4">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Service availability</div>
           <div className="num mt-1 text-3xl font-semibold text-blue-700">{pct(af.service_availability_pct, 2)}</div>
           <div className="text-xs text-slate-500">
-            +{imp.data.agentflow_vs_status_quo.service_availability_gain_pp.toFixed(2)} pp (from {pct(sq.service_availability_pct, 2)})
+            +{vs.service_availability_gain_pp.toFixed(2)} pp (from {pct(sq.service_availability_pct, 2)})
           </div>
         </Card>
         <Card className="p-4">
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Extra cash injected</div>
           <div className="num mt-1 text-3xl font-semibold text-slate-900">BDT 0</div>
-          <div className="text-xs text-slate-500">peer rebalancing only — {num(af.interventions)} simulated transfers</div>
+          <div className="text-xs text-slate-500">peer rebalancing only — {num(af.interventions)} simulated transfers (policy {dflt.toUpperCase()})</div>
         </Card>
       </div>
 
       <Card className="mt-4">
-        <CardHeader title="Without AgentFlow vs. With AgentFlow" subtitle="Same demand, same total cash. The middle column isolates the value of the ML forecast: same risk + rebalancing engine fed by a naive seasonal forecast." />
+        <CardHeader
+          title="Policy comparison"
+          subtitle={`Same demand, same total cash. "Naive forecast" = same risk + rebalancing engine (V1) fed by a seasonal baseline forecast. V2 balances recipient benefit, donor safety and logistics cost. Default policy: ${dflt.toUpperCase()} (pre-registered decision rule).`}
+        />
         <div className="overflow-x-auto">
           <table className="w-full whitespace-nowrap text-sm">
             <thead className="bg-slate-50 text-left text-xs text-slate-500">
               <tr>
                 <th className="px-4 py-2 font-medium">Metric</th>
-                <th className="px-4 py-2 text-right font-medium">{POLICY_LABEL.status_quo}</th>
-                <th className="px-4 py-2 text-right font-medium">{POLICY_LABEL.naive_rebalancing}</th>
-                <th className="px-4 py-2 text-right font-medium">{POLICY_LABEL.agentflow}</th>
-                <th className="px-4 py-2 text-right font-medium">AgentFlow vs. without</th>
+                {COLS.map((c) => (
+                  <th key={c.key} className={cx("px-4 py-2 text-right font-medium", c.key === dfltKey && "text-slate-900")}>
+                    {c.label}
+                    {c.key === dfltKey && " (default)"}
+                  </th>
+                ))}
+                <th className="px-4 py-2 text-right font-medium">Default vs. without</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -95,55 +122,41 @@ export default function ImpactPage() {
                   <td className="px-4 py-2.5 text-slate-700" title={imp.data!.metric_definitions[r.key]}>
                     {r.label}
                   </td>
-                  <td className="num px-4 py-2.5 text-right">{r.fmt(sq[r.key] as number)}</td>
-                  <td className="num px-4 py-2.5 text-right">{r.fmt(nv[r.key] as number)}</td>
-                  <td className="num px-4 py-2.5 text-right font-semibold">{r.fmt(af[r.key] as number)}</td>
+                  {COLS.map((c) => (
+                    <td key={c.key} className={cx("num px-4 py-2.5 text-right", c.key === dfltKey && "font-semibold")}>
+                      {cell(c.key, r)}
+                    </td>
+                  ))}
                   <td className="px-4 py-2.5 text-right">
                     <Delta before={sq[r.key] as number} after={af[r.key] as number} lowerIsBetter={r.lower !== false} unit={r.pp ? "pp" : "%"} />
                   </td>
                 </tr>
               ))}
-              <tr>
-                <td className="px-4 py-2.5 text-slate-700">Simulated transfers / total moved</td>
-                <td className="num px-4 py-2.5 text-right">—</td>
-                <td className="num px-4 py-2.5 text-right">
-                  {nv.interventions} / {bdtCompact(nv.total_rebalanced_bdt)}
+              <tr className="bg-slate-50">
+                <td colSpan={COLS.length + 2} className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Operations, safety & efficiency
                 </td>
-                <td className="num px-4 py-2.5 text-right font-semibold">
-                  {af.interventions} / {bdtCompact(af.total_rebalanced_bdt)}
-                </td>
-                <td />
               </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-slate-700" title={imp.data.metric_definitions.unnecessary_interventions_pct}>
-                  Unnecessary transfers (false alerts)
-                </td>
-                <td className="num px-4 py-2.5 text-right">—</td>
-                <td className="num px-4 py-2.5 text-right">{pct(nv.unnecessary_interventions_pct, 1)}</td>
-                <td className="num px-4 py-2.5 text-right font-semibold">{pct(af.unnecessary_interventions_pct, 1)}</td>
-                <td />
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-slate-700" title={imp.data.metric_definitions.donor_shortage_events_after_transfer}>
-                  Donor shortage events within 6h of giving
-                </td>
-                <td className="num px-4 py-2.5 text-right">—</td>
-                <td className="num px-4 py-2.5 text-right">{num(nv.donor_shortage_events_after_transfer)}</td>
-                <td className="num px-4 py-2.5 text-right font-semibold">{num(af.donor_shortage_events_after_transfer)}</td>
-                <td />
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-slate-700">Estimated logistics cost</td>
-                <td className="num px-4 py-2.5 text-right">—</td>
-                <td className="num px-4 py-2.5 text-right">{bdt(nv.estimated_logistics_cost_bdt)}</td>
-                <td className="num px-4 py-2.5 text-right font-semibold">{bdt(af.estimated_logistics_cost_bdt)}</td>
-                <td />
-              </tr>
+              {opRows.map((r) => (
+                <tr key={r.key}>
+                  <td className="px-4 py-2.5 text-slate-700" title={imp.data!.metric_definitions[r.key]}>
+                    {r.label}
+                  </td>
+                  {COLS.map((c) => (
+                    <td key={c.key} className={cx("num px-4 py-2.5 text-right", c.key === dfltKey && "font-semibold")}>
+                      {c.key === "status_quo" ? "—" : cell(c.key, r)}
+                    </td>
+                  ))}
+                  <td />
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
         <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
-          Hover a metric for its definition. Assumptions: decisions at 09/11/13/15/17/19h, 1-hour transfer delay, same-district donors within 15 km keeping ≥110% of their own P90 requirement, unusual-activity agents held for manual review.
+          Hover a metric for its definition. V2 parameters were selected on training-period validation folds only; the held-out period was used once.
+          Trade-off: V2 makes far fewer transfers, but a slightly higher share of them turn out unnecessary ({pct(p.agentflow_v2.unnecessary_interventions_pct, 1)} vs.{" "}
+          {pct(p.agentflow.unnecessary_interventions_pct, 1)}). Assumptions: decisions at 09/11/13/15/17/19h, 1-hour transfer delay, same-district donors within 15 km, unusual-activity agents held for manual review.
         </p>
       </Card>
 
@@ -161,11 +174,11 @@ export default function ImpactPage() {
               data={Object.entries(imp.data.groups.location_cluster).map(([g, v]) => ({
                 name: titleCase(g),
                 without: v.status_quo.unmet_cash_demand_bdt,
-                with: v.agentflow.unmet_cash_demand_bdt,
+                with: v[dfltKey].unmet_cash_demand_bdt,
               }))}
               bars={[
                 { key: "without", name: "Without AgentFlow", color: "#cbd5e1" },
-                { key: "with", name: "With AgentFlow", color: "#1d4ed8" },
+                { key: "with", name: `With AgentFlow (${dflt.toUpperCase()})`, color: "#1d4ed8" },
               ]}
             />
           </div>

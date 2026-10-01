@@ -64,6 +64,7 @@ class SimulateRequest(BaseModel):
     recommendation_ids: list[str] = Field(min_length=1, max_length=100)
     reviewer_note: Optional[str] = Field(default=None, max_length=500)
     as_of: Optional[str] = Field(default=None, max_length=40)
+    policy: Optional[Literal["v1", "v2"]] = None
 
     def ids_valid(self) -> bool:
         import re

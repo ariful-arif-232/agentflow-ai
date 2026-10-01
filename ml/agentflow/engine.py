@@ -95,6 +95,18 @@ class Engine:
                      np.where(snap["anomaly_status"] != "NORMAL", "BEHAVIOUR_REVIEW", "NONE")))
         return snap.reset_index(drop=True)
 
+    def anomaly_status_matrix(self) -> pd.DataFrame:
+        """timestamp x agent agent-level status (worst score over the trailing lookback window)."""
+        sc = self.anom[["anomaly_score"]].join(self.feats[["timestamp", "agent_id"]]).pivot(
+            index="timestamp", columns="agent_id", values="anomaly_score")
+        sc = sc.rolling(ANOMALY_LOOKBACK_H, min_periods=1).max()
+        return pd.DataFrame(self.detector.status(sc.to_numpy()), index=sc.index, columns=sc.columns)
+
+    def run_impact(self, demand_multiplier: float = 1.0) -> dict:
+        from . import impact
+        return impact.run_impact(self.feats, self.agents, self.preds, self.hist_rate,
+                                 self.anomaly_status_matrix(), demand_multiplier)
+
     def anomaly_drivers(self, agent_id: str, ts: pd.Timestamp) -> list[dict]:
         idx = self.rows_at(ts)
         idx = idx.index[idx["agent_id"] == agent_id]

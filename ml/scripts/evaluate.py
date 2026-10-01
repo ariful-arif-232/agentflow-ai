@@ -39,6 +39,16 @@ def main() -> None:
         print(f"[risk alerts:{v}] precision={m['precision']:.3f} recall={m['recall']:.3f} AUC={m['roc_auc']:.3f}")
     print("metrics ->", config.ARTIFACTS_DIR / "metrics.json")
 
+    imp = eng.run_impact()
+    forecast.write_json(config.ARTIFACTS_DIR / "impact.json", imp)
+    for name, m in imp["policies"].items():
+        print(f"[impact:{name}] shortage_events={m['shortage_events']:,} unmet=BDT {m['unmet_cash_demand_bdt']:,.0f} "
+              f"availability={m['service_availability_pct']:.2f}% interventions={m['interventions']}")
+    d = imp["agentflow_vs_status_quo"]
+    print(f"AgentFlow vs status quo: shortage events -{d['shortage_events_reduction_pct']:.1f}%, "
+          f"unmet demand -{d['unmet_demand_reduction_pct']:.1f}%")
+    print("impact ->", config.ARTIFACTS_DIR / "impact.json")
+
 
 if __name__ == "__main__":
     main()

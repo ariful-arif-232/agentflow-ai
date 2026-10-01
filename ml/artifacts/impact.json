@@ -1,0 +1,296 @@
+{
+  "label": "Synthetic held-out simulation",
+  "period": {
+    "start": "2026-08-18 00:00:00",
+    "end": "2026-08-31 23:00:00",
+    "hours": 336,
+    "agents": 200
+  },
+  "assumptions": {
+    "decision_hours": [
+      9,
+      11,
+      13,
+      15,
+      17,
+      19
+    ],
+    "transfer_delay_hours": 1,
+    "rebalancing": "peer-to-peer within district, <= 15 km, donor keeps >= 110% of its P90 requirement",
+    "cash_neutral": true,
+    "demand_multiplier": 1.0,
+    "anomalous_agents": "held for manual review (not auto-supported)"
+  },
+  "metric_definitions": {
+    "shortage_events": "Agent-hours in which at least one requested cash-out could not be served.",
+    "unmet_cash_demand_bdt": "Total requested cash-out (BDT) not served because the agent lacked cash.",
+    "agents_with_shortage": "Number of agents with at least one shortage event in the period.",
+    "service_availability_pct": "Share of operating agent-hours (08:00-21:59) with customer cash-out demand in which all requested cash-out was served.",
+    "demand_fill_rate_pct": "Served cash-out / requested cash-out over the period.",
+    "interventions": "Number of simulated peer rebalancing transfers (each is human-approved in production).",
+    "total_rebalanced_bdt": "Total cash moved between agents by simulated transfers.",
+    "unnecessary_interventions_pct": "Share of transfers whose recipient would NOT have had any shortage in the following 6 hours under the status-quo policy (false alerts).",
+    "donor_shortage_events_after_transfer": "Shortage events at donor agents within 6 hours after they gave cash (safety check; should be ~0).",
+    "estimated_logistics_cost_bdt": "Sum of per-transfer cost estimates (fixed BDT 150 + BDT 25/km)."
+  },
+  "policies": {
+    "status_quo": {
+      "shortage_events": 2017,
+      "unmet_cash_demand_bdt": 9536930.0,
+      "agents_with_shortage": 140,
+      "service_availability_pct": 96.75510204081633,
+      "demand_fill_rate_pct": 97.53613132214174,
+      "interventions": 0,
+      "total_rebalanced_bdt": 0.0,
+      "estimated_logistics_cost_bdt": 0.0
+    },
+    "naive_rebalancing": {
+      "shortage_events": 1483,
+      "unmet_cash_demand_bdt": 6762240.0,
+      "agents_with_shortage": 143,
+      "service_availability_pct": 97.64285714285714,
+      "demand_fill_rate_pct": 98.25297330187385,
+      "interventions": 384,
+      "total_rebalanced_bdt": 5709500.0,
+      "estimated_logistics_cost_bdt": 122198.0,
+      "donor_shortage_events_after_transfer": 65,
+      "unnecessary_interventions_pct": 15.104166666666666
+    },
+    "agentflow": {
+      "shortage_events": 1255,
+      "unmet_cash_demand_bdt": 5827590.0,
+      "agents_with_shortage": 140,
+      "service_availability_pct": 97.9234693877551,
+      "demand_fill_rate_pct": 98.49444040499405,
+      "interventions": 501,
+      "total_rebalanced_bdt": 7559500.0,
+      "estimated_logistics_cost_bdt": 158448.0,
+      "donor_shortage_events_after_transfer": 25,
+      "unnecessary_interventions_pct": 21.357285429141715
+    }
+  },
+  "agentflow_vs_status_quo": {
+    "shortage_events_reduction_pct": 37.778879524045614,
+    "unmet_demand_reduction_pct": 38.89448700997072,
+    "unmet_demand_avoided_bdt": 3709340.0,
+    "service_availability_gain_pp": 1.1683673469387799
+  },
+  "daily": [
+    {
+      "date": "2026-08-18",
+      "status_quo_unmet_bdt": 296780.0,
+      "status_quo_shortage_events": 72,
+      "naive_rebalancing_unmet_bdt": 237080.0,
+      "naive_rebalancing_shortage_events": 53,
+      "agentflow_unmet_bdt": 215350.0,
+      "agentflow_shortage_events": 53
+    },
+    {
+      "date": "2026-08-19",
+      "status_quo_unmet_bdt": 255780.0,
+      "status_quo_shortage_events": 63,
+      "naive_rebalancing_unmet_bdt": 195950.0,
+      "naive_rebalancing_shortage_events": 43,
+      "agentflow_unmet_bdt": 186770.0,
+      "agentflow_shortage_events": 44
+    },
+    {
+      "date": "2026-08-20",
+      "status_quo_unmet_bdt": 99590.0,
+      "status_quo_shortage_events": 26,
+      "naive_rebalancing_unmet_bdt": 89760.0,
+      "naive_rebalancing_shortage_events": 23,
+      "agentflow_unmet_bdt": 80760.0,
+      "agentflow_shortage_events": 22
+    },
+    {
+      "date": "2026-08-21",
+      "status_quo_unmet_bdt": 12250.0,
+      "status_quo_shortage_events": 13,
+      "naive_rebalancing_unmet_bdt": 8400.0,
+      "naive_rebalancing_shortage_events": 8,
+      "agentflow_unmet_bdt": 8400.0,
+      "agentflow_shortage_events": 8
+    },
+    {
+      "date": "2026-08-22",
+      "status_quo_unmet_bdt": 44080.0,
+      "status_quo_shortage_events": 16,
+      "naive_rebalancing_unmet_bdt": 38010.0,
+      "naive_rebalancing_shortage_events": 11,
+      "agentflow_unmet_bdt": 38010.0,
+      "agentflow_shortage_events": 11
+    },
+    {
+      "date": "2026-08-23",
+      "status_quo_unmet_bdt": 229970.0,
+      "status_quo_shortage_events": 47,
+      "naive_rebalancing_unmet_bdt": 195090.0,
+      "naive_rebalancing_shortage_events": 38,
+      "agentflow_unmet_bdt": 185400.0,
+      "agentflow_shortage_events": 37
+    },
+    {
+      "date": "2026-08-24",
+      "status_quo_unmet_bdt": 299420.0,
+      "status_quo_shortage_events": 47,
+      "naive_rebalancing_unmet_bdt": 225800.0,
+      "naive_rebalancing_shortage_events": 33,
+      "agentflow_unmet_bdt": 251800.0,
+      "agentflow_shortage_events": 36
+    },
+    {
+      "date": "2026-08-25",
+      "status_quo_unmet_bdt": 342110.0,
+      "status_quo_shortage_events": 86,
+      "naive_rebalancing_unmet_bdt": 303140.0,
+      "naive_rebalancing_shortage_events": 81,
+      "agentflow_unmet_bdt": 277200.0,
+      "agentflow_shortage_events": 74
+    },
+    {
+      "date": "2026-08-26",
+      "status_quo_unmet_bdt": 486740.0,
+      "status_quo_shortage_events": 113,
+      "naive_rebalancing_unmet_bdt": 310090.0,
+      "naive_rebalancing_shortage_events": 89,
+      "agentflow_unmet_bdt": 259390.0,
+      "agentflow_shortage_events": 73
+    },
+    {
+      "date": "2026-08-27",
+      "status_quo_unmet_bdt": 2315560.0,
+      "status_quo_shortage_events": 319,
+      "naive_rebalancing_unmet_bdt": 1806610.0,
+      "naive_rebalancing_shortage_events": 262,
+      "agentflow_unmet_bdt": 1397040.0,
+      "agentflow_shortage_events": 205
+    },
+    {
+      "date": "2026-08-28",
+      "status_quo_unmet_bdt": 738210.0,
+      "status_quo_shortage_events": 247,
+      "naive_rebalancing_unmet_bdt": 415860.0,
+      "naive_rebalancing_shortage_events": 185,
+      "agentflow_unmet_bdt": 361580.0,
+      "agentflow_shortage_events": 158
+    },
+    {
+      "date": "2026-08-29",
+      "status_quo_unmet_bdt": 1413420.0,
+      "status_quo_shortage_events": 292,
+      "naive_rebalancing_unmet_bdt": 943510.0,
+      "naive_rebalancing_shortage_events": 208,
+      "agentflow_unmet_bdt": 829620.0,
+      "agentflow_shortage_events": 162
+    },
+    {
+      "date": "2026-08-30",
+      "status_quo_unmet_bdt": 1503610.0,
+      "status_quo_shortage_events": 340,
+      "naive_rebalancing_unmet_bdt": 1110700.0,
+      "naive_rebalancing_shortage_events": 223,
+      "agentflow_unmet_bdt": 918050.0,
+      "agentflow_shortage_events": 178
+    },
+    {
+      "date": "2026-08-31",
+      "status_quo_unmet_bdt": 1499410.0,
+      "status_quo_shortage_events": 336,
+      "naive_rebalancing_unmet_bdt": 882240.0,
+      "naive_rebalancing_shortage_events": 226,
+      "agentflow_unmet_bdt": 818220.0,
+      "agentflow_shortage_events": 194
+    }
+  ],
+  "groups": {
+    "location_cluster": {
+      "rural": {
+        "status_quo": {
+          "unmet_cash_demand_bdt": 4378630.0,
+          "shortage_events": 931
+        },
+        "naive_rebalancing": {
+          "unmet_cash_demand_bdt": 3325750.0,
+          "shortage_events": 746
+        },
+        "agentflow": {
+          "unmet_cash_demand_bdt": 3255060.0,
+          "shortage_events": 707
+        }
+      },
+      "urban_core": {
+        "status_quo": {
+          "unmet_cash_demand_bdt": 600950.0,
+          "shortage_events": 56
+        },
+        "naive_rebalancing": {
+          "unmet_cash_demand_bdt": 521280.0,
+          "shortage_events": 45
+        },
+        "agentflow": {
+          "unmet_cash_demand_bdt": 470590.0,
+          "shortage_events": 44
+        }
+      },
+      "urban_periphery": {
+        "status_quo": {
+          "unmet_cash_demand_bdt": 4557350.0,
+          "shortage_events": 1030
+        },
+        "naive_rebalancing": {
+          "unmet_cash_demand_bdt": 2915210.0,
+          "shortage_events": 692
+        },
+        "agentflow": {
+          "unmet_cash_demand_bdt": 2101940.0,
+          "shortage_events": 504
+        }
+      }
+    },
+    "agent_volume_segment": {
+      "high": {
+        "status_quo": {
+          "unmet_cash_demand_bdt": 2831360.0,
+          "shortage_events": 387
+        },
+        "naive_rebalancing": {
+          "unmet_cash_demand_bdt": 1958370.0,
+          "shortage_events": 274
+        },
+        "agentflow": {
+          "unmet_cash_demand_bdt": 1554600.0,
+          "shortage_events": 218
+        }
+      },
+      "low": {
+        "status_quo": {
+          "unmet_cash_demand_bdt": 1227740.0,
+          "shortage_events": 596
+        },
+        "naive_rebalancing": {
+          "unmet_cash_demand_bdt": 882520.0,
+          "shortage_events": 442
+        },
+        "agentflow": {
+          "unmet_cash_demand_bdt": 808990.0,
+          "shortage_events": 422
+        }
+      },
+      "medium": {
+        "status_quo": {
+          "unmet_cash_demand_bdt": 5477830.0,
+          "shortage_events": 1034
+        },
+        "naive_rebalancing": {
+          "unmet_cash_demand_bdt": 3921350.0,
+          "shortage_events": 767
+        },
+        "agentflow": {
+          "unmet_cash_demand_bdt": 3464000.0,
+          "shortage_events": 615
+        }
+      }
+    }
+  }
+}

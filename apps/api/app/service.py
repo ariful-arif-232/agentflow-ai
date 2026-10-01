@@ -72,7 +72,7 @@ AGENT_LIST_FIELDS = [
 class AgentFlowService:
     def __init__(self) -> None:
         ensure_artifacts()
-        self.engine = engine.Engine.load()
+        self.engine = engine.Engine.load(serving=True).compact()
         env_as_of = os.getenv("AGENTFLOW_AS_OF", "").strip()
         self.default_as_of = pd.Timestamp(env_as_of) if env_as_of else DEFAULT_AS_OF
         ts = self.engine.timestamps

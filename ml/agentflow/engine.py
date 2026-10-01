@@ -12,6 +12,13 @@ from . import anomaly, config, data_gen, features, forecast, risk
 OPERATING_HOURS = range(8, 22)
 DEFAULT_AS_OF = pd.Timestamp("2026-08-31 13:00")
 ANOMALY_LOOKBACK_H = 6
+SERVING_HISTORY_DAYS = 9  # >= 7-day lags + 6h window + 72h chart before the first decision time
+
+
+def training_shortage_rate(df: pd.DataFrame) -> pd.Series:
+    """Per-agent share of training-period operating hours with a liquidity shortage."""
+    train = df[(df["timestamp"] < config.TEST_START) & df["hour"].isin(OPERATING_HOURS)]
+    return train.groupby("agent_id")["liquidity_shortage"].mean()
 
 
 @dataclass
@@ -20,9 +27,9 @@ class Engine:
     feats: pd.DataFrame
     bundle: forecast.ForecastBundle
     detector: anomaly.AnomalyDetector
+    hist_rate: pd.Series | None = None
     preds: pd.DataFrame = field(init=False)
     anom: pd.DataFrame = field(init=False)
-    hist_rate: pd.Series = field(init=False)
 
     def __post_init__(self) -> None:
         f = self.feats
@@ -32,17 +39,25 @@ class Engine:
         self.anom = af
         self.anom["anomaly_score"] = self.detector.score(af)
         self.anom["anomaly_status"] = self.detector.status(self.anom["anomaly_score"].to_numpy())
-        train = f[(f["timestamp"] < config.TEST_START) & f["hour"].isin(OPERATING_HOURS)]
-        self.hist_rate = train.groupby("agent_id")["liquidity_shortage"].mean()
+        if self.hist_rate is None:
+            self.hist_rate = training_shortage_rate(f)
         self._ts_index = {ts: idx for ts, idx in f.groupby("timestamp").groups.items()}
 
     # ------------------------------------------------------------------ loading
     @classmethod
-    def load(cls) -> "Engine":
+    def load(cls, serving: bool = False) -> "Engine":
+        """Load data + models. ``serving=True`` builds features only for the held-out period plus
+        the history it needs (8 days), which keeps the API's memory footprint small. Results for
+        held-out decision times are identical; training-period statistics come from the full data."""
         data = data_gen.load()
-        feats = features.build_features(data.hourly, data.agents)
+        hourly = data.hourly
+        hist_rate = None
+        if serving:
+            hist_rate = training_shortage_rate(hourly)
+            hourly = hourly[hourly["timestamp"] >= config.TEST_START - pd.Timedelta(days=SERVING_HISTORY_DAYS)]
+        feats = features.build_features(hourly, data.agents)
         return cls(agents=data.agents, feats=feats, bundle=forecast.ForecastBundle.load(),
-                   detector=anomaly.AnomalyDetector.load())
+                   detector=anomaly.AnomalyDetector.load(), hist_rate=hist_rate)
 
     @property
     def timestamps(self) -> pd.DatetimeIndex:
@@ -94,6 +109,36 @@ class Engine:
             np.where(snap["risk_level"].isin(["HIGH", "CRITICAL"]), "REBALANCE_REVIEW",
                      np.where(snap["anomaly_status"] != "NORMAL", "BEHAVIOUR_REVIEW", "NONE")))
         return snap.reset_index(drop=True)
+
+    SERVING_COLUMNS = [
+        "agent_id", "timestamp", "district", "location_cluster", "agent_type", "agent_volume_segment",
+        "synthetic_latitude", "synthetic_longitude", "cash_balance", "efloat_balance", "hour",
+        "is_salary_period", "is_market_day", "velocity_ratio_3h", "out_same_window_avg7",
+        "out_rolling_mean_168h", "out_sum_6h", "target_cash_level", "cash_out_amount", "cash_in_amount",
+        "unmet_cash_out", "transaction_count", "future_6h_cash_demand", "future_6h_net_cash_demand",
+    ]
+
+    def compact(self) -> "Engine":
+        """Reduce memory for serving: keep only columns the API reads and use float32 / categories.
+
+        Training, evaluation and the impact simulator use the full-precision engine.
+        """
+        f = self.feats[self.SERVING_COLUMNS].copy()
+        for c in f.columns:
+            if f[c].dtype == "float64" and c not in ("synthetic_latitude", "synthetic_longitude"):
+                f[c] = f[c].astype("float32")
+        for c in ("agent_id", "district", "location_cluster", "agent_type", "agent_volume_segment"):
+            f[c] = f[c].astype("category")
+        self.feats = f
+        self.preds = self.preds.astype("float32")
+        a = self.anom
+        for c in a.columns:
+            if a[c].dtype == "float64":
+                a[c] = a[c].astype("float32")
+        a["anomaly_status"] = a["anomaly_status"].astype("category")
+        import gc
+        gc.collect()
+        return self
 
     def anomaly_status_matrix(self) -> pd.DataFrame:
         """timestamp x agent agent-level status (worst score over the trailing lookback window)."""

@@ -1,0 +1,9 @@
+.git
+**/node_modules
+apps/web
+ml/data/*.parquet
+ml/models/*.joblib
+**/__pycache__
+.pytest_cache
+.env
+.env.*

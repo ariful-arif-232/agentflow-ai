@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, Truck } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, Languages, Truck } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useAsOf } from "@/lib/asof";
 import { bdt, dateTime, num, ratioPct, titleCase } from "@/lib/format";
@@ -43,6 +44,7 @@ function Tile({ label, value, sub, tag, tone }: { label: string; value: string; 
 export default function AgentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { asOf } = useAsOf();
+  const [bangla, setBangla] = useState(false);
   const { data, error, loading, reload } = useApi<AgentDetail>(asOf && id ? `/api/agents/${encodeURIComponent(id)}` : null, { as_of: asOf });
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -87,7 +89,22 @@ export default function AgentDetailPage() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-3">
-          <CardHeader title="Why this risk?" subtitle="Every statement below is generated from calculated values — forecasts, balances and agent history." right={<SourceTag kind="calc" />} />
+          <CardHeader
+            title={bangla ? "কেন এই ঝুঁকি?" : "Why this risk?"}
+            subtitle="Every statement below is generated from calculated values — forecasts, balances and agent history."
+            right={
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setBangla(!bangla)}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-50"
+                >
+                  <Languages className="h-3.5 w-3.5" />
+                  {bangla ? "Show in English" : "বাংলায় ব্যাখ্যা করুন"}
+                </button>
+                <SourceTag kind="calc" />
+              </div>
+            }
+          />
           <div className="grid grid-cols-1 gap-6 p-5 md:grid-cols-5">
             <div className="md:col-span-2">
               <div className="flex items-end gap-2">
@@ -118,16 +135,16 @@ export default function AgentDetailPage() {
                 {reasons.map((e, i) => (
                   <li key={e.code} className="flex gap-3 text-sm">
                     <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">{i + 1}</span>
-                    <span className="text-slate-800">{e.text}</span>
+                    <span className="text-slate-800">{bangla ? e.text_bn : e.text}</span>
                   </li>
                 ))}
               </ol>
               {context.length > 0 && (
                 <div className="mt-4 rounded-lg bg-slate-50 p-3">
-                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Demand context</div>
+                  <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">{bangla ? "চাহিদার প্রেক্ষাপট" : "Demand context"}</div>
                   <ul className="space-y-1.5 text-sm text-slate-700">
                     {context.map((e) => (
-                      <li key={e.code}>• {e.text}</li>
+                      <li key={e.code}>• {bangla ? e.text_bn : e.text}</li>
                     ))}
                   </ul>
                 </div>

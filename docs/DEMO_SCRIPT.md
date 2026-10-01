@@ -56,6 +56,9 @@ Context: this window historically sees 58% more cash-out than average; salary pe
 Point at the component bars: coverage 25.8 / 45, tail 13.0 / 20, deficit 9.0 / 20, history 5 / 5.
 > "Anomalies don't change this score; unusual activity changes the review route, not the liquidity math."
 
+Click **বাংলায় ব্যাখ্যা করুন**: the same evidence rendered deterministically in Bangla for field and
+agent-facing staff, with no language model involved.
+
 ## 4. Safe rebalancing recommendation (≈ 40 s)
 
 Click **Review recommendation** → Rebalancing Center (AG-0171 rows highlighted) → **Review

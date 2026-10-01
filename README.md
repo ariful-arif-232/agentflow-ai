@@ -66,7 +66,7 @@ measurable operational recommendation:
 |---|---|
 | **Command Center** | Active / at-risk / critical agents, projected service readiness (now and after the recommended plan), 6-h forecast demand, recommended rebalancing value, 48-h forecast-vs-actual trend, risk distribution, top at-risk agents, urgent recommendations, district overview |
 | **Agents** | Sortable, filterable table (risk level, behaviour, district, location cluster, volume segment, search) |
-| **Agent Intelligence** | Current cash, 6-h forecasts (P50/P90), expected gap, risk score with component breakdown, *Why this risk?*, recommended action, behavioural drivers, 72-h history, model evidence |
+| **Agent Intelligence** | Current cash, 6-h forecasts (P50/P90), expected gap, risk score with component breakdown, *Why this risk?* (with a deterministic **বাংলায় ব্যাখ্যা করুন** Bangla toggle), recommended action, behavioural drivers, 72-h history, model evidence |
 | **Rebalancing Center** | Recommendations with source/destination reserves and risk before/after → **Review Recommendation** → evidence drawer → acknowledgement → **Approve Simulation** → portfolio before/after + audit log; escalations and held-for-review lists |
 | **Scenario Lab** | Network (+10/25/40%) and district demand shocks; risk, shortfall, rebalancing and escalation recomputed live |
 | **Impact & Model Health** | Without vs. with AgentFlow (and naive-forecast rebalancing), daily unmet demand, group breakdown, baseline vs. ML metrics, feature importance, alert precision/recall, anomaly metrics, fairness checks |

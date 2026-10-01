@@ -76,6 +76,45 @@ def bdt(x: float) -> str:
     return f"BDT {x:,.0f}"
 
 
+_BN_DIGITS = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
+
+
+def bn_num(x: float, decimals: int = 0) -> str:
+    return f"{x:,.{decimals}f}".translate(_BN_DIGITS)
+
+
+def bn_bdt(x: float) -> str:
+    return "৳" + bn_num(x)
+
+
+def bangla_text(code: str, ev: dict) -> str:
+    """Deterministic Bangla rendering of a reason from the same evidence (no language model)."""
+    if code == "forecast_requirement":
+        return (f"আগামী ৬ ঘণ্টায় সর্বোচ্চ নগদ প্রয়োজনের পূর্বাভাস {bn_bdt(ev['pred_net_requirement_6h'])} "
+                f"(উচ্চ-চাহিদার P90 পরিস্থিতিতে {bn_bdt(ev['pred_net_requirement_p90_6h'])})।")
+    if code == "coverage":
+        return f"বর্তমান নগদ {bn_bdt(ev['cash_balance'])}, যা এই প্রয়োজনের প্রায় {bn_num(100 * ev['coverage_ratio'])}% পূরণ করে।"
+    if code == "no_material_requirement":
+        return "আগামী ৬ ঘণ্টায় ক্যাশ-ইন দিয়েই ক্যাশ-আউটের চাহিদা মেটানো যাবে বলে পূর্বাভাস।"
+    if code == "shortfall":
+        return f"কোনো পদক্ষেপ না নিলে প্রত্যাশিত নগদ ঘাটতি {bn_bdt(ev['expected_shortfall'])}।"
+    if code == "tail_risk":
+        return f"উচ্চ-চাহিদার (P90) পরিস্থিতিতে ঘাটতি বেড়ে {bn_bdt(ev['p90_gap'])} হতে পারে।"
+    if code == "velocity":
+        return (f"গত ৩ ঘণ্টায় লেনদেনের গতি এই এজেন্টের একই সময়ের স্বাভাবিক মাত্রার চেয়ে "
+                f"{bn_num(100 * (ev['velocity_ratio_3h'] - 1))}% বেশি।")
+    if code == "history":
+        return f"প্রশিক্ষণ সময়কালে এই এজেন্টের {bn_num(100 * ev['hist_shortage_rate'], 1)}% কার্যঘণ্টায় নগদ ঘাটতি ছিল।"
+    if code == "seasonal_window":
+        uplift = ev["same_window_avg7"] / ev["avg_6h_window"] - 1
+        return f"ঐতিহাসিকভাবে এই সময়ে এজেন্টের গড় ৬ ঘণ্টার তুলনায় {bn_num(100 * uplift)}% বেশি ক্যাশ-আউট হয়।"
+    if code == "salary_period":
+        return "বেতনের সময়: মাসের শেষ ও শুরুতে সাধারণত ক্যাশ-আউটের চাহিদা বেশি থাকে।"
+    if code == "market_day":
+        return "আজ এই এজেন্টের সাপ্তাহিক হাটবার, যা ঐতিহাসিকভাবে চাহিদা বাড়ায়।"
+    return ""
+
+
 def explain(r: dict) -> list[dict]:
     """Structured, evidence-based reasons for one agent's risk (ordered by contribution).
 
@@ -141,6 +180,7 @@ def explain(r: dict) -> list[dict]:
     reasons.sort(key=lambda d: (order[d["component"]], -d["points"]))
     for d in reasons:
         d["points"] = round(float(d["points"]), 1)
+        d["text_bn"] = bangla_text(d["code"], d["evidence"])
         d["evidence"] = {k: (round(float(v), 4) if isinstance(v, (int, float, np.floating)) and not isinstance(v, bool) else v)
                          for k, v in d["evidence"].items()}
     return reasons

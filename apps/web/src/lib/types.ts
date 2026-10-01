@@ -137,6 +137,7 @@ export interface Reason {
   component: string;
   points: number;
   text: string;
+  text_bn: string;
   evidence: Record<string, number | boolean | null>;
 }
 

@@ -52,6 +52,10 @@ def test_explanations_come_from_evidence():
     assert {"shortfall", "velocity", "history", "salary_period", "seasonal_window"} <= set(codes)
     text = " ".join(x["text"] for x in reasons)
     assert "BDT 58,200" in text and "BDT 29,600" in text and "51%" in text and "34%" in text
+    # deterministic Bangla rendering of the same evidence
+    assert all(x["text_bn"] and any("\u0980" <= ch <= "\u09ff" for ch in x["text_bn"]) for x in reasons)
+    bn = " ".join(x["text_bn"] for x in reasons)
+    assert "৳৫৮,২০০" in bn and "৳২৯,৬০০" in bn and "৫১%" in bn
 
 
 @pytest.fixture(scope="module")

@@ -7,7 +7,9 @@
 AgentFlow predicts where an MFS agent may run short of liquidity before customers are affected,
 explains why, and recommends a safe, human-reviewed rebalancing action.
 
-Built for the **AI DEV FEST 2026 AI Hackathon** organised by **DIU CPC × upay**.
+Built for the **AI DEV FEST 2026 AI Hackathon** organised by **DIU CPC × upay** by a registered
+3-member team. Engineering was carried out by one primary implementer, and the development workflow
+is organised around that. Teammate briefing: [docs/TEAM_BRIEFING.md](docs/TEAM_BRIEFING.md).
 
 > ⚠️ **Synthetic data for hackathon prototyping — not production upay data.**
 > AgentFlow is a decision-support prototype. It never moves real money: approvals only run simulations.
@@ -125,7 +127,7 @@ agentflow-ai/
     scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py
     artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json (committed)
     data/ models/     generated data and model binaries (git-ignored, reproducible)
-  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT
+  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING
   tests/              data, forecast, risk/anomaly, rebalancing, impact, API, contract tests
   .github/workflows/  CI
 ```
@@ -234,9 +236,10 @@ allowed dashboard origins. Everything also runs locally with the commands above.
 ## AI tool disclosure
 
 This project was developed with AI-assisted development tools, including Claude Code, under the
-direction and review of the participant, who is responsible for the final submission. The product
+direction and review of the team's primary implementer. The registered team is responsible for the
+final submission. The product
 itself does not use a generative AI model in its decision path.
 
 ## License
 
-Hackathon prototype — all rights reserved by the author unless a license file is added.
+Hackathon prototype — all rights reserved by the registered team unless a license file is added.

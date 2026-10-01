@@ -1,0 +1,30 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Generated data & model binaries (reproducible via `python ml/scripts/run_pipeline.py`)
+ml/data/*.parquet
+ml/data/*.csv
+ml/models/*.joblib
+
+# Node / Next.js
+node_modules/
+apps/web/.next/
+apps/web/out/
+*.tsbuildinfo
+next-env.d.ts
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.log

@@ -172,3 +172,18 @@ def test_bar_check_and_representativeness_rules():
     assert cp.representativeness(per)["verdict"] == "typical"
     per[2026] = {k: 99.0 for k in cp.KEY_METRICS}
     assert cp.representativeness(per)["verdict"] == "unusually strong"
+
+
+def test_committed_audit_artifacts_match_preregistration():
+    import json
+    art = Path(__file__).resolve().parents[1] / "ml" / "artifacts_dual" / "complementarity_multiseed.json"
+    if not art.exists():
+        pytest.skip("audit artifacts not generated")
+    m = json.loads(art.read_text())
+    assert m["assumptions_version"] == "2A.1"
+    assert m["constants"]["seeds"] == list(cp.SEEDS) and list(m["per_seed"]) == [str(s) for s in cp.SEEDS]
+    assert m["constants"]["bar"] == cp.BAR and m["constants"]["decision_hours"] == list(cp.DECISION_HOURS)
+    passing = sum(r["bar"]["passes"] for r in m["per_seed"].values())
+    assert m["overall_bar"]["worlds_passing"] == passing
+    assert m["overall_bar"]["passes"] == (passing >= cp.MIN_WORLDS_PASSING)
+    assert m["per_seed"]["2026"]["phase_2a_artifacts_reproduced"] is True

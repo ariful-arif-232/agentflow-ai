@@ -307,3 +307,14 @@ Both sides are exercised by the pre-specified rules, with no test-set tuning.
 * A shadow-mode pilot with operations staff before any decision is acted on.
 
 Only aggregated amounts and counts would be needed, never customer-level data.
+
+## 9. Follow-up: complementarity feasibility audit (Phase 2B-0)
+
+A pre-registered, read-only, five-seed audit asked whether safe, local and simultaneous
+complementary counterparties exist for peer cash ↔ e-float swaps.
+
+* Protocol: [DUAL_COMPLEMENTARITY_PROTOCOL.md](DUAL_COMPLEMENTARITY_PROTOCOL.md)
+* Results: [DUAL_COMPLEMENTARITY_RESULTS.md](DUAL_COMPLEMENTARITY_RESULTS.md)
+
+**Outcome: 0 of 5 worlds met the minimal bar.** A network V3 optimiser is not supported by this
+world.

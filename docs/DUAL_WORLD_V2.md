@@ -159,3 +159,151 @@ before the full world was generated or evaluated, and must not be changed after 
 
   If either side fails, Phase 2A **stops** and the generator design is revisited scientifically.
   Provisioning will not be adjusted until the bar is met.
+
+## 6. Results — synthetic held-out simulation, Dual-Liquidity World v2
+
+All numbers come from `python ml/scripts/run_dual_world.py`, stored in `ml/artifacts_dual/`. Rerunning
+with seed 2026 reproduces `world_summary.json`, `forecast_metrics.json` and `status_quo_impact.json`
+byte-for-byte. `training_metadata.json` also records wall-clock fit times, which vary between runs.
+World hash: `1e90db46…0bb0231`. The test period was evaluated once, after the rules in §4–5 were
+committed (commit `4733645`).
+
+### 6.1 Forecasts (P50 point error; P90 quantile coverage)
+
+**Held-out test (2026-08-18 → 08-31, 66,000 rows):**
+
+| Requirement (next 6 h) | ML MAE | Naive yesterday | Seasonal 7-day | vs best baseline | vs naive | P90 coverage |
+|---|---|---|---|---|---|---|
+| Cash (`future_6h_net_cash_demand`) | BDT 4,030 | 5,564 | 4,406 | −8.5% | −27.6% | 89.3% |
+| E-float (`future_6h_net_efloat_demand`) | BDT 4,638 | 6,116 | 5,010 | −7.4% | −24.2% | 91.1% |
+
+Other held-out metrics:
+
+| Requirement | RMSE | WAPE | Bias | Mean P90 band |
+|---|---|---|---|---|
+| Cash | 8,720 | 0.395 | −198 | 5,932 |
+| E-float | 11,417 | 0.420 | +140 | 7,154 |
+
+**Validation slice** (recorded only, not used for selection):
+
+| Requirement | ML MAE | Seasonal | Naive | P90 coverage |
+|---|---|---|---|---|
+| Cash | 4,044 | 4,485 | 5,568 | 89.5% |
+| E-float | 3,942 | 4,856 | 5,328 | 90.6% |
+
+**Group consistency (held-out):** ML beats both baselines in every cluster and segment, with one
+exception: **rural e-float**, where ML (MAE 1,608) only matches the seasonal baseline (1,609). Rural
+agents are cash-in-light. Cash P90 coverage per group ranges from 88.0% (rural) to 90.3%.
+
+### 6.2 Pressure at held-out decision times
+
+The evaluation covers 38,400 decisions (operating hours 08:00–21:00). Each cell shows the rate,
+then rows / distinct agents.
+
+| | Cash | E-float | Both (dual) |
+|---|---|---|---|
+| A. Forecast pressure (balance < predicted P50) | 4.72% (1,813 / 83) | 2.30% (884 / 68) | 0 |
+| B. Requirement label (balance < actual requirement) | 4.87% (1,871 / 76) | 2.90% (1,113 / 67) | 0 |
+| C1. Realised unmet, current hour | 1.94% (744 / 76) | 0.56% (214 / 54) | 0 |
+| C2. Realised unmet, next 6 h | 4.87% (1,871 / 76) | 2.90% (1,113 / 67) | 0 |
+
+At decision times, the realised next-6h events (C2) coincide exactly with the requirement label
+(B). This is expected when the other resource never binds within the same window: the path of the
+binding resource is then exactly `balance ± cumulative requested net flow`.
+
+**Early warning (forecast signal vs realised next-6h unmet):**
+
+| Signal | Cash precision / recall / F1 | E-float precision / recall / F1 |
+|---|---|---|
+| Expected pressure (P50) | 71.4% / 69.2% / 0.70 | 77.3% / 61.4% / 0.68 |
+| Cautious watch (P90) | 51.2% / 89.5% / 0.65 | 45.6% / 84.6% / 0.59 |
+
+**Liquidity-state share at decision times:**
+
+| State | Share |
+|---|---|
+| HEALTHY | 86.1% |
+| WATCH | 6.9% |
+| CASH_PRESSURE | 4.7% |
+| EFLOAT_PRESSURE | 2.3% |
+| DUAL_PRESSURE | 0% |
+
+At the default decision time (2026-08-31 13:00) the counts are: HEALTHY 132, WATCH 28,
+CASH_PRESSURE 33, EFLOAT_PRESSURE 7, DUAL_PRESSURE 0.
+
+**Legacy cash risk level by state.** Every EFLOAT_PRESSURE decision has legacy cash risk LOW, so the
+legacy score is blind to it. CASH_PRESSURE decisions split LOW 249 / MEDIUM 578 / HIGH 666 /
+CRITICAL 320.
+
+### 6.3 Structural finding: per-agent dual pressure is (near) impossible
+
+* **Same-hour dual shortage is impossible by construction.** Under net settlement, a
+  cash-out-dominant hour serves all cash-in, and vice versa. This is tested.
+* **Within 6 hours it did not occur either.** Transactions conserve an agent's cash + e-float, so
+  draining one resource fills the other.
+* **Over the 14 days,** only 4 agents had both types of shortage, at different times (28 agents in
+  the training period).
+
+So `DUAL_PRESSURE` is not an evaluable per-agent state in this world. This is a property of the
+physics, not of tuning. The dual-liquidity problem is a **network** problem: at the same hour, some
+agents are short of cash with surplus e-float, while others are short of e-float with surplus cash.
+That complementarity is the premise Phase 2B would test. It has **not** been measured yet
+(co-location and timing of complementary counterparties).
+
+### 6.4 Status quo (manual 08:00 reset, no rebalancing) — held-out 14 days, 67,200 agent-hours
+
+| | Cash side | E-float side |
+|---|---|---|
+| Shortage events (agent-hours with unmet > 0) | 1,014 | 1,276 |
+| Unmet BDT | 37,55,990 cash-out | 46,28,140 cash-in |
+| Requested BDT | 36,65,95,720 | 39,83,64,700 |
+| Fill rate | 98.98% | 98.84% |
+| Agents with ≥ 1 shortage | 76 | 67 |
+
+Network totals:
+
+* agent-hours fully serviceable on both sides: 64,910 (96.59%);
+* dual agent-hours: 0;
+* agents with both types over the period: 4;
+* total requested BDT 76,49,60,420, served BDT 75,65,76,290;
+* combined value fill rate: 98.90%.
+
+The training period shows the same picture: cash events 4,840, e-float events 5,129, and 111 / 106 /
+28 agents with cash / e-float / both.
+
+These numbers are **not comparable** to the legacy world's figures (different world).
+
+### 6.5 Validity bar for Phase 2B (pre-registered, §5)
+
+| Side | Next-6h prevalence | Positive rows | Agents | Passes |
+|---|---|---|---|---|
+| Cash | 4.87% | 1,871 | 76 | yes |
+| E-float | 2.90% | 1,113 | 67 | yes |
+
+Both sides are exercised by the pre-specified rules, with no test-set tuning.
+
+## 7. Known limitations
+
+* **Synthetic.** Flow orientation, timing, event and provisioning parameters are documented design
+  assumptions, not calibrated to real data. The results show the method in a plausible world, not
+  real-world performance.
+* **Within-hour net settlement is optimistic.** Real transaction ordering can cause failures that
+  hourly netting hides, so unmet demand is likely understated.
+* **No demand reaction.** Customers do not retry, defer or switch agents. Requested flows are assumed
+  observable, including declined attempts; real systems may not log declined cash-in.
+* **Replenishment is idealised.** The 08:00 reset is static, free and unconstrained, with no
+  distributor capacity or travel limits.
+* **Only one seed has been evaluated so far.** No sensitivity analysis across seeds yet; it would
+  need the same fixed rules.
+* **Rural e-float forecasting** adds no value over the seasonal baseline.
+* **Anomaly detection was not retrained or evaluated** in this world; the labels are carried only.
+* **Per-agent DUAL_PRESSURE is not evaluable** (§6.3).
+
+## 8. What real upay validation would require later
+
+* Hourly per-agent cash and e-float balances, including declined cash-out **and** cash-in attempts.
+* Replenishment and sweep logs, distributor constraints, and the real geographic flow orientation.
+* Re-running the unchanged pipeline with the same chronological split.
+* A shadow-mode pilot with operations staff before any decision is acted on.
+
+Only aggregated amounts and counts would be needed, never customer-level data.

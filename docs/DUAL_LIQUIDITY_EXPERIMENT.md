@@ -94,3 +94,6 @@ A **separately versioned, resource-conserving dual-liquidity synthetic world** w
 
 The e-float pressure evaluation, any dual liquidity state shown to users and any dual-sided impact
 claim must be validated in that world first.
+
+**Follow-up:** this design is implemented as the research-only Dual-Liquidity Synthetic World v2 on
+branch `feat/dual-liquidity-world-v2`; see [DUAL_WORLD_V2.md](DUAL_WORLD_V2.md).

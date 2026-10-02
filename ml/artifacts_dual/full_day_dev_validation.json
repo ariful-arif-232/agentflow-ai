@@ -1,0 +1,696 @@
+{
+  "label": "Development-world training-period validation only - NOT a project claim",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "protocol": "docs/FULL_DAY_ML_PROTOCOL.md",
+  "dev_seeds": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030
+  ],
+  "validation_window": [
+    "2026-08-04",
+    "2026-08-17"
+  ],
+  "per_seed": {
+    "2026": {
+      "dev_rows": 8200,
+      "val_rows": 2800,
+      "dev_dates": [
+        "2026-06-24",
+        "2026-08-03"
+      ],
+      "val_dates": [
+        "2026-08-04",
+        "2026-08-17"
+      ],
+      "forecast": {
+        "cash": {
+          "target": "full_day_cash_requirement",
+          "ml_p50": {
+            "mae": 9559.0125,
+            "rmse": 15929.53,
+            "wape": 0.297,
+            "bias": 431.4321,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 13102.9821,
+              "rmse": 22000.8558,
+              "wape": 0.407,
+              "bias": 569.5179,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 10835.9949,
+              "rmse": 18052.4096,
+              "wape": 0.3366,
+              "bias": 2311.5296,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 14099.3857,
+              "rmse": 23358.8601,
+              "wape": 0.438,
+              "bias": 3606.8214,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 11.7846,
+            "rmse_pct": 11.7595
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 27.047,
+            "rmse_pct": 27.5959
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.8636,
+            "covered": 2418,
+            "n": 2800,
+            "mean_interval_width": 10850.9244
+          }
+        },
+        "efloat": {
+          "target": "full_day_efloat_requirement",
+          "ml_p50": {
+            "mae": 11409.5741,
+            "rmse": 23322.6068,
+            "wape": 0.5578,
+            "bias": 1271.554,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 14209.3179,
+              "rmse": 31058.6874,
+              "wape": 0.6947,
+              "bias": 1734.6036,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 14011.1316,
+              "rmse": 28081.2767,
+              "wape": 0.685,
+              "bias": 6677.9296,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 20237.0286,
+              "rmse": 42323.1317,
+              "wape": 0.9894,
+              "bias": 12020.2071,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 18.5678,
+            "rmse_pct": 16.9461
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 19.7036,
+            "rmse_pct": 24.9079
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.9021,
+            "covered": 2526,
+            "n": 2800,
+            "mean_interval_width": 12860.5718
+          }
+        }
+      },
+      "combined_unmet_primary_bdt": {
+        "status_quo": 4712020.0,
+        "yesterday_requirement": 2400109.0,
+        "seasonal_requirement_7d": 1842507.0,
+        "seasonal_same_weekday": 2427027.0,
+        "full_day_ml_p90": 1592333.0,
+        "oracle_full_day": 0.0
+      },
+      "incremental_vs_seasonal_7d": {
+        "combined_unmet_reduction_pct": 13.5779,
+        "cash_unmet_reduction_pct": 17.934,
+        "efloat_unmet_reduction_pct": 7.4409,
+        "shortage_event_difference": -74
+      },
+      "best_simple_policy": "seasonal_requirement_7d",
+      "plausibility": {
+        "checks": {
+          "p90_coverage_within_70_99": true,
+          "not_worse_than_naive_on_both": true,
+          "conserved": true
+        },
+        "clearly_broken": false
+      }
+    },
+    "2027": {
+      "dev_rows": 8200,
+      "val_rows": 2800,
+      "dev_dates": [
+        "2026-06-24",
+        "2026-08-03"
+      ],
+      "val_dates": [
+        "2026-08-04",
+        "2026-08-17"
+      ],
+      "forecast": {
+        "cash": {
+          "target": "full_day_cash_requirement",
+          "ml_p50": {
+            "mae": 8704.6452,
+            "rmse": 14359.7455,
+            "wape": 0.2891,
+            "bias": 46.6776,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 12158.5143,
+              "rmse": 19748.5331,
+              "wape": 0.4038,
+              "bias": 359.8786,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 9989.9041,
+              "rmse": 16103.5614,
+              "wape": 0.3318,
+              "bias": 1703.0755,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 13007.3214,
+              "rmse": 21367.5833,
+              "wape": 0.432,
+              "bias": 2939.4071,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 12.8656,
+            "rmse_pct": 10.8288
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 28.407,
+            "rmse_pct": 27.287
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.8436,
+            "covered": 2362,
+            "n": 2800,
+            "mean_interval_width": 10006.4296
+          }
+        },
+        "efloat": {
+          "target": "full_day_efloat_requirement",
+          "ml_p50": {
+            "mae": 10577.8094,
+            "rmse": 21593.7814,
+            "wape": 0.5178,
+            "bias": 1545.2064,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 12866.6,
+              "rmse": 26697.5424,
+              "wape": 0.6298,
+              "bias": 1914.0857,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 13151.5714,
+              "rmse": 25806.1438,
+              "wape": 0.6437,
+              "bias": 7412.7224,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 19627.1607,
+              "rmse": 39195.4223,
+              "wape": 0.9607,
+              "bias": 13131.3179,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "yesterday_requirement",
+          "improvement_vs_best_simple": {
+            "mae_pct": 17.7886,
+            "rmse_pct": 19.117
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 17.7886,
+            "rmse_pct": 19.117
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.9089,
+            "covered": 2545,
+            "n": 2800,
+            "mean_interval_width": 12821.799
+          }
+        }
+      },
+      "combined_unmet_primary_bdt": {
+        "status_quo": 4328300.0,
+        "yesterday_requirement": 1853788.0,
+        "seasonal_requirement_7d": 1313088.0,
+        "seasonal_same_weekday": 1587960.0,
+        "full_day_ml_p90": 913455.0,
+        "oracle_full_day": 0.0
+      },
+      "incremental_vs_seasonal_7d": {
+        "combined_unmet_reduction_pct": 30.4346,
+        "cash_unmet_reduction_pct": 36.8587,
+        "efloat_unmet_reduction_pct": 14.8933,
+        "shortage_event_difference": -66
+      },
+      "best_simple_policy": "seasonal_requirement_7d",
+      "plausibility": {
+        "checks": {
+          "p90_coverage_within_70_99": true,
+          "not_worse_than_naive_on_both": true,
+          "conserved": true
+        },
+        "clearly_broken": false
+      }
+    },
+    "2028": {
+      "dev_rows": 8200,
+      "val_rows": 2800,
+      "dev_dates": [
+        "2026-06-24",
+        "2026-08-03"
+      ],
+      "val_dates": [
+        "2026-08-04",
+        "2026-08-17"
+      ],
+      "forecast": {
+        "cash": {
+          "target": "full_day_cash_requirement",
+          "ml_p50": {
+            "mae": 10526.2981,
+            "rmse": 19344.5523,
+            "wape": 0.3093,
+            "bias": 220.9621,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 14285.3,
+              "rmse": 24961.9696,
+              "wape": 0.4197,
+              "bias": 571.3571,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 11593.0474,
+              "rmse": 20092.6608,
+              "wape": 0.3406,
+              "bias": 2051.0668,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 14723.6357,
+              "rmse": 26445.5289,
+              "wape": 0.4326,
+              "bias": 3378.35,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 9.2016,
+            "rmse_pct": 3.7233
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 26.3138,
+            "rmse_pct": 22.5039
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.8379,
+            "covered": 2346,
+            "n": 2800,
+            "mean_interval_width": 12100.6718
+          }
+        },
+        "efloat": {
+          "target": "full_day_efloat_requirement",
+          "ml_p50": {
+            "mae": 10845.1779,
+            "rmse": 22838.5838,
+            "wape": 0.5409,
+            "bias": 833.1728,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 13371.8786,
+              "rmse": 28466.4396,
+              "wape": 0.6669,
+              "bias": 1405.8786,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 13168.7934,
+              "rmse": 26493.8889,
+              "wape": 0.6568,
+              "bias": 6532.226,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 19555.5179,
+              "rmse": 38910.137,
+              "wape": 0.9753,
+              "bias": 11932.0893,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 17.6449,
+            "rmse_pct": 13.7968
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 18.8956,
+            "rmse_pct": 19.7701
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.9014,
+            "covered": 2524,
+            "n": 2800,
+            "mean_interval_width": 12972.2434
+          }
+        }
+      },
+      "combined_unmet_primary_bdt": {
+        "status_quo": 5810710.0,
+        "yesterday_requirement": 2648451.0,
+        "seasonal_requirement_7d": 2170688.0,
+        "seasonal_same_weekday": 2351339.0,
+        "full_day_ml_p90": 1765328.0,
+        "oracle_full_day": 0.0
+      },
+      "incremental_vs_seasonal_7d": {
+        "combined_unmet_reduction_pct": 18.6743,
+        "cash_unmet_reduction_pct": 22.4897,
+        "efloat_unmet_reduction_pct": 12.4305,
+        "shortage_event_difference": -100
+      },
+      "best_simple_policy": "seasonal_requirement_7d",
+      "plausibility": {
+        "checks": {
+          "p90_coverage_within_70_99": true,
+          "not_worse_than_naive_on_both": true,
+          "conserved": true
+        },
+        "clearly_broken": false
+      }
+    },
+    "2029": {
+      "dev_rows": 8200,
+      "val_rows": 2800,
+      "dev_dates": [
+        "2026-06-24",
+        "2026-08-03"
+      ],
+      "val_dates": [
+        "2026-08-04",
+        "2026-08-17"
+      ],
+      "forecast": {
+        "cash": {
+          "target": "full_day_cash_requirement",
+          "ml_p50": {
+            "mae": 9611.0554,
+            "rmse": 15803.2702,
+            "wape": 0.2961,
+            "bias": 391.4923,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 13542.5107,
+              "rmse": 22901.8249,
+              "wape": 0.4173,
+              "bias": 471.225,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 10958.7291,
+              "rmse": 18161.0953,
+              "wape": 0.3377,
+              "bias": 1703.6781,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 13848.9143,
+              "rmse": 23309.1171,
+              "wape": 0.4267,
+              "bias": 2701.7143,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 12.2977,
+            "rmse_pct": 12.9828
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 29.0305,
+            "rmse_pct": 30.9956
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.8468,
+            "covered": 2371,
+            "n": 2800,
+            "mean_interval_width": 11420.5583
+          }
+        },
+        "efloat": {
+          "target": "full_day_efloat_requirement",
+          "ml_p50": {
+            "mae": 11617.4916,
+            "rmse": 22890.7408,
+            "wape": 0.5716,
+            "bias": 1759.1719,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 13786.7964,
+              "rmse": 28379.6133,
+              "wape": 0.6784,
+              "bias": 1826.4464,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 13881.0082,
+              "rmse": 26509.5671,
+              "wape": 0.683,
+              "bias": 7447.4235,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 20534.1071,
+              "rmse": 41042.1506,
+              "wape": 1.0104,
+              "bias": 13410.95,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "yesterday_requirement",
+          "improvement_vs_best_simple": {
+            "mae_pct": 15.7347,
+            "rmse_pct": 19.3409
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 15.7347,
+            "rmse_pct": 19.3409
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.9025,
+            "covered": 2527,
+            "n": 2800,
+            "mean_interval_width": 13784.5143
+          }
+        }
+      },
+      "combined_unmet_primary_bdt": {
+        "status_quo": 3583470.0,
+        "yesterday_requirement": 1690821.0,
+        "seasonal_requirement_7d": 1225542.0,
+        "seasonal_same_weekday": 1690246.0,
+        "full_day_ml_p90": 854209.0,
+        "oracle_full_day": 0.0
+      },
+      "incremental_vs_seasonal_7d": {
+        "combined_unmet_reduction_pct": 30.2995,
+        "cash_unmet_reduction_pct": 43.2804,
+        "efloat_unmet_reduction_pct": -4.7879,
+        "shortage_event_difference": -70
+      },
+      "best_simple_policy": "seasonal_requirement_7d",
+      "plausibility": {
+        "checks": {
+          "p90_coverage_within_70_99": true,
+          "not_worse_than_naive_on_both": true,
+          "conserved": true
+        },
+        "clearly_broken": false
+      }
+    },
+    "2030": {
+      "dev_rows": 8200,
+      "val_rows": 2800,
+      "dev_dates": [
+        "2026-06-24",
+        "2026-08-03"
+      ],
+      "val_dates": [
+        "2026-08-04",
+        "2026-08-17"
+      ],
+      "forecast": {
+        "cash": {
+          "target": "full_day_cash_requirement",
+          "ml_p50": {
+            "mae": 8939.9974,
+            "rmse": 15202.1914,
+            "wape": 0.2991,
+            "bias": 322.6533,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 12647.0643,
+              "rmse": 22070.7244,
+              "wape": 0.4232,
+              "bias": 611.2857,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 10341.3128,
+              "rmse": 18046.7093,
+              "wape": 0.346,
+              "bias": 2134.5362,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 13259.8357,
+              "rmse": 23931.1995,
+              "wape": 0.4437,
+              "bias": 3532.35,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 13.5507,
+            "rmse_pct": 15.762
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 29.3117,
+            "rmse_pct": 31.1206
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.8511,
+            "covered": 2383,
+            "n": 2800,
+            "mean_interval_width": 11214.7561
+          }
+        },
+        "efloat": {
+          "target": "full_day_efloat_requirement",
+          "ml_p50": {
+            "mae": 11188.2741,
+            "rmse": 22251.9716,
+            "wape": 0.5067,
+            "bias": 1919.1984,
+            "n": 2800
+          },
+          "baselines": {
+            "yesterday_requirement": {
+              "mae": 14068.9821,
+              "rmse": 29496.8791,
+              "wape": 0.6371,
+              "bias": 1735.8536,
+              "n": 2800
+            },
+            "seasonal_requirement_7d": {
+              "mae": 13543.7526,
+              "rmse": 26413.0176,
+              "wape": 0.6134,
+              "bias": 6980.5056,
+              "n": 2800
+            },
+            "seasonal_same_weekday": {
+              "mae": 19690.25,
+              "rmse": 41865.0292,
+              "wape": 0.8917,
+              "bias": 12231.9143,
+              "n": 2800
+            }
+          },
+          "best_simple_baseline": "seasonal_requirement_7d",
+          "improvement_vs_best_simple": {
+            "mae_pct": 17.3916,
+            "rmse_pct": 15.7538
+          },
+          "improvement_vs_naive_yesterday": {
+            "mae_pct": 20.4756,
+            "rmse_pct": 24.5616
+          },
+          "p90": {
+            "nominal_coverage": 0.9,
+            "empirical_coverage": 0.8918,
+            "covered": 2497,
+            "n": 2800,
+            "mean_interval_width": 12632.5788
+          }
+        }
+      },
+      "combined_unmet_primary_bdt": {
+        "status_quo": 4242540.0,
+        "yesterday_requirement": 1937299.0,
+        "seasonal_requirement_7d": 1463015.0,
+        "seasonal_same_weekday": 2233756.0,
+        "full_day_ml_p90": 901993.0,
+        "oracle_full_day": 0.0
+      },
+      "incremental_vs_seasonal_7d": {
+        "combined_unmet_reduction_pct": 38.347,
+        "cash_unmet_reduction_pct": 55.4942,
+        "efloat_unmet_reduction_pct": 14.4361,
+        "shortage_event_difference": -106
+      },
+      "best_simple_policy": "seasonal_requirement_7d",
+      "plausibility": {
+        "checks": {
+          "p90_coverage_within_70_99": true,
+          "not_worse_than_naive_on_both": true,
+          "conserved": true
+        },
+        "clearly_broken": false
+      }
+    }
+  },
+  "any_clearly_broken": false,
+  "median_incremental_vs_seasonal_7d_pct": 30.2995
+}

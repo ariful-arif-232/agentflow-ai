@@ -6,6 +6,16 @@ Three models are trained on the same leakage-safe feature set:
 * ``net_requirement``  — next-6h peak cumulative net cash drain (point forecast)
 * ``net_requirement_p90`` — 90th-percentile quantile model of the same target,
   used as the forecast-uncertainty upper band and as the rebalancing target level.
+
+Dual-liquidity Phase 1 adds two e-float models (same algorithm family, fixed settings,
+no tuning on the held-out test period):
+
+* ``efloat_requirement``     — next-6h peak cumulative net e-float need (point forecast)
+* ``efloat_requirement_p90`` — 90th-percentile quantile model of the same target.
+
+They use ``EFLOAT_FEATURES`` (the cash feature set plus same-window e-float-requirement
+history). The cash models keep exactly ``FORECAST_FEATURES``, so their predictions, and
+every legacy V1/V2 result built on them, are unchanged.
 """
 from __future__ import annotations
 
@@ -20,7 +30,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.inspection import permutation_importance
 
 from . import config
-from .features import FORECAST_FEATURES
+from .features import EFLOAT_FEATURES, EFLOAT_TARGET, FORECAST_FEATURES
 
 MODEL_PATH = config.MODELS_DIR / "forecast_models.joblib"
 
@@ -33,6 +43,13 @@ MODEL_SPECS = {
     "net_requirement_p90": {"target": "future_6h_net_cash_demand", "loss": "quantile", "quantile": 0.9},
 }
 
+# Pre-specified before any e-float evaluation: the same family and hyper-parameters as the
+# cash requirement models (squared error for P50, 0.9 quantile loss for P90).
+EFLOAT_MODEL_SPECS = {
+    "efloat_requirement": {"target": EFLOAT_TARGET, "loss": "squared_error", "quantile": None},
+    "efloat_requirement_p90": {"target": EFLOAT_TARGET, "loss": "quantile", "quantile": 0.9},
+}
+
 # Naive baselines evaluated on exactly the same held-out rows.
 BASELINES = {
     "cash_demand": {
@@ -43,11 +60,16 @@ BASELINES = {
         "naive_yesterday": "net_req_same_window_1d",
         "seasonal_avg_7d": "net_req_same_window_avg7",
     },
+    "efloat_requirement": {
+        "naive_yesterday": "efloat_req_same_window_1d",
+        "seasonal_avg_7d": "efloat_req_same_window_avg7",
+    },
 }
 
 
-def _make_model(loss: str, quantile: float | None, max_iter: int = 400) -> HistGradientBoostingRegressor:
-    cat_mask = [f in CATEGORICAL_FEATURES for f in FORECAST_FEATURES]
+def _make_model(loss: str, quantile: float | None, max_iter: int = 400,
+                feature_names: list[str] = FORECAST_FEATURES) -> HistGradientBoostingRegressor:
+    cat_mask = [f in CATEGORICAL_FEATURES for f in feature_names]
     kwargs = dict(loss=loss, learning_rate=0.06, max_iter=max_iter, max_leaf_nodes=48,
                   min_samples_leaf=60, l2_regularization=1.0, categorical_features=cat_mask,
                   early_stopping=False, random_state=config.SEED)
@@ -75,8 +97,14 @@ class ForecastBundle:
     models: dict[str, HistGradientBoostingRegressor]
     features: list[str]
     metadata: dict
+    efloat_features: list[str] | None = None
+
+    @property
+    def has_efloat(self) -> bool:
+        return self.efloat_features is not None and all(k in self.models for k in EFLOAT_MODEL_SPECS)
 
     def predict(self, X: pd.DataFrame) -> pd.DataFrame:
+        X_all = X
         X = X[self.features]
         out = pd.DataFrame(index=X.index)
         out["pred_cash_demand_6h"] = np.clip(self.models["cash_demand"].predict(X), 0, None)
@@ -84,20 +112,32 @@ class ForecastBundle:
         p90 = np.clip(self.models["net_requirement_p90"].predict(X), 0, None)
         out["pred_net_requirement_6h"] = p50
         out["pred_net_requirement_p90_6h"] = np.maximum(p90, p50)  # enforce non-crossing
+        if self.has_efloat and all(f in X_all.columns for f in self.efloat_features):
+            Xe = X_all[self.efloat_features]
+            e50 = np.clip(self.models["efloat_requirement"].predict(Xe), 0, None)
+            e90 = np.clip(self.models["efloat_requirement_p90"].predict(Xe), 0, None)
+            out["pred_efloat_requirement_6h"] = e50
+            out["pred_efloat_requirement_p90_6h"] = np.maximum(e90, e50)  # P90 >= P50 >= 0
         return out
 
     def save(self, path=MODEL_PATH) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump({"models": self.models, "features": self.features, "metadata": self.metadata},
-                    path, compress=3)
+        joblib.dump({"models": self.models, "features": self.features, "metadata": self.metadata,
+                     "efloat_features": self.efloat_features}, path, compress=3)
 
     @classmethod
     def load(cls, path=MODEL_PATH) -> "ForecastBundle":
         d = joblib.load(path)
-        return cls(models=d["models"], features=d["features"], metadata=d["metadata"])
+        return cls(models=d["models"], features=d["features"], metadata=d["metadata"],
+                   efloat_features=d.get("efloat_features"))
 
 
-def train(train_df: pd.DataFrame, max_iter: int = 400) -> ForecastBundle:
+def train(train_df: pd.DataFrame, max_iter: int = 400, include_efloat: bool = True) -> ForecastBundle:
+    """Fit the cash models (and, by default, the e-float models) on ``train_df``.
+
+    The cash models are fitted first and exactly as before; the e-float models are independent
+    estimators, so adding them cannot change any cash prediction.
+    """
     models = {}
     timings = {}
     X = train_df[FORECAST_FEATURES]
@@ -107,9 +147,19 @@ def train(train_df: pd.DataFrame, max_iter: int = 400) -> ForecastBundle:
         m.fit(X, train_df[spec["target"]].to_numpy())
         models[name] = m
         timings[name] = round(time.time() - t0, 2)
+    specs = dict(MODEL_SPECS)
+    if include_efloat:
+        Xe = train_df[EFLOAT_FEATURES]
+        for name, spec in EFLOAT_MODEL_SPECS.items():
+            t0 = time.time()
+            m = _make_model(spec["loss"], spec["quantile"], max_iter, EFLOAT_FEATURES)
+            m.fit(Xe, train_df[spec["target"]].to_numpy())
+            models[name] = m
+            timings[name] = round(time.time() - t0, 2)
+        specs.update(EFLOAT_MODEL_SPECS)
     meta = {
         "algorithm": "sklearn.ensemble.HistGradientBoostingRegressor",
-        "model_specs": MODEL_SPECS,
+        "model_specs": specs,
         "n_train_rows": int(len(train_df)),
         "train_start": str(train_df["timestamp"].min()),
         "train_end": str(train_df["timestamp"].max()),
@@ -117,7 +167,8 @@ def train(train_df: pd.DataFrame, max_iter: int = 400) -> ForecastBundle:
         "seed": config.SEED,
         "horizon_hours": config.HORIZON_H,
     }
-    return ForecastBundle(models=models, features=list(FORECAST_FEATURES), metadata=meta)
+    return ForecastBundle(models=models, features=list(FORECAST_FEATURES), metadata=meta,
+                          efloat_features=list(EFLOAT_FEATURES) if include_efloat else None)
 
 
 def evaluate(bundle: ForecastBundle, test_df: pd.DataFrame) -> dict:

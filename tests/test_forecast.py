@@ -14,7 +14,9 @@ def trained(small_features):
 
 def test_training_succeeds(trained):
     bundle, train, _ = trained
-    assert set(bundle.models) == set(forecast.MODEL_SPECS)
+    # cash models exactly as before, plus the experimental e-float pair (research branch)
+    assert set(bundle.models) == set(forecast.MODEL_SPECS) | set(forecast.EFLOAT_MODEL_SPECS)
+    assert bundle.features == features.FORECAST_FEATURES
     assert bundle.metadata["n_train_rows"] == len(train)
     assert bundle.metadata["train_end"] < str(features.config.TEST_START)
 

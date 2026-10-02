@@ -14,6 +14,14 @@ future_6h_net_cash_demand
     ``max(0, max_k sum_{j=1..k} (cash_out_{t+j} - cash_in_{t+j}))``.
     This is exactly the opening cash an agent needs to serve every cash-out request
     in the window, so it is the quantity the risk engine compares to the cash balance.
+future_6h_net_efloat_demand
+    The symmetric e-float target (dual-liquidity Phase 1):
+    ``max(0, max_k sum_{j=1..k} (cash_in_{t+j} - cash_out_{t+j}))``.
+    An agent manages two coupled resources: physical cash supports cash-out, e-float supports
+    cash-in, and each transaction shifts value from one side to the other. This is the opening
+    e-float needed to accept every *requested* cash-in in the window under the same
+    aggregate-flow assumption. It is a requirement, not a record of failed cash-in: the
+    synthetic data does not simulate declined cash-in.
 """
 from __future__ import annotations
 
@@ -52,6 +60,14 @@ FORECAST_FEATURES = [
 
 TARGETS = ["future_6h_cash_demand", "future_6h_cash_in", "future_6h_net_cash_demand"]
 
+# Dual-liquidity Phase 1: e-float requirement target and its leakage-safe history.
+# Kept separate from FORECAST_FEATURES / TARGETS so the validated cash models, the
+# train/test split and every legacy V1/V2 result stay exactly as they were.
+EFLOAT_TARGET = "future_6h_net_efloat_demand"
+EFLOAT_HISTORY_FEATURES = ["efloat_req_same_window_1d", "efloat_req_same_window_7d",
+                           "efloat_req_same_window_avg7"]
+EFLOAT_FEATURES = FORECAST_FEATURES + EFLOAT_HISTORY_FEATURES
+
 
 def _encode_static(agents: pd.DataFrame) -> pd.DataFrame:
     a = agents.copy()
@@ -77,6 +93,7 @@ def build_features(hourly: pd.DataFrame, agents: pd.DataFrame) -> pd.DataFrame:
     a = _encode_static(agents)
     keep = ["agent_id", "district", "location_cluster", "agent_type", "agent_volume_segment",
             "synthetic_latitude", "synthetic_longitude", "market_day", "target_cash_level",
+            "target_efloat_level",
             "district_code", "location_cluster_code", "agent_volume_segment_code", "agent_type_code"]
     df = df.merge(a[keep], on="agent_id", how="left")
 
@@ -102,6 +119,12 @@ def build_features(hourly: pd.DataFrame, agents: pd.DataFrame) -> pd.DataFrame:
         peak = d if peak is None else np.fmax(peak, d)
     complete = g_cum.shift(-H).notna()
     df["future_6h_net_cash_demand"] = peak.clip(lower=0).where(complete)
+    # Symmetric e-float requirement: peak cumulative (cash_in - cash_out) = peak of -(net drain).
+    peak_ef = None
+    for k in range(1, H + 1):
+        d = cum - g_cum.shift(-k)
+        peak_ef = d if peak_ef is None else np.fmax(peak_ef, d)
+    df[EFLOAT_TARGET] = peak_ef.clip(lower=0).where(complete)
     unmet_future = _future_window_sum(df["unmet_cash_out"].groupby(gid))
     df["shortage_next_6h"] = (unmet_future > 0).astype("float").where(unmet_future.notna())
     df["unmet_next_6h"] = unmet_future
@@ -121,7 +144,7 @@ def build_features(hourly: pd.DataFrame, agents: pd.DataFrame) -> pd.DataFrame:
     # Same forecast window on previous days: target series shifted by >= 24h only
     # (window t-24d+1 .. t-24d+6 ends at t-18 at the latest => fully observed at t).
     for name, target in (("out", "future_6h_cash_demand"), ("in", "future_6h_cash_in"),
-                         ("net_req", "future_6h_net_cash_demand")):
+                         ("net_req", "future_6h_net_cash_demand"), ("efloat_req", EFLOAT_TARGET)):
         g_t = df[target].groupby(gid)
         lags = [g_t.shift(24 * d) for d in range(1, 8)]
         df[f"{name}_same_window_1d"] = lags[0]

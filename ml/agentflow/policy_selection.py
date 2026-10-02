@@ -69,7 +69,7 @@ def _fold_inputs(feats: pd.DataFrame, fold: dict, max_iter: int = 400):
     has_hist = feats["out_same_window_avg7"].notna() & feats["out_rolling_mean_168h"].notna()
     has_target = feats[TARGETS].notna().all(axis=1)
     dev = feats[has_hist & has_target & (feats["timestamp"] < fold["val_start"] - pd.Timedelta(hours=H))]
-    bundle = forecast.train(dev, max_iter=max_iter)
+    bundle = forecast.train(dev, max_iter=max_iter, include_efloat=False)
     window = feats["timestamp"].between(fold["val_start"], fold["val_end"]) & has_hist
     preds = bundle.predict(feats.loc[window, FORECAST_FEATURES])
     hist_src = feats[(feats["timestamp"] < fold["val_start"]) & feats["hour"].isin(OPERATING_HOURS)]

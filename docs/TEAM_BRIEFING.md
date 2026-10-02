@@ -110,6 +110,7 @@ any hour in the 14-day test period.
 | Page | What it shows |
 |---|---|
 | **Command Center** | At the default time: 200 active agents, **25 at risk** (HIGH or CRITICAL), **7 critical**, 32 at MEDIUM, 15 with unusual activity. Projected service readiness **71.5% → 77.5%** with the recommended plan (policy V2). Recommended rebalancing **BDT 4.7 lakh** in **14 transfers**; BDT 5.0 lakh escalated to the distributor. (With policy V1 the same moment needs 21 transfers for BDT 4.0 lakh, reaching 77.0%.) Also a 48-hour forecast-vs-actual chart, a risk chart, top at-risk agents and a district table. |
+| **Morning Plan** (new, proactive) | At 07:00 a full-day model forecasts each agent's **cash and e-float** needs for 08:00–23:59. At 08:00 it proposes where the **same** district working capital should sit: the budget and recommendation match exactly, with BDT 0 extra. It includes a review-focus panel (largest cuts, low-volume cuts, rural e-float reductions), an agent table with an explanation drawer, a district conservation proof, **Approve Simulation**, and the research evidence with caveats. It uses a separate synthetic demo world. |
 | **Agents** | Table of all 200 agents; sort and filter by risk, behaviour, district, location type, volume and ID. |
 | **Agent Intelligence** (click an agent) | Current cash, 6-hour forecasts, expected gap, risk score with its 5 parts, "Why this risk?" (with Bangla button), recommended action, unusual-activity panel, 72-hour history chart, model accuracy. |
 | **Rebalancing Center** | Policy toggle (**V2**, the default, or **V1**). All recommended transfers → **Review Recommendation** → evidence drawer → tick acknowledgement → **Approve Simulation** → before/after results and audit log. Also lists escalations and agents held for manual review. |
@@ -124,6 +125,29 @@ donor stays LOW with BDT 4,430 above its safety reserve. (Policy V1 would use tw
 from AG-0183 and BDT 16,000 from AG-0178, which reach the same result at a higher estimated logistics
 cost.) Set the decision time to 19:00 and you can see that, without action, its cash hits zero
 at 19:00 and BDT 11,830 of cash-out is turned away.
+
+## 6a. Morning Plan vs. V2: two time scales
+
+- **Morning Plan (proactive):** full-day cash **and** e-float positioning before the day starts.
+- **V2 (reactive):** intraday **physical-cash** rebalancing when 6-hour risk appears. V2 does not
+  handle e-float.
+- **The evidence, to quote exactly:**
+  - *"In fresh synthetic worlds from the same pre-registered world family, the frozen full-day ML
+    policy reduced combined unmet demand by a median 20.6% versus the strongest cautious historical
+    baseline, while conserving each district's cash and e-float budgets exactly. This is synthetic
+    held-out evidence, not measured upay performance."*
+  - The range across worlds was 13.7–29.8%, and 5 of 5 worlds improved.
+- **Caveats to volunteer:**
+  - cash P90 coverage is about 85% (nominal 90%);
+  - low-volume agents did worse than the cautious q90 rule in 4 of 5 worlds;
+  - rural e-float can fall materially.
+- **The research story (negative results included):**
+  1. peer cash/e-float swaps were rejected;
+  2. the 6-hour ML was rejected for morning planning;
+  3. the forecast horizon was aligned to the full day;
+  4. the frozen model survived fresh cautious-baseline tests.
+
+  See `docs/MORNING_PLAN.md`.
 
 ## 7. What the ML model actually predicts
 
@@ -338,7 +362,7 @@ between them. An automated test confirms that no prediction uses future informat
 - **Security:** no secrets in the code (`.env` is excluded from git); strict input checking; error
   messages never show internal code details; allowed website origins are configurable (CORS);
   basic web security headers; the server container runs as a non-root user.
-- **Reproducible and tested:** 79 automated tests, and a GitHub Actions pipeline that rebuilds and
+- **Reproducible and tested:** 103 automated tests, and a GitHub Actions pipeline that rebuilds and
   checks everything on every change.
 
 ## 17. Limitations (be honest about these)
@@ -445,7 +469,7 @@ These are **future steps**, not done today:
     explanation uses fixed templates.
 26. **Can others reproduce your results?** Yes. `python ml/scripts/run_pipeline.py` regenerates the
     data, retrains and re-evaluates; a fresh copy reproduces the metrics files exactly.
-27. **How is it tested?** 79 automated tests (data, leakage, models, risk, rebalancing V1/V2 safety,
+27. **How is it tested?** 103 automated tests (data, leakage, models, risk, rebalancing V1/V2 safety,
     simulation, API, frontend–backend contract). GitHub Actions also checks the frontend build.
 28. **What is the tech stack?** Python (pandas, scikit-learn), FastAPI backend, Next.js + TypeScript +
     Tailwind dashboard. Deployed on Vercel (dashboard) and Railway (API).
@@ -509,6 +533,11 @@ click **Retry**; nothing was changed or approved.
   gains are fewer transfers, lower cost and fewer donor shortages.
 - ❌ Do **not** claim donors are now risk-free. There were still 14 donor shortage events with V2.
 - ❌ Do **not** claim AgentFlow is in production or used by upay.
+- ❌ Do **not** present 20.6% as the saving for the date shown on the Morning Plan page. It is
+  historical synthetic research evidence.
+- ❌ Do **not** say the Morning Plan "adds liquidity" or that V2 optimises e-float. The plan
+  repositions the same working capital, and V2 is cash-only.
+- ❌ Do **not** say an agent "will be harmed". Say the plan *flags it for review*.
 
 **Safe phrases to use:**
 - "In our synthetic held-out simulation…"

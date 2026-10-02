@@ -266,10 +266,29 @@ By volume segment, forecast WAPE is 17.3–18.4% and alert precision 77–84%.
   a real deployment would re-select them on real history and monitor drift. V2 did not lower the
   share of unnecessary transfers and is slightly worse than V1 for rural agents.
 
+## 8. Morning Liquidity Plan: research evidence (separate synthetic environment)
+
+These results come from **Dual-Liquidity World v2**, a separate synthetic environment with finite
+cash *and* e-float. They must not be combined with the legacy V1/V2 tables above.
+
+Each step was pre-registered, frozen before evaluation and run once on fresh seeds:
+
+| Step | Comparison | Result |
+|---|---|---|
+| Peer cash ↔ e-float swaps | feasibility of safe, local, same-time complementary pairs | **rejected**: 0 of 5 worlds met the bar |
+| 6-hour ML morning plan | vs 7-day seasonal full-day history | **rejected**: seasonal history won in 5 of 5 worlds |
+| Full-day ML, fresh confirmatory worlds 2031–2035 | vs seasonal 7-day mean | ML better in 5 of 5 (median −33.2%) |
+| **Full-day ML, fresh audit worlds 2036–2040** | vs **best cautious rule** (historical 7-day q90; also 7-day max) | **ML better in 5 of 5; median −20.6% combined unmet (13.7–29.8%); cash −39.4%; e-float −9.7%; BDT 0 extra working capital; exact conservation** |
+
+The headline is the last row, against the strongest cautious baseline. Pooled P90 coverage is 85.2%
+for cash and 88.0% for e-float. Low-volume agents did worse than q90 in 4 of 5 audit worlds. **This
+is synthetic held-out evidence, not measured upay performance.** Details:
+[MORNING_PLAN.md](MORNING_PLAN.md).
+
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 79 tests
+python -m pytest -q                 # 103 tests
 ```

@@ -46,7 +46,17 @@ The **Judge demo** strip (6 steps, live values) is your route map. Click a step 
 
 Point at: **25 at-risk, 7 critical**, **projected service readiness 71.5% → 77.5% with the V2 plan**,
 **14 peer transfers, BDT 4.7 lakh**.
-*Transition:* "Let's look at one of these agents."
+*Transition:* "That's intraday risk. But AgentFlow also acts before the day starts."
+
+**1b. Morning Plan (25 s)** (guide step 2). Open **Morning Plan**, dated Mon 31 Aug 2026.
+> "At 07:00 a full-day model forecasts each agent's cash *and* e-float need. At 08:00 it proposes where
+> the same working capital should sit. Look: budget and recommendation match exactly, BDT 0 extra."
+
+Point at the **Review focus** panel: "Hard cases are surfaced for a person, such as big cuts, low-volume
+agents and rural e-float." Do **not** quote 20.6% as this date's saving. It is historical synthetic
+evidence, shown at the bottom with its caveats.
+
+*Transition:* "Now let's look at one agent under intraday pressure."
 
 **2. AG-0171 (45 s)** (guide step 2).
 > "AG-0171 in Rangpur has BDT 20,640. Our ML forecast says it will need BDT 38,675 at peak in the
@@ -133,6 +143,9 @@ There is deliberately no fake "offline mode": the app never presents cached numb
 | What if the forecast is wrong? | We plan for a cautious P90 scenario, donors keep a reserve, and a person reviews. It still happens: 14 donor shortage events in 345 simulated transfers. |
 | Why is unnecessary-transfer % higher in V2? | V2 makes fewer, larger transfers. The number of unnecessary ones fell (107 → 84) but their share rose (21.4% → 24.3%). The gate removes low-value moves; it can't fix forecast false alarms. |
 | How did you avoid tuning on the test set? | V2 settings were chosen on two earlier validation windows inside the training period, with forecast models retrained on even earlier data. The 14-day test window was used once, with a decision rule written beforehand. |
+| What is the Morning Plan? | A proactive 08:00 plan: a full-day forecast of cash and e-float needs, and the same district budgets repositioned (BDT 0 extra). A person reviews it; approval only simulates. |
+| Does the ML really matter there? | In fresh synthetic audit worlds it beat strong cautious historical rules (7-day q90 and max) in 5 of 5, with a median 20.6% lower unmet demand. That is synthetic evidence, not upay results, and low-volume agents did worse than q90 in 4 of 5. |
+| Why not peer cash/e-float swaps? | We tested it: safe, nearby, same-time complementary agents were too rare, so we rejected it. |
 | What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot with operations staff, and re-tuning. |
 
 ---
@@ -144,3 +157,4 @@ There is deliberately no fake "offline mode": the app never presents cached numb
 - "Fraud detected".
 - "V2 is better on every metric".
 - "Proven in the real world".
+- "The Morning Plan will save 20.6% today" (it is historical synthetic evidence, not a per-date saving).

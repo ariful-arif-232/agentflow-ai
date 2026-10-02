@@ -85,8 +85,39 @@ served from memory (overview ≈ tens of ms; a new decision time ≈ 0.3 s).
 | POST | `/api/scenario` | demand-shock what-if (network and/or district) |
 | GET | `/api/impact` | held-out impact simulation results |
 | GET | `/api/model/metrics` | held-out model metrics, training metadata, dataset summary |
+| GET | `/api/morning-plan/dates` | Morning Plan demo dates, default date, synthetic/human-review labels |
+| GET | `/api/morning-plan?date=` | live Morning Plan: network totals, district conservation proof, agents, flags, explanations, review focus |
+| GET | `/api/morning-plan/evidence` | aggregate synthetic research evidence and caveats |
+| POST | `/api/morning-plan/simulate` | human-review simulation of a Morning Plan (acknowledgement required; no money moved) |
+| GET | `/api/morning-plan/audit` | simulated Morning Plan approvals log |
 
 All analytics endpoints accept `as_of` (a held-out hour, 06:00–21:00).
+
+## Morning Liquidity Plan layer (proactive, additive)
+
+The Morning Plan is a separate, additive layer. It does not replace or modify the legacy engine,
+the 6-hour forecasts, the risk engine or V1/V2.
+
+```
+frozen full-day forecasts (ml/artifacts/morning_plan_demo.json, ~164 KB)
+  → apps/api/app/morning_plan.py: live need-first allocator per district
+      (fixed cash and e-float budgets, BDT 5,000 floors, integer BDT, agent_id tie-break,
+       runtime conservation / floor / no-future-field assertions)
+  → /api/morning-plan/* → /morning-plan page → human-review simulation (audit, no money moved)
+```
+
+* **Why a fixture?**
+  * The full-day models were trained and audited in the research environment (Dual-Liquidity World
+    v2, frozen spec `3128176`).
+  * Serving pre-computed decision-time forecasts keeps Railway's start-up time and memory unchanged:
+    no Dual World dataset is loaded, no training happens at start-up, and no second engine is created.
+* **Why recompute the allocation live?** It shows that the predictions are frozen and reproducible,
+  while the allocation logic and conservation are enforced in the serving path.
+* **Two time scales:**
+  * the proactive Morning Plan covers cash and e-float for the whole operating day;
+  * reactive intraday V2 rebalancing covers physical cash for the next 6 hours.
+
+See [MORNING_PLAN.md](MORNING_PLAN.md).
 
 ## Scalability and integration path
 

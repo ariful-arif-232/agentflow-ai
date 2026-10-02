@@ -30,6 +30,16 @@ production version would need. It is not a claim of production readiness.
 | Frontend resilience | API calls time out after 20 s. Failures show a safe error message with Retry and never display stale numbers as live data. | `apps/web/src/lib/api.ts`, `apps/web/src/components/ui.tsx` |
 | Reproducible evaluation | A time-based purged split, a feature-leakage test and a fixed seed regenerate every committed metric. V2 parameters were selected on training-period validation folds, never on the test window. | `ml/scripts/run_pipeline.py`, `tests/test_data.py`, `ml/agentflow/policy_selection.py` |
 
+**Morning Liquidity Plan endpoints** (`apps/api/app/morning_plan.py`, `schemas.MorningPlanSimulateRequest`):
+* **Date validation:** dates must match `YYYY-MM-DD` and exist in the fixture (otherwise 404 or 422).
+* **Simulation request:** extra fields are rejected and notes are capped at 500 characters. An
+  explicit `reviewer_acknowledged: true` is required (otherwise 400).
+* **No money movement:** simulation returns `money_moved: false` and writes an in-memory audit entry.
+* **Read-only inputs:** the service loads only two JSON artifacts. It loads no models, datasets or
+  user-supplied paths.
+* **Runtime assertions:** the plan is checked for exact district conservation, floors,
+  non-negativity, and the absence of any future or outcome field in the operational response.
+
 ## B. Known prototype limitations
 
 * **No authentication or authorisation.** Anyone who can reach the API can read the synthetic data

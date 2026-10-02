@@ -81,6 +81,11 @@ One decision engine powers dashboard snapshots, API and impact simulator. See `A
   **Approve Simulation**, portfolio before/after, audit log, escalations, held-for-review.
 * Scenario Lab: network / district demand shocks recomputed live.
 * Impact & Model Health: policy comparison, baselines vs. ML, alert and anomaly evaluation, fairness.
+* **Morning Liquidity Plan** (proactive):
+  * full-day cash + e-float positioning with the same working capital, and exact per-district
+    conservation;
+  * review focus, an agent explanation drawer and human-review simulation;
+  * historical research evidence with caveats.
 
 ## 10. Evaluation (synthetic held-out)
 
@@ -94,6 +99,26 @@ One decision engine powers dashboard snapshots, API and impact simulator. See `A
 | Anomaly detection | ROC-AUC 0.981, AP 0.671 (a simple rule alone is equally strong — reported) |
 
 See `EVALUATION.md`.
+
+## 10a. Morning Liquidity Plan: two time scales
+
+AgentFlow now works on two time scales:
+* **Proactive:** a full-day dual-liquidity Morning Plan for cash and e-float, at 07:00 → 08:00.
+* **Reactive:** the 6-hour cash risk with V2 rebalancing.
+
+In fresh synthetic worlds from the same pre-registered world family, the frozen full-day ML policy
+reduced combined unmet demand by a median **20.6%** versus the strongest cautious historical
+baseline, while conserving each district's cash and e-float budgets exactly. **This is synthetic
+held-out evidence, not measured upay performance.**
+
+The research path was pre-registered, and its negative results are kept:
+1. peer cash/e-float swaps were rejected (local complementarity was sparse);
+2. a 6-hour ML morning plan was rejected (seasonal full-day history beat it);
+3. the forecast horizon was aligned to the full-day decision;
+4. the frozen model survived fresh cautious-baseline (q90/max) attribution.
+
+Caveats: cash P90 coverage is about 85% (nominal 90%), low-volume agents did worse than q90 in 4 of 5
+worlds, and rural e-float can fall materially. See `MORNING_PLAN.md`.
 
 ## 11. Business / customer impact (synthetic held-out simulation)
 

@@ -185,7 +185,14 @@ Across seeds, 32–43 agents are made worse. Per-agent daily allocation shifts i
    with no transport cost, cash-in-transit limit or distributor constraint. Within-hour net
    settlement is optimistic, and there is a single synthetic world family.
 
-## Recommendation
+## Update from Phase 2D (supersedes the recommendation below)
+
+The pre-registered ML attribution audit ([ML_ATTRIBUTION_RESULTS.md](ML_ATTRIBUTION_RESULTS.md))
+found that a **non-ML 7-day seasonal requirement baseline beats this 6-hour ML policy in all five
+seeds**. The ML-value bar failed, so the current ML Morning Liquidity Plan should **not** be shipped.
+A longer-horizon ML model is the next candidate.
+
+## Recommendation (Phase 2C, superseded)
 
 **Proceed to a production-facing Morning Liquidity Plan.** The pre-registered bar passed in 5 of 5
 seeds with exact conservation and no concentration flags. The plan must be framed as human-reviewed

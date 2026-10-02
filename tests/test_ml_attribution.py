@@ -150,3 +150,22 @@ def test_operational_signals_contain_no_labels():
     src = "".join(inspect.getsource(fn) for fn in (ma.history_signals, ma.allocate, ma.prior_day_windows))
     for token in ("future_6h", "unmet_cash", "known_anomaly", "oracle"):
         assert token not in src
+
+
+def test_committed_attribution_artifacts_match_preregistration():
+    import json
+    art = Path(__file__).resolve().parents[1] / "ml" / "artifacts_dual" / "ml_attribution_multiseed.json"
+    if not art.exists():
+        pytest.skip("attribution artifacts not generated")
+    m = json.loads(art.read_text())
+    assert m["assumptions_version"] == "2A.1" and m["constants"]["bar"] == ma.BAR
+    assert m["constants"]["seeds"] == list(ma.SEEDS) and list(m["per_seed"]) == [str(s) for s in ma.SEEDS]
+    for s, r in m["per_seed"].items():
+        assert r["conserved_all_policies"] is True and r["ml_matches_phase_2c"] is True
+        best = min(ma.SIMPLE_BASELINES, key=lambda k: (r[f"{k}_combined_unmet_bdt"], ma.SIMPLE_BASELINES.index(k)))
+        assert r["best_simple_baseline"] == best
+        want = 100 * (r[f"{best}_combined_unmet_bdt"] - r["agentflow_ml_p90_combined_unmet_bdt"]) / r[f"{best}_combined_unmet_bdt"]
+        assert r["incremental"]["combined_unmet_reduction_pct"] == pytest.approx(want, abs=1e-3)
+    bar = ma.ml_value_bar({s: {"incremental": r["incremental"], "conserved_all_policies": r["conserved_all_policies"]}
+                           for s, r in m["per_seed"].items()})
+    assert bar["passes"] == m["ml_value_bar"]["passes"]

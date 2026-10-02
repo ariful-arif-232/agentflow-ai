@@ -318,3 +318,13 @@ e-float budgets at 08:00 using 6-hour P90 forecasts, with exact conservation.
 
 **Outcome: the research bar passed in 5 of 5 seeds** (median combined unmet −35.5%). The
 status-quo baseline is crude, and a stronger non-ML baseline is still to be tested.
+
+## 10. Follow-up: ML attribution of the prepositioning gain (Phase 2D)
+
+This pre-registered comparison holds budgets, floors, allocator and demand fixed and changes only
+the allocation signal. It found that a **non-ML 7-day seasonal requirement baseline beats the 6-hour
+ML policy in all 5 seeds** (ML combined unmet +24% to +38% higher). The ML signal is better for cash
+and much worse for e-float. The ML-value bar failed.
+
+* Protocol: [ML_ATTRIBUTION_PROTOCOL.md](ML_ATTRIBUTION_PROTOCOL.md)
+* Results: [ML_ATTRIBUTION_RESULTS.md](ML_ATTRIBUTION_RESULTS.md)

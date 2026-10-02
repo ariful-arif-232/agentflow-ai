@@ -1,0 +1,384 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2 - prepositioning ML attribution (research only)",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "protocol": "docs/ML_ATTRIBUTION_PROTOCOL.md",
+  "constants": {
+    "seeds": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030
+    ],
+    "operational_policies": [
+      "status_quo",
+      "history_proportional",
+      "seasonal_requirement_7d",
+      "agentflow_ml_p90"
+    ],
+    "simple_baselines": [
+      "history_proportional",
+      "seasonal_requirement_7d"
+    ],
+    "ml_policy": "agentflow_ml_p90",
+    "oracle_policies": [
+      "oracle_6h",
+      "oracle_full_day"
+    ],
+    "history_days": 7,
+    "modes": {
+      "history_proportional": "proportional",
+      "seasonal_requirement_7d": "need",
+      "agentflow_ml_p90": "need",
+      "oracle_6h": "need",
+      "oracle_full_day": "need"
+    },
+    "bar": {
+      "min_seeds_ml_not_worse": 4,
+      "min_median_incremental_combined_pct": 5.0,
+      "max_side_increase_pct": 5.0,
+      "max_seeds_with_side_increase": 1
+    },
+    "floors_bdt": [
+      5000,
+      5000
+    ]
+  },
+  "seed": 2026,
+  "window": [
+    "2026-08-18 08:00:00",
+    "2026-08-31 23:00:00"
+  ],
+  "held_out_days": 14,
+  "status_quo_replay_matches_world": true,
+  "ml_matches_phase_2c": true,
+  "metrics": {
+    "status_quo": {
+      "cash_shortage_events": 1005,
+      "unmet_cash_out_bdt": 3751880.0,
+      "cash_out_fill_rate": 0.9897,
+      "efloat_shortage_events": 1267,
+      "unmet_cash_in_bdt": 4627190.0,
+      "cash_in_fill_rate": 0.9884,
+      "fully_serviceable_agent_hours": 63328,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 8379070.0,
+      "combined_fill_rate": 0.989,
+      "shortage_events_total": 2272,
+      "agents_with_any_shortage": 139,
+      "vs_status_quo": {
+        "combined_unmet_reduction_pct": 0.0,
+        "agents": {
+          "better": 0,
+          "worse": 0,
+          "unchanged": 200
+        }
+      }
+    },
+    "history_proportional": {
+      "cash_shortage_events": 543,
+      "unmet_cash_out_bdt": 2441745.0,
+      "cash_out_fill_rate": 0.9933,
+      "efloat_shortage_events": 1077,
+      "unmet_cash_in_bdt": 3853613.0,
+      "cash_in_fill_rate": 0.9903,
+      "fully_serviceable_agent_hours": 63980,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 6295358.0,
+      "combined_fill_rate": 0.9918,
+      "shortage_events_total": 1620,
+      "agents_with_any_shortage": 138,
+      "vs_status_quo": {
+        "combined_unmet_reduction_pct": 24.8681,
+        "agents": {
+          "better": 106,
+          "worse": 56,
+          "unchanged": 38
+        }
+      }
+    },
+    "seasonal_requirement_7d": {
+      "cash_shortage_events": 351,
+      "unmet_cash_out_bdt": 1462236.0,
+      "cash_out_fill_rate": 0.996,
+      "efloat_shortage_events": 641,
+      "unmet_cash_in_bdt": 2345046.0,
+      "cash_in_fill_rate": 0.9941,
+      "fully_serviceable_agent_hours": 64608,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 3807282.0,
+      "combined_fill_rate": 0.995,
+      "shortage_events_total": 992,
+      "agents_with_any_shortage": 128,
+      "vs_status_quo": {
+        "combined_unmet_reduction_pct": 54.562,
+        "agents": {
+          "better": 114,
+          "worse": 36,
+          "unchanged": 50
+        }
+      }
+    },
+    "agentflow_ml_p90": {
+      "cash_shortage_events": 208,
+      "unmet_cash_out_bdt": 979795.0,
+      "cash_out_fill_rate": 0.9973,
+      "efloat_shortage_events": 1045,
+      "unmet_cash_in_bdt": 3745361.0,
+      "cash_in_fill_rate": 0.9906,
+      "fully_serviceable_agent_hours": 64347,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 4725156.0,
+      "combined_fill_rate": 0.9938,
+      "shortage_events_total": 1253,
+      "agents_with_any_shortage": 106,
+      "vs_status_quo": {
+        "combined_unmet_reduction_pct": 43.6076,
+        "agents": {
+          "better": 109,
+          "worse": 32,
+          "unchanged": 59
+        }
+      }
+    }
+  },
+  "oracle": {
+    "label": "ORACLE - evaluation only, impossible operationally",
+    "oracle_6h": {
+      "cash_shortage_events": 145,
+      "unmet_cash_out_bdt": 366826.0,
+      "cash_out_fill_rate": 0.999,
+      "efloat_shortage_events": 1001,
+      "unmet_cash_in_bdt": 3941091.0,
+      "cash_in_fill_rate": 0.9901,
+      "fully_serviceable_agent_hours": 64454,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 4307917.0,
+      "combined_fill_rate": 0.9944,
+      "shortage_events_total": 1146,
+      "agents_with_any_shortage": 94,
+      "vs_status_quo": {
+        "combined_unmet_reduction_pct": 48.5872,
+        "agents": {
+          "better": 117,
+          "worse": 22,
+          "unchanged": 61
+        }
+      }
+    },
+    "oracle_full_day": {
+      "cash_shortage_events": 0,
+      "unmet_cash_out_bdt": 0.0,
+      "cash_out_fill_rate": 1.0,
+      "efloat_shortage_events": 0,
+      "unmet_cash_in_bdt": 0.0,
+      "cash_in_fill_rate": 1.0,
+      "fully_serviceable_agent_hours": 65600,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 0.0,
+      "combined_fill_rate": 1.0,
+      "shortage_events_total": 0,
+      "agents_with_any_shortage": 0,
+      "vs_status_quo": {
+        "combined_unmet_reduction_pct": 100.0,
+        "agents": {
+          "better": 139,
+          "worse": 0,
+          "unchanged": 61
+        }
+      }
+    }
+  },
+  "conservation": {
+    "status_quo": {
+      "exact": true,
+      "max_abs_district_diff_bdt": 0
+    },
+    "history_proportional": {
+      "exact": true,
+      "max_abs_district_diff_bdt": 0
+    },
+    "seasonal_requirement_7d": {
+      "exact": true,
+      "max_abs_district_diff_bdt": 0
+    },
+    "agentflow_ml_p90": {
+      "exact": true,
+      "max_abs_district_diff_bdt": 0
+    },
+    "oracle_6h": {
+      "exact": true,
+      "max_abs_district_diff_bdt": 0
+    },
+    "oracle_full_day": {
+      "exact": true,
+      "max_abs_district_diff_bdt": 0
+    }
+  },
+  "conserved_all_policies": true,
+  "floor_edge_cases": {
+    "status_quo": 0,
+    "history_proportional": 0,
+    "seasonal_requirement_7d": 0,
+    "agentflow_ml_p90": 0,
+    "oracle_6h": 0,
+    "oracle_full_day": 0
+  },
+  "best_simple_baseline": "seasonal_requirement_7d",
+  "incremental": {
+    "combined_unmet_reduction_pct": -24.1084,
+    "cash_unmet_reduction_pct": 32.9934,
+    "efloat_unmet_reduction_pct": -59.7138,
+    "shortage_event_difference": 261,
+    "agents_vs_best_simple": {
+      "better": 86,
+      "worse": 56,
+      "unchanged": 58
+    }
+  },
+  "groups": {
+    "best_simple": {
+      "location_cluster": {
+        "rural": {
+          "cash_ratio": 1.2052,
+          "efloat_ratio": 0.8038,
+          "combined_unmet_change_pct": -62.1046,
+          "harmed_agents": 7,
+          "agents": 79
+        },
+        "urban_core": {
+          "cash_ratio": 0.8123,
+          "efloat_ratio": 1.1086,
+          "combined_unmet_change_pct": -60.6773,
+          "harmed_agents": 12,
+          "agents": 62
+        },
+        "urban_periphery": {
+          "cash_ratio": 1.0077,
+          "efloat_ratio": 0.9833,
+          "combined_unmet_change_pct": -39.6005,
+          "harmed_agents": 17,
+          "agents": 59
+        }
+      },
+      "agent_volume_segment": {
+        "high": {
+          "cash_ratio": 0.96,
+          "efloat_ratio": 1.0185,
+          "combined_unmet_change_pct": -44.1844,
+          "harmed_agents": 8,
+          "agents": 49
+        },
+        "low": {
+          "cash_ratio": 1.0719,
+          "efloat_ratio": 1.0248,
+          "combined_unmet_change_pct": -67.3637,
+          "harmed_agents": 11,
+          "agents": 71
+        },
+        "medium": {
+          "cash_ratio": 1.0286,
+          "efloat_ratio": 0.9663,
+          "combined_unmet_change_pct": -60.8633,
+          "harmed_agents": 17,
+          "agents": 80
+        }
+      },
+      "urban_periphery_high_volume": {
+        "agents": 23,
+        "harmed_agents": 4,
+        "status_quo_unmet_bdt": 1923120.0,
+        "policy_unmet_bdt": 1203212.0,
+        "change_pct": -37.4344
+      }
+    },
+    "agentflow_ml_p90": {
+      "location_cluster": {
+        "rural": {
+          "cash_ratio": 1.2098,
+          "efloat_ratio": 0.9938,
+          "combined_unmet_change_pct": -75.3395,
+          "harmed_agents": 1,
+          "agents": 79
+        },
+        "urban_core": {
+          "cash_ratio": 0.791,
+          "efloat_ratio": 1.0318,
+          "combined_unmet_change_pct": -37.3621,
+          "harmed_agents": 6,
+          "agents": 62
+        },
+        "urban_periphery": {
+          "cash_ratio": 1.0246,
+          "efloat_ratio": 0.9625,
+          "combined_unmet_change_pct": -6.0645,
+          "harmed_agents": 25,
+          "agents": 59
+        }
+      },
+      "agent_volume_segment": {
+        "high": {
+          "cash_ratio": 0.9516,
+          "efloat_ratio": 0.9868,
+          "combined_unmet_change_pct": -23.1332,
+          "harmed_agents": 15,
+          "agents": 49
+        },
+        "low": {
+          "cash_ratio": 1.0844,
+          "efloat_ratio": 1.0746,
+          "combined_unmet_change_pct": -77.5053,
+          "harmed_agents": 4,
+          "agents": 71
+        },
+        "medium": {
+          "cash_ratio": 1.0355,
+          "efloat_ratio": 0.9918,
+          "combined_unmet_change_pct": -51.4768,
+          "harmed_agents": 13,
+          "agents": 80
+        }
+      },
+      "urban_periphery_high_volume": {
+        "agents": 23,
+        "harmed_agents": 12,
+        "status_quo_unmet_bdt": 1923120.0,
+        "policy_unmet_bdt": 1819739.0,
+        "change_pct": -5.3757
+      }
+    }
+  },
+  "network_daily_budget_bdt": {
+    "cash": 15507000,
+    "efloat": 15320500
+  },
+  "phase_2c_worst_harmed_agents_change_vs_status_quo_bdt": {
+    "AG-0082": {
+      "history_proportional": 87850.0,
+      "seasonal_requirement_7d": 23140.0,
+      "agentflow_ml_p90": 21293.0
+    },
+    "AG-0144": {
+      "history_proportional": -38052.0,
+      "seasonal_requirement_7d": -17285.0,
+      "agentflow_ml_p90": 20568.0
+    },
+    "AG-0149": {
+      "history_proportional": -10642.0,
+      "seasonal_requirement_7d": -33577.0,
+      "agentflow_ml_p90": 15708.0
+    },
+    "AG-0012": {
+      "history_proportional": -9930.0,
+      "seasonal_requirement_7d": 661.0,
+      "agentflow_ml_p90": 15056.0
+    },
+    "AG-0005": {
+      "history_proportional": -6960.0,
+      "seasonal_requirement_7d": 24330.0,
+      "agentflow_ml_p90": 13871.0
+    }
+  },
+  "phase_2a_artifacts_reproduced": true
+}

@@ -1,0 +1,131 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "seed": 2026,
+  "world_hash": "1e90db46bfb1cff39827dfe3a6507724d50f24c71f5b30364e37729000bb0231",
+  "assumptions": {
+    "flow_orientation": {
+      "cash_in_ratio_median": {
+        "urban_core": 1.25,
+        "urban_periphery": 1.0,
+        "rural": 0.7
+      },
+      "cash_in_ratio_lognormal_sigma": 0.15,
+      "market_stall_cash_in_multiplier": 1.12
+    },
+    "salary_and_remittance": {
+      "urban_cash_in": "salary_factor(day, cluster, 'out')",
+      "urban_cash_out": "salary_factor(day, cluster, 'in')",
+      "rural_cash_out": "salary_factor(day - 2 days, 'rural', 'out')",
+      "rural_cash_in": "salary_factor(day, 'rural', 'in')"
+    },
+    "market_day": {
+      "cash_out_multiplier_all_day": 1.45,
+      "cash_in_multiplier": 1.6,
+      "cash_in_hours": [
+        14,
+        19
+      ]
+    },
+    "legitimate_spikes": {
+      "events_per_agent_day": 0.1,
+      "cash_in_share": 0.5,
+      "multiplier": [
+        1.6,
+        2.6
+      ],
+      "duration_h": [
+        2,
+        5
+      ],
+      "hours": [
+        9,
+        19
+      ]
+    },
+    "provisioning": {
+      "reset_hour": 8,
+      "cash_target": "expected_daily_cash_out x U(0.42, 0.85)",
+      "efloat_target": "expected_daily_cash_in x U(0.42, 0.85)",
+      "fraction_range": [
+        0.42,
+        0.85
+      ],
+      "rounding_bdt": 500
+    },
+    "service_rule": "within-hour opposite flows net-settle; transaction ordering not modelled",
+    "anomalies": "legacy behavioural anomaly injection, labelled separately from legitimate flow events"
+  },
+  "boundaries": {
+    "train": [
+      "2026-06-17 00:00:00",
+      "2026-08-17 17:00:00"
+    ],
+    "purge_hours": 6,
+    "validation_fit_end": "2026-08-03 17:00:00",
+    "validation": [
+      "2026-08-04 00:00:00",
+      "2026-08-17 17:00:00"
+    ],
+    "test": [
+      "2026-08-18 00:00:00",
+      "2026-08-31 17:00:00"
+    ]
+  },
+  "n_agents": 200,
+  "n_rows": 364800,
+  "agents_by_cluster": {
+    "rural": 79,
+    "urban_core": 62,
+    "urban_periphery": 59
+  },
+  "median_cash_in_ratio_by_cluster": {
+    "rural": 0.7128,
+    "urban_core": 1.3012,
+    "urban_periphery": 0.9945
+  },
+  "median_target_cash_by_cluster": {
+    "rural": 49500.0,
+    "urban_core": 72750.0,
+    "urban_periphery": 80500.0
+  },
+  "median_target_efloat_by_cluster": {
+    "rural": 36000.0,
+    "urban_core": 99750.0,
+    "urban_periphery": 75000.0
+  },
+  "flow_event_agent_hours": {
+    "": 357372,
+    "haat_trader_deposits": 5041,
+    "cash_in_surge": 1264,
+    "cash_out_surge": 1123
+  },
+  "anomaly_agent_hours": 976,
+  "training_period_service": {
+    "agent_hours": 297600,
+    "cash_side": {
+      "shortage_events": 4840,
+      "unmet_cash_out_bdt": 16951190.0,
+      "requested_cash_out_bdt": 1595512170.0,
+      "cash_out_fill_rate": 0.9894
+    },
+    "efloat_side": {
+      "shortage_events": 5129,
+      "unmet_cash_in_bdt": 18947060.0,
+      "requested_cash_in_bdt": 1696553080.0,
+      "cash_in_fill_rate": 0.9888
+    },
+    "network": {
+      "dual_shortage_agent_hours": 0,
+      "agent_hours_fully_serviceable_both_sides": 287631,
+      "share_agent_hours_fully_serviceable": 0.9665,
+      "agents_with_cash_shortage": 111,
+      "agents_with_efloat_shortage": 106,
+      "agents_with_both_types": 28,
+      "total_requested_bdt": 3292065250.0,
+      "total_served_bdt": 3256167000.0,
+      "combined_value_fill_rate": 0.9891
+    }
+  }
+}

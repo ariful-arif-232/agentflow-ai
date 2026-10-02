@@ -1,0 +1,333 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "seed": 2026,
+  "boundaries": {
+    "train": [
+      "2026-06-17 00:00:00",
+      "2026-08-17 17:00:00"
+    ],
+    "purge_hours": 6,
+    "validation_fit_end": "2026-08-03 17:00:00",
+    "validation": [
+      "2026-08-04 00:00:00",
+      "2026-08-17 17:00:00"
+    ],
+    "test": [
+      "2026-08-18 00:00:00",
+      "2026-08-31 17:00:00"
+    ]
+  },
+  "model_specs": {
+    "cash_demand": {
+      "target": "future_6h_cash_demand",
+      "loss": "poisson",
+      "quantile": null
+    },
+    "net_requirement": {
+      "target": "future_6h_net_cash_demand",
+      "loss": "squared_error",
+      "quantile": null
+    },
+    "net_requirement_p90": {
+      "target": "future_6h_net_cash_demand",
+      "loss": "quantile",
+      "quantile": 0.9
+    },
+    "efloat_requirement": {
+      "target": "future_6h_net_efloat_demand",
+      "loss": "squared_error",
+      "quantile": null
+    },
+    "efloat_requirement_p90": {
+      "target": "future_6h_net_efloat_demand",
+      "loss": "quantile",
+      "quantile": 0.9
+    }
+  },
+  "algorithm": "sklearn.ensemble.HistGradientBoostingRegressor (legacy settings, unchanged)",
+  "selection_protocol": "fixed pre-registered models; validation slice recorded only; test evaluated once",
+  "validation": {
+    "dev_start": "2026-06-24 00:00:00",
+    "dev_end": "2026-08-03 17:00:00",
+    "val_start": "2026-08-04 00:00:00",
+    "val_end": "2026-08-17 17:00:00",
+    "dev_rows": 195600,
+    "val_rows": 66000,
+    "cash_requirement": {
+      "target": "future_6h_net_cash_demand",
+      "ml_model": {
+        "mae": 4044.2128,
+        "rmse": 8512.2813,
+        "wape": 0.395,
+        "bias": -0.0981,
+        "n": 66000
+      },
+      "baselines": {
+        "naive_yesterday": {
+          "mae": 5567.6568,
+          "rmse": 12044.6501,
+          "wape": 0.5438,
+          "bias": 132.6726,
+          "n": 66000
+        },
+        "seasonal_avg_7d": {
+          "mae": 4484.6274,
+          "rmse": 9399.4443,
+          "wape": 0.438,
+          "bias": 493.4056,
+          "n": 66000
+        }
+      },
+      "best_baseline": "seasonal_avg_7d",
+      "improvement_vs_best_baseline": {
+        "mae_pct": 9.8205,
+        "rmse_pct": 9.4385
+      },
+      "improvement_vs_naive": {
+        "mae_pct": 27.3624,
+        "rmse_pct": 29.3273
+      },
+      "quantile_p90": {
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 0.8952,
+        "mean_band_width": 5882.5432
+      }
+    },
+    "efloat_requirement": {
+      "target": "future_6h_net_efloat_demand",
+      "ml_model": {
+        "mae": 3942.3223,
+        "rmse": 10004.4761,
+        "wape": 0.4486,
+        "bias": 48.4313,
+        "n": 66000
+      },
+      "baselines": {
+        "naive_yesterday": {
+          "mae": 5327.5929,
+          "rmse": 14151.8965,
+          "wape": 0.6062,
+          "bias": 417.0035,
+          "n": 66000
+        },
+        "seasonal_avg_7d": {
+          "mae": 4855.5629,
+          "rmse": 12067.7402,
+          "wape": 0.5525,
+          "bias": 1674.8744,
+          "n": 66000
+        }
+      },
+      "best_baseline": "seasonal_avg_7d",
+      "improvement_vs_best_baseline": {
+        "mae_pct": 18.8081,
+        "rmse_pct": 17.0974
+      },
+      "improvement_vs_naive": {
+        "mae_pct": 26.0018,
+        "rmse_pct": 29.3065
+      },
+      "quantile_p90": {
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 0.9055,
+        "mean_band_width": 6235.8451
+      }
+    },
+    "used_for_selection": false
+  },
+  "held_out": {
+    "test_start": "2026-08-18 00:00:00",
+    "test_end": "2026-08-31 17:00:00",
+    "n_test_rows": 66000,
+    "cash_requirement": {
+      "target": "future_6h_net_cash_demand",
+      "ml_model": {
+        "mae": 4029.8515,
+        "rmse": 8720.0082,
+        "wape": 0.3952,
+        "bias": -197.5812,
+        "n": 66000
+      },
+      "baselines": {
+        "naive_yesterday": {
+          "mae": 5564.1245,
+          "rmse": 12242.6104,
+          "wape": 0.5457,
+          "bias": -169.6379,
+          "n": 66000
+        },
+        "seasonal_avg_7d": {
+          "mae": 4405.5811,
+          "rmse": 9611.3934,
+          "wape": 0.4321,
+          "bias": -419.7219,
+          "n": 66000
+        }
+      },
+      "best_baseline": "seasonal_avg_7d",
+      "improvement_vs_best_baseline": {
+        "mae_pct": 8.5285,
+        "rmse_pct": 9.2743
+      },
+      "improvement_vs_naive": {
+        "mae_pct": 27.5744,
+        "rmse_pct": 28.7733
+      },
+      "quantile_p90": {
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 0.8925,
+        "mean_band_width": 5932.3894
+      },
+      "group_consistency": {
+        "location_cluster": {
+          "rural": {
+            "ml_mae": 4033.3326,
+            "ml_wape": 0.3475,
+            "naive_mae": 5893.8097,
+            "seasonal_mae": 4587.9863,
+            "p90_coverage": 0.8798,
+            "n": 26070
+          },
+          "urban_core": {
+            "ml_mae": 3480.7935,
+            "ml_wape": 0.6154,
+            "naive_mae": 4571.5044,
+            "seasonal_mae": 3648.6182,
+            "p90_coverage": 0.9028,
+            "n": 20460
+          },
+          "urban_periphery": {
+            "ml_mae": 4602.1667,
+            "ml_wape": 0.3519,
+            "naive_mae": 6165.774,
+            "seasonal_mae": 4956.7962,
+            "p90_coverage": 0.8988,
+            "n": 19470
+          }
+        },
+        "agent_volume_segment": {
+          "high": {
+            "ml_mae": 7654.8034,
+            "ml_wape": 0.4077,
+            "naive_mae": 10528.3544,
+            "seasonal_mae": 8376.6411,
+            "p90_coverage": 0.8827,
+            "n": 16170
+          },
+          "low": {
+            "ml_mae": 1626.3704,
+            "ml_wape": 0.3762,
+            "naive_mae": 2229.0875,
+            "seasonal_mae": 1779.7809,
+            "p90_coverage": 0.9008,
+            "n": 23430
+          },
+          "medium": {
+            "ml_mae": 3942.6581,
+            "ml_wape": 0.3883,
+            "naive_mae": 5483.3792,
+            "seasonal_mae": 4303.7045,
+            "p90_coverage": 0.8912,
+            "n": 26400
+          }
+        }
+      }
+    },
+    "efloat_requirement": {
+      "target": "future_6h_net_efloat_demand",
+      "ml_model": {
+        "mae": 4638.0645,
+        "rmse": 11417.269,
+        "wape": 0.4199,
+        "bias": 139.7113,
+        "n": 66000
+      },
+      "baselines": {
+        "naive_yesterday": {
+          "mae": 6116.4948,
+          "rmse": 15448.4475,
+          "wape": 0.5537,
+          "bias": -409.49,
+          "n": 66000
+        },
+        "seasonal_avg_7d": {
+          "mae": 5009.9891,
+          "rmse": 13078.3353,
+          "wape": 0.4536,
+          "bias": -1568.0043,
+          "n": 66000
+        }
+      },
+      "best_baseline": "seasonal_avg_7d",
+      "improvement_vs_best_baseline": {
+        "mae_pct": 7.4237,
+        "rmse_pct": 12.7009
+      },
+      "improvement_vs_naive": {
+        "mae_pct": 24.1712,
+        "rmse_pct": 26.0944
+      },
+      "quantile_p90": {
+        "nominal_coverage": 0.9,
+        "empirical_coverage": 0.9108,
+        "mean_band_width": 7153.7152
+      },
+      "group_consistency": {
+        "location_cluster": {
+          "rural": {
+            "ml_mae": 1608.0602,
+            "ml_wape": 0.8585,
+            "naive_mae": 1974.1262,
+            "seasonal_mae": 1608.7538,
+            "p90_coverage": 0.9252,
+            "n": 26070
+          },
+          "urban_core": {
+            "ml_mae": 7293.8046,
+            "ml_wape": 0.4188,
+            "naive_mae": 9831.3245,
+            "seasonal_mae": 7845.7243,
+            "p90_coverage": 0.8934,
+            "n": 20460
+          },
+          "urban_periphery": {
+            "ml_mae": 5904.4112,
+            "ml_wape": 0.355,
+            "naive_mae": 7759.3369,
+            "seasonal_mae": 6584.2605,
+            "p90_coverage": 0.9096,
+            "n": 19470
+          }
+        },
+        "agent_volume_segment": {
+          "high": {
+            "ml_mae": 10322.4928,
+            "ml_wape": 0.4078,
+            "naive_mae": 13554.851,
+            "seasonal_mae": 11217.1528,
+            "p90_coverage": 0.9059,
+            "n": 16170
+          },
+          "low": {
+            "ml_mae": 1487.128,
+            "ml_wape": 0.4513,
+            "naive_mae": 1987.7311,
+            "seasonal_mae": 1563.7937,
+            "p90_coverage": 0.9179,
+            "n": 23430
+          },
+          "medium": {
+            "ml_mae": 3952.8084,
+            "ml_wape": 0.4304,
+            "naive_mae": 5224.7795,
+            "seasonal_mae": 4266.5999,
+            "p90_coverage": 0.9074,
+            "n": 26400
+          }
+        }
+      }
+    }
+  }
+}

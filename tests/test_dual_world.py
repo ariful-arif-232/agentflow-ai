@@ -169,3 +169,62 @@ def test_resource_status_and_state_matrix():
     # symmetric: swapping resources swaps the one-sided states only
     swapped = dw.liquidity_state_matrix(ef, cash)
     assert list(swapped) == ["DUAL_PRESSURE", "EFLOAT_PRESSURE", "CASH_PRESSURE", "WATCH", "WATCH", "HEALTHY"]
+
+
+def test_same_hour_dual_shortage_is_structurally_impossible(small_world):
+    # Net settlement: a cash-out-dominant hour serves all cash-in and vice versa, so one agent can
+    # never be short of both resources in the same hour (a property of the rule, not of tuning).
+    assert small_world.hourly["dual_shortage_event"].sum() == 0
+    rng = np.random.default_rng(3)
+    c, e, o, i = (rng.uniform(0, 1e5, 50_000) for _ in range(4))
+    so, si, _, _ = dw.serve_hour(c, e, o, i)
+    assert not ((so < o - 1e-9) & (si < i - 1e-9)).any()
+
+
+def test_dual_world_evaluation_smoke(small_world, tmp_path):
+    from agentflow import dual_world_eval as ev
+    arts = ev.run(small_world, max_iter=25, model_path=tmp_path / "m.joblib")
+    assert set(arts) == {"world_summary.json", "forecast_metrics.json", "status_quo_impact.json", "training_metadata.json"}
+    fm, sq = arts["forecast_metrics.json"], arts["status_quo_impact.json"]
+    for art in arts.values():
+        assert art["label"] == ev.LABEL and art["world_version"] == dw.WORLD_VERSION
+    b = fm["boundaries"]
+    # validation strictly inside training, test after the purge; nothing selected on validation
+    assert b["validation_fit_end"] < b["validation"][0] < b["validation"][1] < b["test"][0]
+    assert fm["validation"]["used_for_selection"] is False
+    for k in ("cash_requirement", "efloat_requirement"):
+        e = fm["held_out"][k]
+        assert set(e["baselines"]) == {"naive_yesterday", "seasonal_avg_7d"}
+        assert 0.0 <= e["quantile_p90"]["empirical_coverage"] <= 1.0
+        assert e["quantile_p90"]["mean_band_width"] >= 0.0
+    s = sq["held_out_service"]
+    for side, fill in (("cash_side", "cash_out_fill_rate"), ("efloat_side", "cash_in_fill_rate")):
+        assert 0.0 <= s[side][fill] <= 1.0
+    n = s["network"]
+    assert n["total_served_bdt"] <= n["total_requested_bdt"]
+    assert n["dual_shortage_agent_hours"] == 0
+    assert sum(sq["held_out_decision_time_pressure"]["liquidity_state_share"].values()) == pytest.approx(1.0, abs=1e-3)
+    from agentflow import forecast
+    bundle = forecast.ForecastBundle.load(tmp_path / "m.joblib")
+    assert bundle.has_efloat
+
+
+def test_dual_predictions_are_ordered(small_world, tmp_path):
+    from agentflow import dual_world_eval as ev, features, forecast
+    f = ev.build(small_world)
+    train, test = features.time_split(f)
+    p = forecast.train(train, max_iter=25).predict(test)
+    for lo, hi in (("pred_net_requirement_6h", "pred_net_requirement_p90_6h"),
+                   ("pred_efloat_requirement_6h", "pred_efloat_requirement_p90_6h")):
+        assert (p[lo] >= 0).all() and (p[hi] >= p[lo]).all()
+
+
+def test_production_serving_path_never_reads_the_dual_world():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    files = list((root / "apps" / "api").rglob("*.py")) + [root / "ml" / "agentflow" / "engine.py",
+                                                           root / "Dockerfile"]
+    for fp in files:
+        text = fp.read_text()
+        for token in ("dual_world", "data_dual", "models_dual", "artifacts_dual"):
+            assert token not in text, f"{fp} references {token}"

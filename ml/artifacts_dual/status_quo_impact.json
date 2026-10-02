@@ -1,0 +1,323 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "seed": 2026,
+  "boundaries": {
+    "train": [
+      "2026-06-17 00:00:00",
+      "2026-08-17 17:00:00"
+    ],
+    "purge_hours": 6,
+    "validation_fit_end": "2026-08-03 17:00:00",
+    "validation": [
+      "2026-08-04 00:00:00",
+      "2026-08-17 17:00:00"
+    ],
+    "test": [
+      "2026-08-18 00:00:00",
+      "2026-08-31 17:00:00"
+    ]
+  },
+  "held_out_service": {
+    "agent_hours": 67200,
+    "cash_side": {
+      "shortage_events": 1014,
+      "unmet_cash_out_bdt": 3755990.0,
+      "requested_cash_out_bdt": 366595720.0,
+      "cash_out_fill_rate": 0.9898
+    },
+    "efloat_side": {
+      "shortage_events": 1276,
+      "unmet_cash_in_bdt": 4628140.0,
+      "requested_cash_in_bdt": 398364700.0,
+      "cash_in_fill_rate": 0.9884
+    },
+    "network": {
+      "dual_shortage_agent_hours": 0,
+      "agent_hours_fully_serviceable_both_sides": 64910,
+      "share_agent_hours_fully_serviceable": 0.9659,
+      "agents_with_cash_shortage": 76,
+      "agents_with_efloat_shortage": 67,
+      "agents_with_both_types": 4,
+      "total_requested_bdt": 764960420.0,
+      "total_served_bdt": 756576290.0,
+      "combined_value_fill_rate": 0.989
+    }
+  },
+  "held_out_decision_time_pressure": {
+    "n_decisions": 38400,
+    "rows": "held-out operating hours 08:00-21:00",
+    "prevalence": {
+      "cash": {
+        "forecast_pressure": {
+          "rate": 0.0472,
+          "rows": 1813,
+          "agents": 83
+        },
+        "forecast_watch_p90": {
+          "rate": 0.0851,
+          "rows": 3269,
+          "agents": 98
+        },
+        "requirement_label": {
+          "rate": 0.0487,
+          "rows": 1871,
+          "agents": 76
+        },
+        "realised_current_hour": {
+          "rate": 0.0194,
+          "rows": 744,
+          "agents": 76
+        },
+        "realised_next_6h": {
+          "rate": 0.0487,
+          "rows": 1871,
+          "agents": 76
+        }
+      },
+      "efloat": {
+        "forecast_pressure": {
+          "rate": 0.023,
+          "rows": 884,
+          "agents": 68
+        },
+        "forecast_watch_p90": {
+          "rate": 0.0538,
+          "rows": 2066,
+          "agents": 96
+        },
+        "requirement_label": {
+          "rate": 0.029,
+          "rows": 1113,
+          "agents": 67
+        },
+        "realised_current_hour": {
+          "rate": 0.0056,
+          "rows": 214,
+          "agents": 54
+        },
+        "realised_next_6h": {
+          "rate": 0.029,
+          "rows": 1113,
+          "agents": 67
+        }
+      },
+      "dual": {
+        "forecast_pressure": {
+          "rate": 0.0,
+          "rows": 0,
+          "agents": 0
+        },
+        "forecast_watch_p90": {
+          "rate": 0.0001,
+          "rows": 4,
+          "agents": 1
+        },
+        "requirement_label": {
+          "rate": 0.0,
+          "rows": 0,
+          "agents": 0
+        },
+        "realised_current_hour": {
+          "rate": 0.0,
+          "rows": 0,
+          "agents": 0
+        },
+        "realised_next_6h": {
+          "rate": 0.0,
+          "rows": 0,
+          "agents": 0
+        }
+      }
+    },
+    "early_warning": {
+      "cash": {
+        "forecast_pressure_vs_realised_next_6h": {
+          "positives": 1871,
+          "prevalence": 0.0487,
+          "alerts": 1813,
+          "alert_rate": 0.0472,
+          "true_positives": 1294,
+          "false_positives": 519,
+          "missed": 577,
+          "precision": 0.7137,
+          "recall": 0.6916,
+          "f1": 0.7025
+        },
+        "forecast_watch_p90_vs_realised_next_6h": {
+          "positives": 1871,
+          "prevalence": 0.0487,
+          "alerts": 3269,
+          "alert_rate": 0.0851,
+          "true_positives": 1675,
+          "false_positives": 1594,
+          "missed": 196,
+          "precision": 0.5124,
+          "recall": 0.8952,
+          "f1": 0.6518
+        },
+        "forecast_pressure_vs_requirement_label": {
+          "positives": 1871,
+          "prevalence": 0.0487,
+          "alerts": 1813,
+          "alert_rate": 0.0472,
+          "true_positives": 1294,
+          "false_positives": 519,
+          "missed": 577,
+          "precision": 0.7137,
+          "recall": 0.6916,
+          "f1": 0.7025
+        }
+      },
+      "efloat": {
+        "forecast_pressure_vs_realised_next_6h": {
+          "positives": 1113,
+          "prevalence": 0.029,
+          "alerts": 884,
+          "alert_rate": 0.023,
+          "true_positives": 683,
+          "false_positives": 201,
+          "missed": 430,
+          "precision": 0.7726,
+          "recall": 0.6137,
+          "f1": 0.684
+        },
+        "forecast_watch_p90_vs_realised_next_6h": {
+          "positives": 1113,
+          "prevalence": 0.029,
+          "alerts": 2066,
+          "alert_rate": 0.0538,
+          "true_positives": 942,
+          "false_positives": 1124,
+          "missed": 171,
+          "precision": 0.456,
+          "recall": 0.8464,
+          "f1": 0.5926
+        },
+        "forecast_pressure_vs_requirement_label": {
+          "positives": 1113,
+          "prevalence": 0.029,
+          "alerts": 884,
+          "alert_rate": 0.023,
+          "true_positives": 683,
+          "false_positives": 201,
+          "missed": 430,
+          "precision": 0.7726,
+          "recall": 0.6137,
+          "f1": 0.684
+        }
+      },
+      "dual": {
+        "forecast_pressure_vs_realised_next_6h": {
+          "positives": 0,
+          "prevalence": 0.0,
+          "alerts": 0,
+          "alert_rate": 0.0,
+          "true_positives": 0,
+          "false_positives": 0,
+          "missed": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "forecast_watch_p90_vs_realised_next_6h": {
+          "positives": 0,
+          "prevalence": 0.0,
+          "alerts": 4,
+          "alert_rate": 0.0001,
+          "true_positives": 0,
+          "false_positives": 4,
+          "missed": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "forecast_pressure_vs_requirement_label": {
+          "positives": 0,
+          "prevalence": 0.0,
+          "alerts": 0,
+          "alert_rate": 0.0,
+          "true_positives": 0,
+          "false_positives": 0,
+          "missed": 0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        }
+      }
+    },
+    "liquidity_state_share": {
+      "HEALTHY": 0.8612,
+      "WATCH": 0.0686,
+      "CASH_PRESSURE": 0.0472,
+      "EFLOAT_PRESSURE": 0.023,
+      "DUAL_PRESSURE": 0.0
+    },
+    "legacy_cash_risk_level_by_state": {
+      "HEALTHY": {
+        "LOW": 33069,
+        "MEDIUM": 0,
+        "HIGH": 0,
+        "CRITICAL": 0
+      },
+      "WATCH": {
+        "LOW": 2613,
+        "MEDIUM": 21,
+        "HIGH": 0,
+        "CRITICAL": 0
+      },
+      "CASH_PRESSURE": {
+        "LOW": 249,
+        "MEDIUM": 578,
+        "HIGH": 666,
+        "CRITICAL": 320
+      },
+      "EFLOAT_PRESSURE": {
+        "LOW": 884,
+        "MEDIUM": 0,
+        "HIGH": 0,
+        "CRITICAL": 0
+      },
+      "DUAL_PRESSURE": {
+        "LOW": 0,
+        "MEDIUM": 0,
+        "HIGH": 0,
+        "CRITICAL": 0
+      }
+    }
+  },
+  "default_decision_time": {
+    "as_of": "2026-08-31 13:00:00",
+    "liquidity_state_counts": {
+      "HEALTHY": 132,
+      "WATCH": 28,
+      "CASH_PRESSURE": 33,
+      "EFLOAT_PRESSURE": 7,
+      "DUAL_PRESSURE": 0
+    }
+  },
+  "validity_for_phase_2b": {
+    "bar": {
+      "min_prevalence": 0.01,
+      "min_positive_rows": 100,
+      "min_agents": 20
+    },
+    "basis": "realised next-6h unmet events at held-out decision times",
+    "sides": {
+      "cash": {
+        "rate": 0.0487,
+        "rows": 1871,
+        "agents": 76,
+        "passes": true
+      },
+      "efloat": {
+        "rate": 0.029,
+        "rows": 1113,
+        "agents": 67,
+        "passes": true
+      }
+    },
+    "passes": true
+  }
+}

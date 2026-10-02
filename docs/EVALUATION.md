@@ -2,8 +2,13 @@
 
 > **Synthetic held-out evaluation.** All numbers come from `python ml/scripts/evaluate.py`
 > (machine-readable: `ml/artifacts/metrics.json`, `ml/artifacts/impact.json`, `ml/artifacts/policy_selection.json`). They are
-> results on synthetic data, **not** measured real-world upay results. A fresh clone reproduces
-> these files byte-for-byte.
+> results on synthetic data, **not** measured real-world upay results. With the pinned project
+> environment, the evaluated decision outputs, business-impact metrics and demo values reproduce.
+> Runtime `fit_seconds` metadata is excluded, and tiny cross-machine floating-point variation may
+> occur in internal anomaly thresholds.
+>
+> Sections 1–7 cover the **legacy intraday environment**, where e-float is tracked but is not a
+> binding constraint. Section 8 covers the separate Morning Plan environment.
 
 ## 1. Dataset and split
 
@@ -168,7 +173,7 @@ those numbers.
 | Final held-out test | 2026-08-18 → 08-31 | evaluated once, after selection |
 
 Grid: λ ∈ {0.5, 0.75, 1.0}, u ∈ {0.25, 0.5, 1.0}, `min_risk_drop` ∈ {10, 20},
-`require_p50_shortfall` ∈ {no, yes}. The pre-registered selection rule considers a configuration
+`require_p50_shortfall` ∈ {no, yes}. The fixed selection rule considers a configuration
 *feasible* if, across both folds, it retains ≥ 95% of V1's unmet demand avoided and has no more
 donor shortage events than V1. Among feasible configurations it chooses the one with the most unmet
 demand avoided per BDT 1,000 of logistics cost. 24 of 36 configurations were feasible.
@@ -200,7 +205,9 @@ cost. Unnecessary transfers were essentially unchanged (21.8% vs 21.2%).
 | Unmet demand avoided per BDT 1,000 cost | — | BDT 22,707 | BDT 23,410 | **BDT 33,340** |
 | Shortage events avoided per 100 transfers | — | 139.1 | 152.1 | **230.1** |
 
-**Pre-registered deployment rule.** V2 becomes the default only if it retains ≥ 95% of V1's unmet
+**Fixed deployment rule.** V2 parameters were selected only on training-period validation folds,
+never on the held-out test. The rule and the held-out results were committed together, so this is
+not a separately time-stamped pre-registration. V2 becomes the default only if it retains ≥ 95% of V1's unmet
 demand avoided, has no more donor shortage events, and is strictly better on at least two of
 {unnecessary-transfer %, donor shortage events, unmet demand avoided per BDT 1,000 cost}. Held-out
 result: retention 103.7%; donor events 14 vs 25 (better); avoided per BDT 1,000 cost 33,340 vs
@@ -259,7 +266,8 @@ By volume segment, forecast WAPE is 17.3–18.4% and alert precision 77–84%.
 * Demand is exogenous in the simulator: unserved customers do not retry or move to another agent.
 * Transfers are assumed to complete in 1 hour with a simple cost model; real logistics constraints
   (field-officer capacity, security, cash-in-transit rules) are not modelled.
-* E-float is tracked but not used as a binding constraint.
+* In this legacy intraday environment, e-float is tracked but is not a binding constraint (cash-in is
+  never declined). Only the separate Morning Plan environment (§8) treats e-float as binding.
 * The peak-requirement model improves on the seasonal baseline only modestly (−6.8% MAE).
 * Anomaly labels are injected patterns; detection performance on real behaviour is unknown.
 * Rebalancing V2 parameters were chosen on two 14-day validation folds of the same synthetic world;
@@ -271,7 +279,9 @@ By volume segment, forecast WAPE is 17.3–18.4% and alert precision 77–84%.
 These results come from **Dual-Liquidity World v2**, a separate synthetic environment with finite
 cash *and* e-float. They must not be combined with the legacy V1/V2 tables above.
 
-Each step was pre-registered, frozen before evaluation and run once on fresh seeds:
+For every step, the protocol and success bar were committed before results were computed. The first
+two steps used development seeds 2026–2030. For the confirmatory (2031–2035) and audit (2036–2040)
+seeds, the protocol and success bar were committed before those seeds were generated.
 
 | Step | Comparison | Result |
 |---|---|---|
@@ -280,10 +290,21 @@ Each step was pre-registered, frozen before evaluation and run once on fresh see
 | Full-day ML, fresh confirmatory worlds 2031–2035 | vs seasonal 7-day mean | ML better in 5 of 5 (median −33.2%) |
 | **Full-day ML, fresh audit worlds 2036–2040** | vs **best cautious rule** (historical 7-day q90; also 7-day max) | **ML better in 5 of 5; median −20.6% combined unmet (13.7–29.8%); cash −39.4%; e-float −9.7%; BDT 0 extra working capital; exact conservation** |
 
-The headline is the last row, against the strongest cautious baseline. Pooled P90 coverage is 85.2%
-for cash and 88.0% for e-float. Low-volume agents did worse than q90 in 4 of 5 audit worlds. **This
-is synthetic held-out evidence, not measured upay performance.** Details:
-[MORNING_PLAN.md](MORNING_PLAN.md).
+The headline is the last row, against the strongest cautious baseline. Its success bar required:
+* ML ≤ the q90 rule and ML ≤ the max rule, each in at least 4 of 5 worlds;
+* a median reduction of at least 5% against the better of the two;
+* at most 1 world with cash or e-float unmet worse by more than 5%;
+* exact conservation.
+
+All five checks passed.
+
+**Absolute example (audit world seed 2036, 14 held-out operating days).** Combined unmet fell from
+about BDT 49.7 lakh (q90 rule) to about BDT 40.8 lakh (frozen ML), −17.9% in this world. Cash-out
+fill rose from 99.65% to 99.80%.
+
+Pooled P90 coverage is 85.2% for cash and 88.0% for e-float. Low-volume agents did worse than q90 in
+4 of 5 audit worlds. **This is synthetic held-out evidence, not measured upay performance, and not an
+expected saving for any demo date.** Details: [MORNING_PLAN.md](MORNING_PLAN.md).
 
 ## Reproduce
 

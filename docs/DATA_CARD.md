@@ -16,8 +16,16 @@ access to production data.
 python ml/scripts/generate_data.py      # writes ml/data/*.parquet + ml/artifacts/dataset_summary.json
 ```
 
-Generation is deterministic (`numpy.random.default_rng(seed=2026)`); the same seed
-always yields byte-identical data (enforced by `tests/test_data.py`).
+Generation is deterministic (`numpy.random.default_rng(seed=2026)`). Within the pinned project
+environment, the same seed yields identical data (checked by `tests/test_data.py`). Across machines,
+the evaluated decision outputs, business-impact metrics and demo values reproduce. Runtime
+`fit_seconds` metadata is excluded, and tiny cross-machine floating-point variation may occur in
+internal anomaly thresholds.
+
+This card describes the **legacy intraday dataset** used for the 6-hour forecasts, risk, anomaly
+detection and the V1/V2 rebalancing evaluation. The Morning Plan uses a separate synthetic
+environment, described in
+[Dual-Liquidity World v2](#dual-liquidity-world-v2-morning-plan-environment) below.
 
 ## Size and coverage
 
@@ -110,8 +118,38 @@ patterns for testing an unsupervised detector; they are **not** labels of fraud.
   distributor logistics constraints, e-float limits).
 * Customer demand is exogenous: shortages do not cause customers to retry later or move
   to a neighbouring agent.
-* E-float is tracked but not used as a binding constraint.
+* In this legacy intraday dataset, e-float is tracked but is not a binding constraint. It is reset at
+  08:00 to 0.9 × the agent's base daily cash-out, clipped at zero, and cash-in is never declined, so
+  failed cash-in is not represented. The separate Dual-Liquidity World v2 (below) treats e-float as
+  binding.
 * Distances are straight-line (haversine), not road travel time.
+
+## Dual-Liquidity World v2 (Morning Plan environment)
+
+A **separate** synthetic environment used only to build and evaluate the Morning Liquidity Plan. It
+is not the legacy dataset above, and its results are never combined with the V1/V2 results.
+
+| Item | Value |
+|---|---|
+| Purpose | Evaluate proactive full-day positioning of physical cash **and** e-float under the same working capital |
+| Data | **Synthetic only.** No upay data, no real agents, no real customers. |
+| Version | Dual-Liquidity World v2, assumptions **2A.1** (committed before the world was generated or evaluated) |
+| Structure | The legacy calendar and structure are reused (200 agents, 8 districts, clusters, segments, hourly profiles), with their own seeded random streams and a documented remittance-corridor flow orientation, market-day deposits and local spikes |
+| Binding resources | **Both** physical cash and e-float. Cash-out fails when cash runs out; cash-in fails when e-float runs out. |
+| Flows and settlement | Each hour records **requested = served + unmet** for cash-out and cash-in. Opposite flows within an hour are net-settled (an optimistic, documented assumption; transaction ordering is not modelled). A served transaction moves value between cash and e-float without creating or destroying working capital. |
+| Status quo | Each day at 08:00, both resources are reset to static synthetic targets (cash on expected cash-out, e-float on expected cash-in, × U(0.42, 0.85)). The reset is idealised: free and unconstrained. |
+| Decision timing | Information cutoff **07:00**; allocation **08:00**; horizon **08:00–23:59** of the same day |
+| Budgets | Fixed district-level **cash** and **e-float** budgets, kept separately and equal to the status-quo totals |
+| Floors and conservation | Every agent keeps at least **BDT 5,000** of each resource. District totals are conserved **exactly** in integer BDT (BDT 0 extra working capital). |
+| Seeds | **Development** 2026–2030 (method development and the rejected approaches); **confirmatory** 2031–2035 (full-day ML vs the 7-day mean); **audit** 2036–2040 (frozen ML vs cautious q90/max rules). The three sets are disjoint. For the confirmatory and audit phases, the protocol and success bar were committed before those seeds were generated. |
+| Frozen model | Full-day ML specification frozen in commit `3128176e23b4a5a2dde883e8dff8a75f21e35540` |
+| Research record | Branch `research/full-day-ml-quantile-attribution` at `c7418041f7b6c43873a8a45c1d43b32cafaf2a33` (protocol `c01c79f`, implementation freeze `f2840f3`) |
+| On `main` | Only a compact decision-time fixture for audit seed 2036 (`ml/artifacts/morning_plan_demo.json`, 14 held-out dates) and the aggregate evidence (`ml/artifacts/morning_plan_evidence.json`). Neither the generator nor the world data ships with the product. |
+
+Limitations specific to this world: within-hour net settlement is optimistic, customers do not
+retry or switch agents, morning repositioning is assumed instantaneous and free, and all flow
+parameters are design assumptions, not calibrated to real data. See
+[MORNING_PLAN.md](MORNING_PLAN.md).
 
 ## Future real-data validation
 

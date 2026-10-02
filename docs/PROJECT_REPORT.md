@@ -1,11 +1,16 @@
 # AgentFlow AI — Project Report (outline-ready)
 
-**Explainable Predictive Liquidity Orchestration for MFS Agent Networks** · *Predict. Explain. Rebalance.*
+**Explainable Predictive Liquidity Orchestration for MFS Agent Networks** · *Same liquidity. Placed ahead of demand.*
 AI DEV FEST 2026 AI Hackathon (DIU CPC × upay) · Track 05: Merchant & Agent Intelligence — Agent Liquidity Forecasting
 
 > All results are from synthetic data for hackathon prototyping, not production upay data.
 
 ## 1. Problem
+
+> For MFS liquidity operations teams, agents running short of physical cash or e-float during demand
+> peaks can cause failed customer transactions and lost agent income. AgentFlow uses per-agent
+> transaction-flow aggregates to forecast liquidity need and recommend human-reviewed placement
+> decisions, with success measured by unmet demand under the same working-capital budget.
 
 MFS agents need physical cash (for cash-out) and e-float (for cash-in). Demand varies by hour,
 weekday, salary period, market days and local events. Static, once-a-day cash provisioning cannot
@@ -25,13 +30,23 @@ field staff who execute approved rebalancing.
 * **Operator:** lower service availability, more emergency logistics and support costs.
 * In the synthetic status-quo simulation, 140 of 200 agents experience shortages in two weeks and
   BDT 95.4 lakh of cash-out demand goes unmet.
+* **Economics (illustrative formula only):** protected agent income ≈ avoided unmet transaction
+  value × verified applicable commission rate. We do not assume a commission rate. Operator-specific
+  economics must come from validated real data.
 
 ## 4. Proposed solution
 
-A closed intelligence loop — **forecast → risk → explain → recommend → human review → simulate →
-measure impact** — delivered as an operations dashboard backed by an API:
-Command Center, Agents, Agent Intelligence, Rebalancing Center, Scenario Lab, Impact & Model Health,
-Responsible AI.
+*Same liquidity. Placed ahead of demand.* AgentFlow works on two time scales:
+* **Morning:** predict each agent's full-day cash and e-float need and recommend where the same
+  district working capital should sit (Morning Liquidity Plan).
+* **Intraday:** monitor cash pressure and recommend safe V2 peer recovery, through the loop
+  **forecast → risk → explain → recommend → human review → simulate → measure impact**
+  (*Predict. Explain. Rebalance.*).
+* **Human:** a person reviews every consequential action; approval only simulates.
+* **Measure:** each layer is evaluated in its own synthetic environment.
+
+It is delivered as an operations dashboard backed by an API: Command Center, Morning Plan, Agents,
+Agent Intelligence, Rebalancing Center, Scenario Lab, Impact & Model Health, Responsible AI.
 
 ## 5. AI role
 
@@ -87,7 +102,10 @@ One decision engine powers dashboard snapshots, API and impact simulator. See `A
   * review focus, an agent explanation drawer and human-review simulation;
   * historical research evidence with caveats.
 
-## 10. Evaluation (synthetic held-out)
+## 10. Evaluation: intraday system (synthetic held-out, legacy environment)
+
+In this legacy environment, e-float is tracked but is not a binding constraint. The Morning Plan is
+evaluated separately (§10a).
 
 | Area | Result |
 |---|---|
@@ -106,16 +124,37 @@ AgentFlow now works on two time scales:
 * **Proactive:** a full-day dual-liquidity Morning Plan for cash and e-float, at 07:00 → 08:00.
 * **Reactive:** the 6-hour cash risk with V2 rebalancing.
 
-In fresh synthetic worlds from the same pre-registered world family, the frozen full-day ML policy
-reduced combined unmet demand by a median **20.6%** versus the strongest cautious historical
-baseline, while conserving each district's cash and e-float budgets exactly. **This is synthetic
-held-out evidence, not measured upay performance.**
+The Morning Plan is evaluated in a **separate** synthetic environment, Dual-Liquidity World v2, where
+physical cash **and** e-float are both binding. It is not combined with the legacy intraday
+simulation in §10–§11.
 
-The research path was pre-registered, and its negative results are kept:
+In fresh synthetic worlds from the same world family, the frozen full-day ML policy reduced combined
+unmet demand by a median **20.6%** versus the strongest cautious historical baseline, while
+conserving each district's cash and e-float budgets exactly. **This is synthetic held-out evidence,
+not measured upay performance, and not an expected saving for any demo date.**
+
+* **Success bar.** The protocol and success bar were committed before the audit seeds (2036–2040)
+  were generated. ML had to:
+  * match or beat both the 7-day q90 and 7-day max rules in at least 4 of 5 worlds;
+  * reach a median combined-unmet reduction of at least 5% against the better of the two;
+  * worsen cash or e-float unmet by more than 5% in at most 1 world;
+  * conserve both budgets exactly.
+
+  All five checks passed.
+* **Absolute example (audit world seed 2036, 14 held-out operating days).** Combined unmet fell
+  from about BDT 49.7 lakh (q90 rule) to about BDT 40.8 lakh (frozen ML), −17.9% in this world.
+  Cash-out fill rose from 99.65% to 99.80%.
+* **Who moves the liquidity?** AgentFlow only recommends target levels and simulates approval; it
+  never executes a transfer. A future deployment could hand approved targets to an existing
+  distributor, field-officer or bank-deposit replenishment workflow. Whether targets can change daily
+  is a real-world validation question.
+
+For every research step, the protocol and success bar were committed before results were computed,
+and the negative results are kept:
 1. peer cash/e-float swaps were rejected (local complementarity was sparse);
 2. a 6-hour ML morning plan was rejected (seasonal full-day history beat it);
-3. the forecast horizon was aligned to the full-day decision;
-4. the frozen model survived fresh cautious-baseline (q90/max) attribution.
+3. the forecast horizon was aligned to the full-day decision (confirmatory seeds 2031–2035);
+4. the frozen model survived cautious-baseline (q90/max) attribution (audit seeds 2036–2040).
 
 Caveats: cash P90 coverage is about 85% (nominal 90%), low-volume agents did worse than q90 in 4 of 5
 worlds, and rural e-float can fall materially. See `MORNING_PLAN.md`.
@@ -137,8 +176,8 @@ Same demand, same total cash, 14 days, 200 agents:
 
 V2 delivers slightly more benefit than V1 with 31% fewer transfers, 27% lower logistics cost and 44%
 fewer donor shortage events. The share of unnecessary transfers did not improve (24.3% vs 21.4%), and V2
-is slightly worse than V1 for rural agents. It became the default under a deployment rule written before
-the held-out evaluation. Rebalancing fed by a naive forecast achieves −26.5% events, isolating the ML
+is slightly worse than V1 for rural agents. It became the default under a fixed deployment rule, with parameters
+selected on training-period validation folds only. Rebalancing fed by a naive forecast achieves −26.5% events, isolating the ML
 contribution.
 
 ## 12. Responsible AI
@@ -153,7 +192,8 @@ input validation, structured errors and env-based configuration.
 
 Synthetic, hand-designed data; modest gain on the peak-requirement target; ~42% recall of shortage
 windows; false-alert and donor-risk costs; simplified logistics (1-hour transfers, cost model);
-exogenous demand; e-float not binding; in-memory audit log; no authentication.
+exogenous demand; e-float tracked but not binding in the legacy intraday environment (only the
+separate Morning Plan world treats it as binding); in-memory audit log; no authentication.
 
 ## 14. Scalability
 
@@ -174,5 +214,8 @@ min-cost-flow optimiser if routing constraints are added.
 ## 16. Conclusion
 
 AgentFlow shows that agent liquidity stress can be anticipated hours ahead, explained with concrete
-evidence, and converted into safe, human-approved peer rebalancing that — in a reproducible held-out
-simulation — avoids about 38% of shortage events without adding cash to the network.
+evidence, and converted into safe, human-approved peer rebalancing. In a reproducible synthetic
+held-out simulation, the default V2 avoids about 39% of shortage events (V1: about 38%) without
+adding cash to the network. In a separate synthetic environment, a frozen full-day Morning Plan
+reduced combined cash and e-float unmet demand by a median 20.6% against the strongest cautious
+historical rule, using the same working capital.

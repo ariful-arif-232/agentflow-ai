@@ -55,7 +55,10 @@ simultaneous in/out surge (churn); night-time activity; 3-h velocity deviation.
 * Split: time-based; train 2026-06-24 → 2026-08-17 17:00 (262,800 rows, 6-h purge),
   test 2026-08-18 → 2026-08-31 (66,000 rows). No shuffling. Anomaly thresholds and per-agent
   historical shortage rates use the training period only.
-* Reproducible: fixed seeds; `python ml/scripts/run_pipeline.py`.
+* Reproducible: fixed seeds; `python ml/scripts/run_pipeline.py`. With the pinned project
+  environment, the evaluated decision outputs, business-impact metrics and demo values reproduce.
+  Runtime `fit_seconds` metadata is excluded, and tiny cross-machine floating-point variation may
+  occur in internal anomaly thresholds.
 
 ## 6. Metrics (held-out, synthetic)
 
@@ -108,7 +111,8 @@ for manual review rather than receiving rebalancing recommendations.
   period was used once.
 * **Held-out result** (synthetic) vs V1: unmet demand −40.3% vs −38.9%; 345 vs 501 transfers; 14 vs 25
   donor shortage events; BDT 1.15 vs 1.58 lakh logistics cost. The unnecessary-transfer share was
-  24.3% vs 21.4% (worse). V2 is the default under a pre-registered rule; V1 remains selectable.
+  24.3% vs 21.4% (worse). V2 is the default under a fixed deployment rule (parameters selected on training-period validation
+  folds only); V1 remains selectable.
   See `docs/EVALUATION.md` §5a.
 
 ## 9. Explainability
@@ -144,7 +148,9 @@ for manual review rather than receiving rebalancing recommendations.
   345 simulated transfers with V2 (V1: 25 across 501).
 * V2 did not reduce the share of unnecessary transfers (24.3% vs 21.4%) and is slightly worse than V1
   for rural agents.
-* No modelling of e-float limits, distributor capacity, travel time or cash-in-transit security.
+* The intraday models and V1/V2 are evaluated in the legacy environment, where e-float is tracked
+  but is not a binding constraint (only the separate Morning Plan world treats it as binding). There
+  is no modelling of distributor capacity, travel time or cash-in-transit security.
 
 ## 12. When not to trust the system blindly
 
@@ -159,10 +165,10 @@ for manual review rather than receiving rebalancing recommendations.
 | | |
 |---|---|
 | Purpose | Forecast each agent's **full operating-day** (08:00–23:59) peak physical-cash and e-float requirement at 07:00, for the proactive 08:00 Morning Plan |
-| Environment | Dual-Liquidity World v2 (synthetic, assumptions 2A.1); separate from the legacy cash-only world |
+| Environment | Dual-Liquidity World v2 (synthetic, assumptions 2A.1), where physical cash **and** e-float are both binding. It is separate from the legacy intraday world, where e-float is tracked but not binding, and the two are never combined. See [DATA_CARD.md](DATA_CARD.md#dual-liquidity-world-v2-morning-plan-environment). |
 | Specification | Frozen in commit `3128176`: 30 features from completed prior days only (static agent attributes, calendar, previous-day and 3/7-day flow history, 7-day mean/max/std of requirements, same-weekday history, trends); four `HistGradientBoostingRegressor` models (P50 squared error, P90 0.9 quantile) with the legacy settings; P90 ≥ P50 ≥ 0 |
 | Serving | Pre-computed decision-time forecasts for one synthetic demo world (seed 2036, 14 dates) in `ml/artifacts/morning_plan_demo.json`; the allocation is recomputed live; no training at start-up |
-| Evidence | On fresh synthetic audit worlds (2036–2040), the frozen ML P90 plan reduced combined unmet demand by a median **20.6%** (13.7–29.8%) versus the best cautious non-ML rule (historical 7-day q90), with exact conservation. Full-day P50 MAE was about 8% lower than the 7-day mean. **Synthetic held-out evidence, not measured upay performance.** |
+| Evidence | On fresh synthetic audit worlds (2036–2040), the frozen ML P90 plan reduced combined unmet demand by a median **20.6%** (13.7–29.8%) versus the best cautious non-ML rule (historical 7-day q90), with exact conservation. Full-day P50 MAE was about 8% lower than the 7-day mean. The protocol and success bar were committed before the audit seeds were generated (`c01c79f`), and all five checks passed. **Synthetic held-out evidence, not measured upay performance, and not an expected saving for any demo date.** |
 | Calibration | Pooled P90 coverage: cash 85.2%, e-float 88.0% (nominal 90%). Cash is under-covered, and more so for high-volume agents. It was not recalibrated. |
 | Subgroups | Low-volume agents did worse than the q90 rule in 4 of 5 audit worlds. Rural e-float allocations can fall materially. Both are surfaced as review flags. |
 | Explainability | Deterministic templates over the plan's numbers. Permutation importance (the 7-day mean requirement dominates, then market day, calendar and cluster) describes the model, not causes. |

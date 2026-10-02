@@ -158,6 +158,12 @@ tuned here.
   −55% combined unmet) with exact conservation. It could be a credible, simpler Morning Liquidity
   Plan candidate, but it would need its own pre-registered evaluation before any product decision.
 
+## Follow-up (Phase 2E)
+
+The longer-horizon model was evaluated on fresh confirmatory worlds. A full-day ML forecast beat
+`seasonal_requirement_7d` in 5 of 5 seeds; see [FULL_DAY_ML_RESULTS.md](FULL_DAY_ML_RESULTS.md).
+The recommendation below applies to the **6-hour** ML signal only.
+
 ## Recommendation
 
 **Simple historical allocation explains most/all of the gain — do not ship the current ML Morning

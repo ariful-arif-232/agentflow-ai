@@ -328,3 +328,15 @@ and much worse for e-float. The ML-value bar failed.
 
 * Protocol: [ML_ATTRIBUTION_PROTOCOL.md](ML_ATTRIBUTION_PROTOCOL.md)
 * Results: [ML_ATTRIBUTION_RESULTS.md](ML_ATTRIBUTION_RESULTS.md)
+
+## 11. Follow-up: confirmatory full-day ML (Phase 2E)
+
+This phase used fresh confirmatory seeds 2031–2035, a model spec frozen before evaluation, and the
+same budgets, floors and allocator. A full-operating-day (08:00–23:59) ML P90 forecast **beat the
+non-ML `seasonal_requirement_7d` baseline in 5 of 5 fresh worlds** (median combined unmet −33.2%).
+The pre-registered bar passed.
+
+* Protocol: [FULL_DAY_ML_PROTOCOL.md](FULL_DAY_ML_PROTOCOL.md)
+* Results: [FULL_DAY_ML_RESULTS.md](FULL_DAY_ML_RESULTS.md)
+
+Caveats include a P90-versus-mean signal confound and marginal cash P90 calibration (85.3%).

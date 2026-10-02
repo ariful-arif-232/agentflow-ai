@@ -157,3 +157,24 @@ def test_plausibility_rule():
     assert fd.plausibility(fm(0.6, 0.9, 10, 12), True)["clearly_broken"]
     assert fd.plausibility(fm(0.9, 0.9, 13, 12), True)["clearly_broken"]
     assert fd.plausibility(fm(0.9, 0.9, 10, 12), False)["clearly_broken"]
+
+
+def test_committed_confirmatory_artifacts_match_preregistration():
+    import json
+    root = Path(__file__).resolve().parents[1] / "ml" / "artifacts_dual"
+    imp_p, fc_p = root / "full_day_confirmatory_impact.json", root / "full_day_confirmatory_forecast.json"
+    if not imp_p.exists():
+        pytest.skip("confirmatory artifacts not generated")
+    imp, fc = json.loads(imp_p.read_text()), json.loads(fc_p.read_text())
+    assert imp["assumptions_version"] == "2A.1" and imp["confirmatory_seeds"] == list(fd.CONFIRMATORY_SEEDS)
+    assert list(imp["per_seed"]) == [str(s) for s in fd.CONFIRMATORY_SEEDS] and imp["comparator"] == fd.COMPARATOR
+    assert fc["features"] == fd.FEATURES
+    for s, r in imp["per_seed"].items():
+        assert r["conserved_all_policies"] is True
+        p = {k: v["primary_operating_hours"]["combined_unmet_bdt"] for k, v in r["policies"].items()}
+        want = 100 * (p[fd.COMPARATOR] - p[fd.ML_POLICY]) / p[fd.COMPARATOR]
+        assert r["incremental_vs_comparator"]["combined_unmet_reduction_pct"] == pytest.approx(want, abs=1e-3)
+    bar = fd.confirmatory_bar({s: {"incremental": r["incremental_vs_comparator"],
+                                   "conserved_all_policies": r["conserved_all_policies"]} for s, r in imp["per_seed"].items()},
+                              fc["pooled_p90_coverage"])
+    assert bar["passes"] == imp["success_bar"]["passes"]

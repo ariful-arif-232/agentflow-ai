@@ -1,0 +1,280 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2 - complementarity feasibility audit (read-only)",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "protocol": "docs/DUAL_COMPLEMENTARITY_PROTOCOL.md",
+  "constants": {
+    "seeds": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030
+    ],
+    "decision_hours": [
+      9,
+      11,
+      13,
+      15,
+      17,
+      19
+    ],
+    "max_distance_km": 15.0,
+    "min_swap_bdt": 2000.0,
+    "rounding_bdt": 500.0,
+    "reserve": "max(5000, 1.10 x P90)",
+    "bar": {
+      "min_distinct_agents": 20,
+      "min_viable_pairs": 100,
+      "min_cash_side_share_with_counterparty": 0.1,
+      "min_efloat_side_share_with_counterparty": 0.1
+    },
+    "min_worlds_passing": 4,
+    "useful_district_min_pairs": 10
+  },
+  "seed": 2026,
+  "decision_timestamps": 84,
+  "decision_rows": 16800,
+  "cash_pressure_rows": 901,
+  "efloat_pressure_rows": 373,
+  "cash_side_eligible_rows": 762,
+  "efloat_side_eligible_rows": 295,
+  "cash_rows_with_counterparty": 15,
+  "efloat_rows_with_counterparty": 17,
+  "cash_side_share_with_counterparty": 0.0166,
+  "efloat_side_share_with_counterparty": 0.0456,
+  "no_counterparty_reasons": {
+    "cash": {
+      "has_viable_counterparty": 15,
+      "not_normal_behaviour": 139,
+      "no_own_safe_surplus": 0,
+      "no_eligible_opposite_agent_in_district": 549,
+      "none_within_15km": 174,
+      "capacity_below_minimum": 24
+    },
+    "efloat": {
+      "has_viable_counterparty": 17,
+      "not_normal_behaviour": 78,
+      "no_own_safe_surplus": 0,
+      "no_eligible_opposite_agent_in_district": 95,
+      "none_within_15km": 157,
+      "capacity_below_minimum": 26
+    }
+  },
+  "distinct_agents": {
+    "cash_side": 7,
+    "efloat_side": 9,
+    "total": 16
+  },
+  "candidate_pairs_within_15km": 50,
+  "viable_pairs": 19,
+  "raw_viable_pair_capacity_bdt_double_counted": 114500.0,
+  "total_p50_cash_need_bdt": 5309614.0727,
+  "total_p50_efloat_need_bdt": 8290449.0139,
+  "greedy_assignments": 15,
+  "greedy_swappable_bdt": 106000.0,
+  "cash_need_coverable_pct": 1.9964,
+  "efloat_need_coverable_pct": 1.2786,
+  "median_viable_pair_amount_bdt": 3500.0,
+  "median_greedy_assignment_bdt": 6000.0,
+  "median_distance_km": 11.361,
+  "p90_distance_km": 14.2928,
+  "useful_districts": 0,
+  "by_district": {
+    "Barishal": {
+      "agents": 15,
+      "cash_pressure_rows": 114,
+      "efloat_pressure_rows": 34,
+      "viable_pairs": 9,
+      "greedy_swappable_bdt": 30500.0,
+      "cash_need_coverable_pct": 4.924,
+      "efloat_need_coverable_pct": 2.5327
+    },
+    "Chattogram": {
+      "agents": 35,
+      "cash_pressure_rows": 103,
+      "efloat_pressure_rows": 101,
+      "viable_pairs": 1,
+      "greedy_swappable_bdt": 6000.0,
+      "cash_need_coverable_pct": 0.6938,
+      "efloat_need_coverable_pct": 0.3775
+    },
+    "Dhaka": {
+      "agents": 50,
+      "cash_pressure_rows": 87,
+      "efloat_pressure_rows": 111,
+      "viable_pairs": 3,
+      "greedy_swappable_bdt": 2000.0,
+      "cash_need_coverable_pct": 0.2922,
+      "efloat_need_coverable_pct": 0.1047
+    },
+    "Gazipur": {
+      "agents": 25,
+      "cash_pressure_rows": 232,
+      "efloat_pressure_rows": 22,
+      "viable_pairs": 5,
+      "greedy_swappable_bdt": 60500.0,
+      "cash_need_coverable_pct": 5.1675,
+      "efloat_need_coverable_pct": 4.8285
+    },
+    "Khulna": {
+      "agents": 20,
+      "cash_pressure_rows": 32,
+      "efloat_pressure_rows": 39,
+      "viable_pairs": 0,
+      "greedy_swappable_bdt": 0.0,
+      "cash_need_coverable_pct": 0.0,
+      "efloat_need_coverable_pct": 0.0
+    },
+    "Rajshahi": {
+      "agents": 20,
+      "cash_pressure_rows": 115,
+      "efloat_pressure_rows": 19,
+      "viable_pairs": 1,
+      "greedy_swappable_bdt": 7000.0,
+      "cash_need_coverable_pct": 1.1679,
+      "efloat_need_coverable_pct": 1.1967
+    },
+    "Rangpur": {
+      "agents": 15,
+      "cash_pressure_rows": 108,
+      "efloat_pressure_rows": 24,
+      "viable_pairs": 0,
+      "greedy_swappable_bdt": 0.0,
+      "cash_need_coverable_pct": 0.0,
+      "efloat_need_coverable_pct": 0.0
+    },
+    "Sylhet": {
+      "agents": 20,
+      "cash_pressure_rows": 110,
+      "efloat_pressure_rows": 23,
+      "viable_pairs": 0,
+      "greedy_swappable_bdt": 0.0,
+      "cash_need_coverable_pct": 0.0,
+      "efloat_need_coverable_pct": 0.0
+    }
+  },
+  "oracle": {
+    "label": "oracle / evaluation only - uses actual future requirements; never used operationally",
+    "decision_rows_with_actuals": 16600,
+    "viable_pairs": 45,
+    "cash_side_share_with_counterparty": 0.0428,
+    "efloat_side_share_with_counterparty": 0.0886,
+    "greedy_swappable_bdt": 326500.0,
+    "operational_viable_pairs_truly_complementary_share": 0.5789
+  },
+  "hourly_appendix_08_21": {
+    "8": {
+      "cash_pressure_rows": 64,
+      "efloat_pressure_rows": 0,
+      "viable_pairs": 0,
+      "cash_side_share_with_counterparty": 0.0,
+      "efloat_side_share_with_counterparty": 0.0,
+      "greedy_swappable_bdt": 0.0
+    },
+    "9": {
+      "cash_pressure_rows": 107,
+      "efloat_pressure_rows": 1,
+      "viable_pairs": 0,
+      "cash_side_share_with_counterparty": 0.0,
+      "efloat_side_share_with_counterparty": 0.0,
+      "greedy_swappable_bdt": 0.0
+    },
+    "10": {
+      "cash_pressure_rows": 158,
+      "efloat_pressure_rows": 4,
+      "viable_pairs": 1,
+      "cash_side_share_with_counterparty": 0.0063,
+      "efloat_side_share_with_counterparty": 0.25,
+      "greedy_swappable_bdt": 3500.0
+    },
+    "11": {
+      "cash_pressure_rows": 191,
+      "efloat_pressure_rows": 6,
+      "viable_pairs": 2,
+      "cash_side_share_with_counterparty": 0.0105,
+      "efloat_side_share_with_counterparty": 0.1667,
+      "greedy_swappable_bdt": 36000.0
+    },
+    "12": {
+      "cash_pressure_rows": 192,
+      "efloat_pressure_rows": 12,
+      "viable_pairs": 3,
+      "cash_side_share_with_counterparty": 0.0156,
+      "efloat_side_share_with_counterparty": 0.1667,
+      "greedy_swappable_bdt": 27000.0
+    },
+    "13": {
+      "cash_pressure_rows": 192,
+      "efloat_pressure_rows": 23,
+      "viable_pairs": 0,
+      "cash_side_share_with_counterparty": 0.0,
+      "efloat_side_share_with_counterparty": 0.0,
+      "greedy_swappable_bdt": 0.0
+    },
+    "14": {
+      "cash_pressure_rows": 194,
+      "efloat_pressure_rows": 49,
+      "viable_pairs": 7,
+      "cash_side_share_with_counterparty": 0.0361,
+      "efloat_side_share_with_counterparty": 0.1429,
+      "greedy_swappable_bdt": 49500.0
+    },
+    "15": {
+      "cash_pressure_rows": 194,
+      "efloat_pressure_rows": 81,
+      "viable_pairs": 9,
+      "cash_side_share_with_counterparty": 0.0464,
+      "efloat_side_share_with_counterparty": 0.0988,
+      "greedy_swappable_bdt": 60500.0
+    },
+    "16": {
+      "cash_pressure_rows": 209,
+      "efloat_pressure_rows": 118,
+      "viable_pairs": 14,
+      "cash_side_share_with_counterparty": 0.0574,
+      "efloat_side_share_with_counterparty": 0.1102,
+      "greedy_swappable_bdt": 74500.0
+    },
+    "17": {
+      "cash_pressure_rows": 174,
+      "efloat_pressure_rows": 128,
+      "viable_pairs": 8,
+      "cash_side_share_with_counterparty": 0.023,
+      "efloat_side_share_with_counterparty": 0.0625,
+      "greedy_swappable_bdt": 9500.0
+    },
+    "18": {
+      "cash_pressure_rows": 90,
+      "efloat_pressure_rows": 135,
+      "viable_pairs": 0,
+      "cash_side_share_with_counterparty": 0.0,
+      "efloat_side_share_with_counterparty": 0.0,
+      "greedy_swappable_bdt": 0.0
+    },
+    "19": {
+      "cash_pressure_rows": 43,
+      "efloat_pressure_rows": 134,
+      "viable_pairs": 0,
+      "cash_side_share_with_counterparty": 0.0,
+      "efloat_side_share_with_counterparty": 0.0,
+      "greedy_swappable_bdt": 0.0
+    },
+    "20": {
+      "cash_pressure_rows": 23,
+      "efloat_pressure_rows": 149,
+      "viable_pairs": 0,
+      "cash_side_share_with_counterparty": 0.0,
+      "efloat_side_share_with_counterparty": 0.0,
+      "greedy_swappable_bdt": 0.0
+    },
+    "21": {
+      "cash_pressure_rows": 23,
+      "efloat_pressure_rows": 146,
+      "viable_pairs": 0,
+      "cash_side_share_with_counterparty": 0.0,
+      "efloat_side_share_with_counterparty": 0.0,
+      "greedy_swappable_bdt": 0.0
+    }
+  }
+}

@@ -1,0 +1,355 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2 - complementarity feasibility audit (read-only)",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "protocol": "docs/DUAL_COMPLEMENTARITY_PROTOCOL.md",
+  "constants": {
+    "seeds": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030
+    ],
+    "decision_hours": [
+      9,
+      11,
+      13,
+      15,
+      17,
+      19
+    ],
+    "max_distance_km": 15.0,
+    "min_swap_bdt": 2000.0,
+    "rounding_bdt": 500.0,
+    "reserve": "max(5000, 1.10 x P90)",
+    "bar": {
+      "min_distinct_agents": 20,
+      "min_viable_pairs": 100,
+      "min_cash_side_share_with_counterparty": 0.1,
+      "min_efloat_side_share_with_counterparty": 0.1
+    },
+    "min_worlds_passing": 4,
+    "useful_district_min_pairs": 10
+  },
+  "per_seed": {
+    "2026": {
+      "seed": 2026,
+      "world_hash": "1e90db46bfb1cff39827dfe3a6507724d50f24c71f5b30364e37729000bb0231",
+      "cash_pressure_prevalence_next6h": 0.0487,
+      "efloat_pressure_prevalence_next6h": 0.029,
+      "cash_forecast_improvement_vs_best_pct": 8.5285,
+      "efloat_forecast_improvement_vs_best_pct": 7.4237,
+      "cash_p90_coverage": 0.8925,
+      "efloat_p90_coverage": 0.9108,
+      "cash_pressure_rows": 901,
+      "efloat_pressure_rows": 373,
+      "viable_pairs": 19,
+      "distinct_agents": 16,
+      "cash_side_share_with_counterparty": 0.0166,
+      "efloat_side_share_with_counterparty": 0.0456,
+      "greedy_swappable_bdt": 106000.0,
+      "cash_need_coverable_pct": 1.9964,
+      "efloat_need_coverable_pct": 1.2786,
+      "useful_districts": 0,
+      "median_distance_km": 11.361,
+      "p90_distance_km": 14.2928,
+      "bar": {
+        "checks": {
+          "distinct_agents": false,
+          "viable_pairs": false,
+          "cash_side_share": false,
+          "efloat_side_share": false
+        },
+        "passes": false
+      },
+      "phase_2a_artifacts_reproduced": true
+    },
+    "2027": {
+      "seed": 2027,
+      "world_hash": "e8140dd924a66030e08b9bddeb276f25553e5b5957ba0f7b116b4097f3efba8f",
+      "cash_pressure_prevalence_next6h": 0.0384,
+      "efloat_pressure_prevalence_next6h": 0.0402,
+      "cash_forecast_improvement_vs_best_pct": 7.5532,
+      "efloat_forecast_improvement_vs_best_pct": 8.4347,
+      "cash_p90_coverage": 0.9033,
+      "efloat_p90_coverage": 0.902,
+      "cash_pressure_rows": 736,
+      "efloat_pressure_rows": 526,
+      "viable_pairs": 40,
+      "distinct_agents": 28,
+      "cash_side_share_with_counterparty": 0.0285,
+      "efloat_side_share_with_counterparty": 0.076,
+      "greedy_swappable_bdt": 111500.0,
+      "cash_need_coverable_pct": 2.2323,
+      "efloat_need_coverable_pct": 0.9567,
+      "useful_districts": 2,
+      "median_distance_km": 12.5624,
+      "p90_distance_km": 13.8847,
+      "bar": {
+        "checks": {
+          "distinct_agents": true,
+          "viable_pairs": false,
+          "cash_side_share": false,
+          "efloat_side_share": false
+        },
+        "passes": false
+      }
+    },
+    "2028": {
+      "seed": 2028,
+      "world_hash": "a23951cb005e15821695d5f5e0a2c0976d77ed2b5fa8fb4b76805ea40c0f5f3c",
+      "cash_pressure_prevalence_next6h": 0.043,
+      "efloat_pressure_prevalence_next6h": 0.0296,
+      "cash_forecast_improvement_vs_best_pct": 7.4713,
+      "efloat_forecast_improvement_vs_best_pct": 8.4271,
+      "cash_p90_coverage": 0.8937,
+      "efloat_p90_coverage": 0.9056,
+      "cash_pressure_rows": 810,
+      "efloat_pressure_rows": 384,
+      "viable_pairs": 31,
+      "distinct_agents": 24,
+      "cash_side_share_with_counterparty": 0.0247,
+      "efloat_side_share_with_counterparty": 0.0781,
+      "greedy_swappable_bdt": 181500.0,
+      "cash_need_coverable_pct": 3.0263,
+      "efloat_need_coverable_pct": 2.4772,
+      "useful_districts": 1,
+      "median_distance_km": 12.6667,
+      "p90_distance_km": 14.6995,
+      "bar": {
+        "checks": {
+          "distinct_agents": true,
+          "viable_pairs": false,
+          "cash_side_share": false,
+          "efloat_side_share": false
+        },
+        "passes": false
+      }
+    },
+    "2029": {
+      "seed": 2029,
+      "world_hash": "2083859cc8e00c7150fc4e883b396b03e0e7f2df94eec812080e638e589c4902",
+      "cash_pressure_prevalence_next6h": 0.0284,
+      "efloat_pressure_prevalence_next6h": 0.0338,
+      "cash_forecast_improvement_vs_best_pct": 6.9967,
+      "efloat_forecast_improvement_vs_best_pct": 7.5329,
+      "cash_p90_coverage": 0.8997,
+      "efloat_p90_coverage": 0.9026,
+      "cash_pressure_rows": 514,
+      "efloat_pressure_rows": 469,
+      "viable_pairs": 42,
+      "distinct_agents": 31,
+      "cash_side_share_with_counterparty": 0.0486,
+      "efloat_side_share_with_counterparty": 0.0874,
+      "greedy_swappable_bdt": 185000.0,
+      "cash_need_coverable_pct": 5.9756,
+      "efloat_need_coverable_pct": 2.4069,
+      "useful_districts": 1,
+      "median_distance_km": 11.7049,
+      "p90_distance_km": 14.7268,
+      "bar": {
+        "checks": {
+          "distinct_agents": true,
+          "viable_pairs": false,
+          "cash_side_share": false,
+          "efloat_side_share": false
+        },
+        "passes": false
+      }
+    },
+    "2030": {
+      "seed": 2030,
+      "world_hash": "9941d192c2235fc9aedb5781cc6dbc2a4a6f0429b74a84d30fa6d731b56fedc6",
+      "cash_pressure_prevalence_next6h": 0.0332,
+      "efloat_pressure_prevalence_next6h": 0.0388,
+      "cash_forecast_improvement_vs_best_pct": 8.354,
+      "efloat_forecast_improvement_vs_best_pct": 5.5563,
+      "cash_p90_coverage": 0.8977,
+      "efloat_p90_coverage": 0.9055,
+      "cash_pressure_rows": 585,
+      "efloat_pressure_rows": 565,
+      "viable_pairs": 28,
+      "distinct_agents": 28,
+      "cash_side_share_with_counterparty": 0.0393,
+      "efloat_side_share_with_counterparty": 0.0496,
+      "greedy_swappable_bdt": 155500.0,
+      "cash_need_coverable_pct": 3.5465,
+      "efloat_need_coverable_pct": 1.2771,
+      "useful_districts": 0,
+      "median_distance_km": 12.8899,
+      "p90_distance_km": 14.4009,
+      "bar": {
+        "checks": {
+          "distinct_agents": true,
+          "viable_pairs": false,
+          "cash_side_share": false,
+          "efloat_side_share": false
+        },
+        "passes": false
+      }
+    }
+  },
+  "robustness_summary": {
+    "cash_pressure_prevalence_next6h": {
+      "mean": 0.0383,
+      "median": 0.0384,
+      "min": 0.0284,
+      "max": 0.0487
+    },
+    "efloat_pressure_prevalence_next6h": {
+      "mean": 0.0343,
+      "median": 0.0338,
+      "min": 0.029,
+      "max": 0.0402
+    },
+    "cash_forecast_improvement_vs_best_pct": {
+      "mean": 7.7807,
+      "median": 7.5532,
+      "min": 6.9967,
+      "max": 8.5285
+    },
+    "efloat_forecast_improvement_vs_best_pct": {
+      "mean": 7.4749,
+      "median": 7.5329,
+      "min": 5.5563,
+      "max": 8.4347
+    },
+    "cash_p90_coverage": {
+      "mean": 0.8974,
+      "median": 0.8977,
+      "min": 0.8925,
+      "max": 0.9033
+    },
+    "efloat_p90_coverage": {
+      "mean": 0.9053,
+      "median": 0.9055,
+      "min": 0.902,
+      "max": 0.9108
+    },
+    "cash_pressure_rows": {
+      "mean": 709.2,
+      "median": 736.0,
+      "min": 514.0,
+      "max": 901.0
+    },
+    "efloat_pressure_rows": {
+      "mean": 463.4,
+      "median": 469.0,
+      "min": 373.0,
+      "max": 565.0
+    },
+    "viable_pairs": {
+      "mean": 32.0,
+      "median": 31.0,
+      "min": 19.0,
+      "max": 42.0
+    },
+    "distinct_agents": {
+      "mean": 25.4,
+      "median": 28.0,
+      "min": 16.0,
+      "max": 31.0
+    },
+    "cash_side_share_with_counterparty": {
+      "mean": 0.0316,
+      "median": 0.0285,
+      "min": 0.0166,
+      "max": 0.0486
+    },
+    "efloat_side_share_with_counterparty": {
+      "mean": 0.0673,
+      "median": 0.076,
+      "min": 0.0456,
+      "max": 0.0874
+    },
+    "greedy_swappable_bdt": {
+      "mean": 147900.0,
+      "median": 155500.0,
+      "min": 106000.0,
+      "max": 185000.0
+    },
+    "cash_need_coverable_pct": {
+      "mean": 3.3554,
+      "median": 3.0263,
+      "min": 1.9964,
+      "max": 5.9756
+    },
+    "efloat_need_coverable_pct": {
+      "mean": 1.6793,
+      "median": 1.2786,
+      "min": 0.9567,
+      "max": 2.4772
+    },
+    "useful_districts": {
+      "mean": 0.8,
+      "median": 1.0,
+      "min": 0.0,
+      "max": 2.0
+    },
+    "median_distance_km": {
+      "mean": 12.237,
+      "median": 12.5624,
+      "min": 11.361,
+      "max": 12.8899
+    },
+    "p90_distance_km": {
+      "mean": 14.4009,
+      "median": 14.4009,
+      "min": 13.8847,
+      "max": 14.7268
+    }
+  },
+  "seed_2026_representativeness": {
+    "metrics": {
+      "cash_side_share_with_counterparty": {
+        "seed_value": 0.0166,
+        "others_min": 0.0247,
+        "others_max": 0.0486,
+        "position": "below",
+        "rank_of_5_desc": 5
+      },
+      "efloat_side_share_with_counterparty": {
+        "seed_value": 0.0456,
+        "others_min": 0.0496,
+        "others_max": 0.0874,
+        "position": "below",
+        "rank_of_5_desc": 5
+      },
+      "viable_pairs": {
+        "seed_value": 19,
+        "others_min": 28,
+        "others_max": 42,
+        "position": "below",
+        "rank_of_5_desc": 5
+      },
+      "greedy_swappable_bdt": {
+        "seed_value": 106000.0,
+        "others_min": 111500.0,
+        "others_max": 185000.0,
+        "position": "below",
+        "rank_of_5_desc": 5
+      },
+      "cash_need_coverable_pct": {
+        "seed_value": 1.9964,
+        "others_min": 2.2323,
+        "others_max": 5.9756,
+        "position": "below",
+        "rank_of_5_desc": 5
+      },
+      "efloat_need_coverable_pct": {
+        "seed_value": 1.2786,
+        "others_min": 0.9567,
+        "others_max": 2.4772,
+        "position": "within",
+        "rank_of_5_desc": 3
+      }
+    },
+    "verdict": "unusually weak"
+  },
+  "overall_bar": {
+    "worlds_passing": 0,
+    "required": 4,
+    "passes": false
+  }
+}

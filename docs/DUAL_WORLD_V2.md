@@ -340,3 +340,13 @@ The pre-registered bar passed.
 * Results: [FULL_DAY_ML_RESULTS.md](FULL_DAY_ML_RESULTS.md)
 
 Caveats include a P90-versus-mean signal confound and marginal cash P90 calibration (85.3%).
+
+## 12. Follow-up: cautious non-ML attribution (Phase 2F)
+
+This audit used fresh seeds 2036–2040 from the same synthetic family, with the frozen full-day ML of
+`3128176`. **The frozen ML beat the historical q90_7d and max7 upper-quantile baselines in 5 of 5
+seeds** (median combined unmet −20.6% versus the best cautious baseline). The bar passed. The
+historical baseline is safer for low-volume agents in 4 of 5 seeds.
+
+* Protocol: [QUANTILE_ATTRIBUTION_PROTOCOL.md](QUANTILE_ATTRIBUTION_PROTOCOL.md)
+* Results: [QUANTILE_ATTRIBUTION_RESULTS.md](QUANTILE_ATTRIBUTION_RESULTS.md)

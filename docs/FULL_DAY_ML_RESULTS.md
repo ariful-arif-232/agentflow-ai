@@ -162,6 +162,12 @@ market-day and agent context.
    * within-hour net settlement is optimistic;
    * a single world family is used.
 
+## Follow-up (Phase 2F)
+
+Caveat 1, the quantile confound, was tested on fresh seeds 2036–2040. The frozen ML still beat
+non-ML q90_7d and max7 baselines in 5 of 5 seeds; see
+[QUANTILE_ATTRIBUTION_RESULTS.md](QUANTILE_ATTRIBUTION_RESULTS.md).
+
 ## Recommendation
 
 **Fresh confirmatory evidence demonstrates ML value — integrate a human-reviewed Morning Liquidity

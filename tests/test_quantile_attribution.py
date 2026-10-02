@@ -135,3 +135,22 @@ def test_best_cautious_selection_and_bar_logic():
     side = {s: _seed(80, 100, 95, ef=-6.0 if i < 2 else 0.0) for i, s in enumerate(qa.AUDIT_SEEDS)}
     assert not qa.attribution_bar(side)["checks"]["D_side_worse_gt5pct_in_at_most_1_seed"]
     assert not qa.attribution_bar({**good, 2040: _seed(80, 100, 95, cons=False)})["passes"]
+
+
+def test_committed_attribution_artifacts_match_preregistration():
+    import json
+    art = ROOT / "ml" / "artifacts_dual" / "quantile_attribution_multiseed.json"
+    if not art.exists():
+        pytest.skip("Phase 2F artifacts not generated")
+    m = json.loads(art.read_text())
+    assert m["assumptions_version"] == "2A.1" and m["audit_seeds"] == list(qa.AUDIT_SEEDS)
+    assert list(m["per_seed"]) == [str(s) for s in qa.AUDIT_SEEDS] and m["bar"] == qa.BAR
+    assert m["frozen_ml_spec_commit"] == qa.FROZEN_SPEC_COMMIT
+    assert m["frozen_ml_regression_check"]["reproduces_phase_2e"] is True
+    for r in m["per_seed"].values():
+        assert r["conserved_all_policies"] is True
+        assert r["best_cautious_non_ml"] == qa.best_cautious(r["prim"])
+        best = r["prim"][r["best_cautious_non_ml"]]["combined_unmet_bdt"]
+        want = 100 * (best - r["prim"][qa.ML]["combined_unmet_bdt"]) / best
+        assert r["incremental"]["combined_unmet_reduction_pct"] == pytest.approx(want, abs=1e-3)
+    assert qa.attribution_bar(m["per_seed"])["passes"] == m["success_bar"]["passes"]

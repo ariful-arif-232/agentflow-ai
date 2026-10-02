@@ -1,0 +1,2856 @@
+{
+  "label": "Synthetic held-out simulation - fresh seeds from the same Dual-Liquidity World v2 family (NOT external or real-world validation) - cautious non-ML baseline attribution (research only)",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "protocol": "docs/QUANTILE_ATTRIBUTION_PROTOCOL.md",
+  "audit_seeds": [
+    2036,
+    2037,
+    2038,
+    2039,
+    2040
+  ],
+  "frozen_ml_spec_commit": "3128176e23b4a5a2dde883e8dff8a75f21e35540",
+  "quantile_method": "linear interpolation (numpy method='linear'), q=0.90",
+  "policies": [
+    "status_quo",
+    "seasonal_requirement_mean7",
+    "seasonal_requirement_q90_7d",
+    "seasonal_requirement_max7",
+    "frozen_full_day_ml_p90",
+    "yesterday_requirement"
+  ],
+  "oracle_label": "ORACLE - evaluation only, impossible operationally",
+  "bar": {
+    "min_seeds_ml_le_q90": 4,
+    "min_seeds_ml_le_max7": 4,
+    "min_median_incremental_pct": 5.0,
+    "max_side_worse_pct": 5.0,
+    "max_seeds_side_worse": 1
+  },
+  "frozen_ml_regression_check": {
+    "seed": 2031,
+    "frozen_spec_commit": "3128176e23b4a5a2dde883e8dff8a75f21e35540",
+    "frozen_files_sha256_match": true,
+    "reproduces_phase_2e": true,
+    "values": {
+      "ml_combined_unmet": [
+        1697295.0,
+        1697295.0
+      ],
+      "mean7_combined_unmet": [
+        3296539.0,
+        3296539.0
+      ],
+      "ml_cash_mae": [
+        9337.0247,
+        9337.0247
+      ],
+      "ml_efloat_mae": [
+        11206.774,
+        11206.774
+      ]
+    }
+  },
+  "per_seed": {
+    "2036": {
+      "prim": {
+        "status_quo": {
+          "cash_shortage_events": 654,
+          "unmet_cash_out_bdt": 3838780.0,
+          "cash_out_fill_rate": 0.9893,
+          "efloat_shortage_events": 801,
+          "unmet_cash_in_bdt": 6877580.0,
+          "cash_in_fill_rate": 0.983,
+          "fully_serviceable_agent_hours": 43345,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 10716360.0,
+          "combined_fill_rate": 0.9859,
+          "shortage_events_total": 1455,
+          "agents_with_any_shortage": 145
+        },
+        "seasonal_requirement_mean7": {
+          "cash_shortage_events": 224,
+          "unmet_cash_out_bdt": 1555337.0,
+          "cash_out_fill_rate": 0.9957,
+          "efloat_shortage_events": 494,
+          "unmet_cash_in_bdt": 4087425.0,
+          "cash_in_fill_rate": 0.9899,
+          "fully_serviceable_agent_hours": 44082,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 5642762.0,
+          "combined_fill_rate": 0.9926,
+          "shortage_events_total": 718,
+          "agents_with_any_shortage": 141
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash_shortage_events": 183,
+          "unmet_cash_out_bdt": 1253339.0,
+          "cash_out_fill_rate": 0.9965,
+          "efloat_shortage_events": 457,
+          "unmet_cash_in_bdt": 3716798.0,
+          "cash_in_fill_rate": 0.9908,
+          "fully_serviceable_agent_hours": 44160,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4970137.0,
+          "combined_fill_rate": 0.9935,
+          "shortage_events_total": 640,
+          "agents_with_any_shortage": 138
+        },
+        "seasonal_requirement_max7": {
+          "cash_shortage_events": 246,
+          "unmet_cash_out_bdt": 1461057.0,
+          "cash_out_fill_rate": 0.9959,
+          "efloat_shortage_events": 607,
+          "unmet_cash_in_bdt": 4118918.0,
+          "cash_in_fill_rate": 0.9898,
+          "fully_serviceable_agent_hours": 43947,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 5579975.0,
+          "combined_fill_rate": 0.9927,
+          "shortage_events_total": 853,
+          "agents_with_any_shortage": 150
+        },
+        "frozen_full_day_ml_p90": {
+          "cash_shortage_events": 92,
+          "unmet_cash_out_bdt": 703336.0,
+          "cash_out_fill_rate": 0.998,
+          "efloat_shortage_events": 492,
+          "unmet_cash_in_bdt": 3379310.0,
+          "cash_in_fill_rate": 0.9916,
+          "fully_serviceable_agent_hours": 44216,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4082646.0,
+          "combined_fill_rate": 0.9946,
+          "shortage_events_total": 584,
+          "agents_with_any_shortage": 117
+        },
+        "yesterday_requirement": {
+          "cash_shortage_events": 275,
+          "unmet_cash_out_bdt": 1859998.0,
+          "cash_out_fill_rate": 0.9948,
+          "efloat_shortage_events": 560,
+          "unmet_cash_in_bdt": 4292087.0,
+          "cash_in_fill_rate": 0.9894,
+          "fully_serviceable_agent_hours": 43965,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 6152085.0,
+          "combined_fill_rate": 0.9919,
+          "shortage_events_total": 835,
+          "agents_with_any_shortage": 151
+        },
+        "oracle_full_day": {
+          "cash_shortage_events": 0,
+          "unmet_cash_out_bdt": 0.0,
+          "cash_out_fill_rate": 1.0,
+          "efloat_shortage_events": 0,
+          "unmet_cash_in_bdt": 0.0,
+          "cash_in_fill_rate": 1.0,
+          "fully_serviceable_agent_hours": 44800,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 0.0,
+          "combined_fill_rate": 1.0,
+          "shortage_events_total": 0,
+          "agents_with_any_shortage": 0
+        }
+      },
+      "incremental": {
+        "combined_unmet_reduction_pct": 17.8565,
+        "cash_unmet_reduction_pct": 43.883,
+        "efloat_unmet_reduction_pct": 9.0801,
+        "shortage_event_difference": -56
+      },
+      "conserved_all_policies": true,
+      "best_cautious_non_ml": "seasonal_requirement_q90_7d",
+      "conservation": {
+        "status_quo": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_mean7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_q90_7d": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_max7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "frozen_full_day_ml_p90": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "yesterday_requirement": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "oracle_full_day": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        }
+      },
+      "ml_p90_coverage": {
+        "cash": 0.8564,
+        "efloat": 0.8689
+      },
+      "historical_signal_coverage": {
+        "seasonal_requirement_mean7": {
+          "cash": 0.5239,
+          "efloat": 0.57
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash": 0.7996,
+          "efloat": 0.7764
+        },
+        "seasonal_requirement_max7": {
+          "cash": 0.8689,
+          "efloat": 0.8339
+        },
+        "yesterday_requirement": {
+          "cash": 0.4871,
+          "efloat": 0.62
+        }
+      },
+      "forecast_mae": {
+        "cash": {
+          "ml_p50": 9171.2063,
+          "seasonal_mean7": 10067.0485
+        },
+        "efloat": {
+          "ml_p50": 14137.5733,
+          "seasonal_mean7": 15714.4821
+        }
+      },
+      "harm_vs_status_quo": {
+        "seasonal_requirement_q90_7d": {
+          "better": 111,
+          "worse": 53,
+          "unchanged": 36,
+          "total_benefit_bdt": 6499059.0,
+          "total_harm_bdt": 752836.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0037",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 64329.0
+            },
+            {
+              "agent_id": "AG-0007",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 59983.0
+            },
+            {
+              "agent_id": "AG-0035",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 59637.0
+            },
+            {
+              "agent_id": "AG-0061",
+              "location_cluster": "urban_core",
+              "segment": "medium",
+              "change_bdt": 55655.0
+            },
+            {
+              "agent_id": "AG-0178",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 38550.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.348,
+                "efloat_ratio": 0.6276,
+                "combined_unmet_change_pct": -69.3073,
+                "harmed_agents": 6,
+                "agents": 63
+              },
+              "urban_core": {
+                "cash_ratio": 0.7653,
+                "efloat_ratio": 1.1161,
+                "combined_unmet_change_pct": -55.2417,
+                "harmed_agents": 16,
+                "agents": 54
+              },
+              "urban_periphery": {
+                "cash_ratio": 0.9782,
+                "efloat_ratio": 1.028,
+                "combined_unmet_change_pct": -39.4919,
+                "harmed_agents": 31,
+                "agents": 83
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9366,
+                "efloat_ratio": 1.0387,
+                "combined_unmet_change_pct": -49.3995,
+                "harmed_agents": 15,
+                "agents": 47
+              },
+              "low": {
+                "cash_ratio": 1.0548,
+                "efloat_ratio": 1.028,
+                "combined_unmet_change_pct": -53.2465,
+                "harmed_agents": 19,
+                "agents": 68
+              },
+              "medium": {
+                "cash_ratio": 1.06,
+                "efloat_ratio": 0.9397,
+                "combined_unmet_change_pct": -59.1332,
+                "harmed_agents": 19,
+                "agents": 85
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 24,
+            "harmed": 8,
+            "change_pct": -40.2607
+          }
+        },
+        "frozen_full_day_ml_p90": {
+          "better": 117,
+          "worse": 47,
+          "unchanged": 36,
+          "total_benefit_bdt": 7635837.0,
+          "total_harm_bdt": 1002123.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0037",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 89624.0
+            },
+            {
+              "agent_id": "AG-0056",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 87970.0
+            },
+            {
+              "agent_id": "AG-0068",
+              "location_cluster": "urban_periphery",
+              "segment": "low",
+              "change_bdt": 57722.0
+            },
+            {
+              "agent_id": "AG-0071",
+              "location_cluster": "urban_periphery",
+              "segment": "low",
+              "change_bdt": 53340.0
+            },
+            {
+              "agent_id": "AG-0061",
+              "location_cluster": "urban_core",
+              "segment": "medium",
+              "change_bdt": 50936.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.3623,
+                "efloat_ratio": 0.5487,
+                "combined_unmet_change_pct": -84.4133,
+                "harmed_agents": 3,
+                "agents": 63
+              },
+              "urban_core": {
+                "cash_ratio": 0.7631,
+                "efloat_ratio": 1.113,
+                "combined_unmet_change_pct": -61.5106,
+                "harmed_agents": 14,
+                "agents": 54
+              },
+              "urban_periphery": {
+                "cash_ratio": 0.9721,
+                "efloat_ratio": 1.0581,
+                "combined_unmet_change_pct": -43.187,
+                "harmed_agents": 30,
+                "agents": 83
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.926,
+                "efloat_ratio": 1.0511,
+                "combined_unmet_change_pct": -61.2681,
+                "harmed_agents": 9,
+                "agents": 47
+              },
+              "low": {
+                "cash_ratio": 1.0668,
+                "efloat_ratio": 0.9917,
+                "combined_unmet_change_pct": -43.0505,
+                "harmed_agents": 22,
+                "agents": 68
+              },
+              "medium": {
+                "cash_ratio": 1.0691,
+                "efloat_ratio": 0.9347,
+                "combined_unmet_change_pct": -69.8737,
+                "harmed_agents": 16,
+                "agents": 85
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 24,
+            "harmed": 6,
+            "change_pct": -49.3691
+          }
+        },
+        "seasonal_requirement_mean7": {
+          "better": 115,
+          "worse": 40,
+          "unchanged": 45,
+          "total_benefit_bdt": 5490334.0,
+          "total_harm_bdt": 416736.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0037",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 56253.0
+            },
+            {
+              "agent_id": "AG-0035",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 33762.0
+            },
+            {
+              "agent_id": "AG-0064",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 27846.0
+            },
+            {
+              "agent_id": "AG-0170",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 23853.0
+            },
+            {
+              "agent_id": "AG-0038",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 22484.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2438,
+                "efloat_ratio": 0.8026,
+                "combined_unmet_change_pct": -60.7914,
+                "harmed_agents": 4,
+                "agents": 63
+              },
+              "urban_core": {
+                "cash_ratio": 0.807,
+                "efloat_ratio": 1.0857,
+                "combined_unmet_change_pct": -55.7714,
+                "harmed_agents": 9,
+                "agents": 54
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0047,
+                "efloat_ratio": 0.9938,
+                "combined_unmet_change_pct": -31.192,
+                "harmed_agents": 27,
+                "agents": 83
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9549,
+                "efloat_ratio": 1.0186,
+                "combined_unmet_change_pct": -42.4128,
+                "harmed_agents": 12,
+                "agents": 47
+              },
+              "low": {
+                "cash_ratio": 1.042,
+                "efloat_ratio": 1.0477,
+                "combined_unmet_change_pct": -52.1839,
+                "harmed_agents": 14,
+                "agents": 68
+              },
+              "medium": {
+                "cash_ratio": 1.0418,
+                "efloat_ratio": 0.9601,
+                "combined_unmet_change_pct": -51.7784,
+                "harmed_agents": 14,
+                "agents": 85
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 24,
+            "harmed": 8,
+            "change_pct": -30.6586
+          }
+        }
+      },
+      "ml_vs_best_cautious": {
+        "better": 99,
+        "worse": 57,
+        "unchanged": 44,
+        "total_benefit_bdt": 1597750.0,
+        "total_harm_bdt": 710259.0,
+        "worst_harmed": [
+          {
+            "agent_id": "AG-0056",
+            "location_cluster": "urban_periphery",
+            "segment": "medium",
+            "change_bdt": 58165.0
+          },
+          {
+            "agent_id": "AG-0012",
+            "location_cluster": "urban_core",
+            "segment": "low",
+            "change_bdt": 54800.0
+          },
+          {
+            "agent_id": "AG-0064",
+            "location_cluster": "urban_periphery",
+            "segment": "medium",
+            "change_bdt": 37896.0
+          },
+          {
+            "agent_id": "AG-0003",
+            "location_cluster": "urban_periphery",
+            "segment": "low",
+            "change_bdt": 36630.0
+          },
+          {
+            "agent_id": "AG-0068",
+            "location_cluster": "urban_periphery",
+            "segment": "low",
+            "change_bdt": 36317.0
+          }
+        ],
+        "groups": {
+          "location_cluster": {
+            "rural": {
+              "cash_ratio": 1.3623,
+              "efloat_ratio": 0.5487,
+              "combined_unmet_change_pct": -49.2169,
+              "harmed_agents": 11,
+              "agents": 63
+            },
+            "urban_core": {
+              "cash_ratio": 0.7631,
+              "efloat_ratio": 1.113,
+              "combined_unmet_change_pct": -14.0061,
+              "harmed_agents": 16,
+              "agents": 54
+            },
+            "urban_periphery": {
+              "cash_ratio": 0.9721,
+              "efloat_ratio": 1.0581,
+              "combined_unmet_change_pct": -6.1067,
+              "harmed_agents": 30,
+              "agents": 83
+            }
+          },
+          "agent_volume_segment": {
+            "high": {
+              "cash_ratio": 0.926,
+              "efloat_ratio": 1.0511,
+              "combined_unmet_change_pct": -23.4556,
+              "harmed_agents": 11,
+              "agents": 47
+            },
+            "low": {
+              "cash_ratio": 1.0668,
+              "efloat_ratio": 0.9917,
+              "combined_unmet_change_pct": 21.8081,
+              "harmed_agents": 28,
+              "agents": 68
+            },
+            "medium": {
+              "cash_ratio": 1.0691,
+              "efloat_ratio": 0.9347,
+              "combined_unmet_change_pct": -26.2818,
+              "harmed_agents": 18,
+              "agents": 85
+            }
+          }
+        },
+        "urban_periphery_high_volume": {
+          "agents": 24,
+          "harmed": 7,
+          "change_pct": -15.2468
+        }
+      },
+      "secondary_combined_unmet": {
+        "status_quo": 11066530.0,
+        "seasonal_requirement_mean7": 5843261.0,
+        "seasonal_requirement_q90_7d": 5144955.0,
+        "seasonal_requirement_max7": 5761673.0,
+        "frozen_full_day_ml_p90": 4208476.0,
+        "yesterday_requirement": 6355383.0,
+        "oracle_full_day": 19497.0
+      }
+    },
+    "2037": {
+      "prim": {
+        "status_quo": {
+          "cash_shortage_events": 641,
+          "unmet_cash_out_bdt": 3571720.0,
+          "cash_out_fill_rate": 0.9898,
+          "efloat_shortage_events": 434,
+          "unmet_cash_in_bdt": 3515950.0,
+          "cash_in_fill_rate": 0.9907,
+          "fully_serviceable_agent_hours": 43725,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 7087670.0,
+          "combined_fill_rate": 0.9902,
+          "shortage_events_total": 1075,
+          "agents_with_any_shortage": 127
+        },
+        "seasonal_requirement_mean7": {
+          "cash_shortage_events": 255,
+          "unmet_cash_out_bdt": 1746328.0,
+          "cash_out_fill_rate": 0.995,
+          "efloat_shortage_events": 277,
+          "unmet_cash_in_bdt": 2017627.0,
+          "cash_in_fill_rate": 0.9947,
+          "fully_serviceable_agent_hours": 44268,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3763955.0,
+          "combined_fill_rate": 0.9948,
+          "shortage_events_total": 532,
+          "agents_with_any_shortage": 122
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash_shortage_events": 208,
+          "unmet_cash_out_bdt": 1595391.0,
+          "cash_out_fill_rate": 0.9954,
+          "efloat_shortage_events": 243,
+          "unmet_cash_in_bdt": 1692854.0,
+          "cash_in_fill_rate": 0.9955,
+          "fully_serviceable_agent_hours": 44349,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3288245.0,
+          "combined_fill_rate": 0.9955,
+          "shortage_events_total": 451,
+          "agents_with_any_shortage": 118
+        },
+        "seasonal_requirement_max7": {
+          "cash_shortage_events": 216,
+          "unmet_cash_out_bdt": 1677147.0,
+          "cash_out_fill_rate": 0.9952,
+          "efloat_shortage_events": 244,
+          "unmet_cash_in_bdt": 1673685.0,
+          "cash_in_fill_rate": 0.9956,
+          "fully_serviceable_agent_hours": 44340,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3350832.0,
+          "combined_fill_rate": 0.9954,
+          "shortage_events_total": 460,
+          "agents_with_any_shortage": 125
+        },
+        "frozen_full_day_ml_p90": {
+          "cash_shortage_events": 98,
+          "unmet_cash_out_bdt": 1014082.0,
+          "cash_out_fill_rate": 0.9971,
+          "efloat_shortage_events": 177,
+          "unmet_cash_in_bdt": 1295891.0,
+          "cash_in_fill_rate": 0.9966,
+          "fully_serviceable_agent_hours": 44525,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 2309973.0,
+          "combined_fill_rate": 0.9968,
+          "shortage_events_total": 275,
+          "agents_with_any_shortage": 77
+        },
+        "yesterday_requirement": {
+          "cash_shortage_events": 306,
+          "unmet_cash_out_bdt": 1938508.0,
+          "cash_out_fill_rate": 0.9944,
+          "efloat_shortage_events": 314,
+          "unmet_cash_in_bdt": 2295941.0,
+          "cash_in_fill_rate": 0.9939,
+          "fully_serviceable_agent_hours": 44180,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4234449.0,
+          "combined_fill_rate": 0.9942,
+          "shortage_events_total": 620,
+          "agents_with_any_shortage": 136
+        },
+        "oracle_full_day": {
+          "cash_shortage_events": 36,
+          "unmet_cash_out_bdt": 162180.0,
+          "cash_out_fill_rate": 0.9995,
+          "efloat_shortage_events": 4,
+          "unmet_cash_in_bdt": 2971.0,
+          "cash_in_fill_rate": 1.0,
+          "fully_serviceable_agent_hours": 44760,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 165151.0,
+          "combined_fill_rate": 0.9998,
+          "shortage_events_total": 40,
+          "agents_with_any_shortage": 8
+        }
+      },
+      "incremental": {
+        "combined_unmet_reduction_pct": 29.7506,
+        "cash_unmet_reduction_pct": 36.4368,
+        "efloat_unmet_reduction_pct": 23.4493,
+        "shortage_event_difference": -176
+      },
+      "conserved_all_policies": true,
+      "best_cautious_non_ml": "seasonal_requirement_q90_7d",
+      "conservation": {
+        "status_quo": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_mean7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_q90_7d": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_max7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "frozen_full_day_ml_p90": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "yesterday_requirement": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "oracle_full_day": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        }
+      },
+      "ml_p90_coverage": {
+        "cash": 0.8479,
+        "efloat": 0.8961
+      },
+      "historical_signal_coverage": {
+        "seasonal_requirement_mean7": {
+          "cash": 0.5354,
+          "efloat": 0.5968
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash": 0.8014,
+          "efloat": 0.7996
+        },
+        "seasonal_requirement_max7": {
+          "cash": 0.8618,
+          "efloat": 0.8571
+        },
+        "yesterday_requirement": {
+          "cash": 0.4904,
+          "efloat": 0.6379
+        }
+      },
+      "forecast_mae": {
+        "cash": {
+          "ml_p50": 9734.2104,
+          "seasonal_mean7": 10591.2219
+        },
+        "efloat": {
+          "ml_p50": 12333.5368,
+          "seasonal_mean7": 12978.0128
+        }
+      },
+      "harm_vs_status_quo": {
+        "seasonal_requirement_q90_7d": {
+          "better": 103,
+          "worse": 42,
+          "unchanged": 55,
+          "total_benefit_bdt": 4446180.0,
+          "total_harm_bdt": 646755.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0173",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 73907.0
+            },
+            {
+              "agent_id": "AG-0036",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 45834.0
+            },
+            {
+              "agent_id": "AG-0089",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 39293.0
+            },
+            {
+              "agent_id": "AG-0103",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 38839.0
+            },
+            {
+              "agent_id": "AG-0127",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 33982.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2724,
+                "efloat_ratio": 0.7033,
+                "combined_unmet_change_pct": -65.7046,
+                "harmed_agents": 8,
+                "agents": 70
+              },
+              "urban_core": {
+                "cash_ratio": 0.797,
+                "efloat_ratio": 1.0941,
+                "combined_unmet_change_pct": -39.6904,
+                "harmed_agents": 19,
+                "agents": 70
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0103,
+                "efloat_ratio": 1.0313,
+                "combined_unmet_change_pct": -46.4441,
+                "harmed_agents": 15,
+                "agents": 60
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9621,
+                "efloat_ratio": 1.0349,
+                "combined_unmet_change_pct": -51.229,
+                "harmed_agents": 12,
+                "agents": 46
+              },
+              "low": {
+                "cash_ratio": 1.0752,
+                "efloat_ratio": 0.9865,
+                "combined_unmet_change_pct": -64.9944,
+                "harmed_agents": 8,
+                "agents": 67
+              },
+              "medium": {
+                "cash_ratio": 1.0188,
+                "efloat_ratio": 0.9632,
+                "combined_unmet_change_pct": -52.0895,
+                "harmed_agents": 22,
+                "agents": 87
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 13,
+            "harmed": 3,
+            "change_pct": -52.6279
+          }
+        },
+        "frozen_full_day_ml_p90": {
+          "better": 115,
+          "worse": 27,
+          "unchanged": 58,
+          "total_benefit_bdt": 5222083.0,
+          "total_harm_bdt": 444386.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0173",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 67474.0
+            },
+            {
+              "agent_id": "AG-0088",
+              "location_cluster": "urban_core",
+              "segment": "medium",
+              "change_bdt": 46054.0
+            },
+            {
+              "agent_id": "AG-0005",
+              "location_cluster": "rural",
+              "segment": "high",
+              "change_bdt": 35308.0
+            },
+            {
+              "agent_id": "AG-0077",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 32666.0
+            },
+            {
+              "agent_id": "AG-0112",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 32047.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2866,
+                "efloat_ratio": 0.6269,
+                "combined_unmet_change_pct": -83.9012,
+                "harmed_agents": 2,
+                "agents": 70
+              },
+              "urban_core": {
+                "cash_ratio": 0.788,
+                "efloat_ratio": 1.0921,
+                "combined_unmet_change_pct": -48.9501,
+                "harmed_agents": 13,
+                "agents": 70
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0087,
+                "efloat_ratio": 1.0837,
+                "combined_unmet_change_pct": -57.3543,
+                "harmed_agents": 12,
+                "agents": 60
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9439,
+                "efloat_ratio": 1.0374,
+                "combined_unmet_change_pct": -60.5573,
+                "harmed_agents": 9,
+                "agents": 46
+              },
+              "low": {
+                "cash_ratio": 1.0985,
+                "efloat_ratio": 0.9768,
+                "combined_unmet_change_pct": -82.6453,
+                "harmed_agents": 6,
+                "agents": 67
+              },
+              "medium": {
+                "cash_ratio": 1.0318,
+                "efloat_ratio": 0.9633,
+                "combined_unmet_change_pct": -68.9992,
+                "harmed_agents": 12,
+                "agents": 87
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 13,
+            "harmed": 3,
+            "change_pct": -60.3808
+          }
+        },
+        "seasonal_requirement_mean7": {
+          "better": 103,
+          "worse": 37,
+          "unchanged": 60,
+          "total_benefit_bdt": 3685341.0,
+          "total_harm_bdt": 361626.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0173",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 47044.0
+            },
+            {
+              "agent_id": "AG-0036",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 31994.0
+            },
+            {
+              "agent_id": "AG-0112",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 29564.0
+            },
+            {
+              "agent_id": "AG-0061",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 27717.0
+            },
+            {
+              "agent_id": "AG-0089",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 24423.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.1936,
+                "efloat_ratio": 0.8409,
+                "combined_unmet_change_pct": -59.2393,
+                "harmed_agents": 7,
+                "agents": 70
+              },
+              "urban_core": {
+                "cash_ratio": 0.8337,
+                "efloat_ratio": 1.0651,
+                "combined_unmet_change_pct": -42.1471,
+                "harmed_agents": 14,
+                "agents": 70
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0387,
+                "efloat_ratio": 0.992,
+                "combined_unmet_change_pct": -34.208,
+                "harmed_agents": 16,
+                "agents": 60
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9684,
+                "efloat_ratio": 1.0146,
+                "combined_unmet_change_pct": -42.6143,
+                "harmed_agents": 10,
+                "agents": 46
+              },
+              "low": {
+                "cash_ratio": 1.0631,
+                "efloat_ratio": 1.0201,
+                "combined_unmet_change_pct": -57.8613,
+                "harmed_agents": 8,
+                "agents": 67
+              },
+              "medium": {
+                "cash_ratio": 1.0155,
+                "efloat_ratio": 0.9766,
+                "combined_unmet_change_pct": -47.3969,
+                "harmed_agents": 19,
+                "agents": 87
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 13,
+            "harmed": 3,
+            "change_pct": -36.3253
+          }
+        }
+      },
+      "ml_vs_best_cautious": {
+        "better": 90,
+        "worse": 34,
+        "unchanged": 76,
+        "total_benefit_bdt": 1237687.0,
+        "total_harm_bdt": 259415.0,
+        "worst_harmed": [
+          {
+            "agent_id": "AG-0184",
+            "location_cluster": "rural",
+            "segment": "high",
+            "change_bdt": 62222.0
+          },
+          {
+            "agent_id": "AG-0088",
+            "location_cluster": "urban_core",
+            "segment": "medium",
+            "change_bdt": 30638.0
+          },
+          {
+            "agent_id": "AG-0018",
+            "location_cluster": "urban_core",
+            "segment": "high",
+            "change_bdt": 20357.0
+          },
+          {
+            "agent_id": "AG-0076",
+            "location_cluster": "urban_core",
+            "segment": "high",
+            "change_bdt": 16703.0
+          },
+          {
+            "agent_id": "AG-0174",
+            "location_cluster": "urban_periphery",
+            "segment": "low",
+            "change_bdt": 15160.0
+          }
+        ],
+        "groups": {
+          "location_cluster": {
+            "rural": {
+              "cash_ratio": 1.2866,
+              "efloat_ratio": 0.6269,
+              "combined_unmet_change_pct": -53.0584,
+              "harmed_agents": 8,
+              "agents": 70
+            },
+            "urban_core": {
+              "cash_ratio": 0.788,
+              "efloat_ratio": 1.0921,
+              "combined_unmet_change_pct": -15.3536,
+              "harmed_agents": 13,
+              "agents": 70
+            },
+            "urban_periphery": {
+              "cash_ratio": 1.0087,
+              "efloat_ratio": 1.0837,
+              "combined_unmet_change_pct": -20.3715,
+              "harmed_agents": 13,
+              "agents": 60
+            }
+          },
+          "agent_volume_segment": {
+            "high": {
+              "cash_ratio": 0.9439,
+              "efloat_ratio": 1.0374,
+              "combined_unmet_change_pct": -19.1267,
+              "harmed_agents": 11,
+              "agents": 46
+            },
+            "low": {
+              "cash_ratio": 1.0985,
+              "efloat_ratio": 0.9768,
+              "combined_unmet_change_pct": -50.4232,
+              "harmed_agents": 9,
+              "agents": 67
+            },
+            "medium": {
+              "cash_ratio": 1.0318,
+              "efloat_ratio": 0.9633,
+              "combined_unmet_change_pct": -35.2943,
+              "harmed_agents": 14,
+              "agents": 87
+            }
+          }
+        },
+        "urban_periphery_high_volume": {
+          "agents": 13,
+          "harmed": 5,
+          "change_pct": -16.3659
+        }
+      },
+      "secondary_combined_unmet": {
+        "status_quo": 7334570.0,
+        "seasonal_requirement_mean7": 3892188.0,
+        "seasonal_requirement_q90_7d": 3388715.0,
+        "seasonal_requirement_max7": 3446436.0,
+        "frozen_full_day_ml_p90": 2377957.0,
+        "yesterday_requirement": 4354585.0,
+        "oracle_full_day": 165151.0
+      }
+    },
+    "2038": {
+      "prim": {
+        "status_quo": {
+          "cash_shortage_events": 615,
+          "unmet_cash_out_bdt": 3928880.0,
+          "cash_out_fill_rate": 0.9889,
+          "efloat_shortage_events": 482,
+          "unmet_cash_in_bdt": 4436030.0,
+          "cash_in_fill_rate": 0.9885,
+          "fully_serviceable_agent_hours": 43703,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 8364910.0,
+          "combined_fill_rate": 0.9887,
+          "shortage_events_total": 1097,
+          "agents_with_any_shortage": 133
+        },
+        "seasonal_requirement_mean7": {
+          "cash_shortage_events": 300,
+          "unmet_cash_out_bdt": 2090862.0,
+          "cash_out_fill_rate": 0.9941,
+          "efloat_shortage_events": 303,
+          "unmet_cash_in_bdt": 2611265.0,
+          "cash_in_fill_rate": 0.9932,
+          "fully_serviceable_agent_hours": 44197,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4702127.0,
+          "combined_fill_rate": 0.9937,
+          "shortage_events_total": 603,
+          "agents_with_any_shortage": 113
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash_shortage_events": 235,
+          "unmet_cash_out_bdt": 1707616.0,
+          "cash_out_fill_rate": 0.9952,
+          "efloat_shortage_events": 287,
+          "unmet_cash_in_bdt": 2464927.0,
+          "cash_in_fill_rate": 0.9936,
+          "fully_serviceable_agent_hours": 44278,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4172543.0,
+          "combined_fill_rate": 0.9944,
+          "shortage_events_total": 522,
+          "agents_with_any_shortage": 122
+        },
+        "seasonal_requirement_max7": {
+          "cash_shortage_events": 281,
+          "unmet_cash_out_bdt": 1881380.0,
+          "cash_out_fill_rate": 0.9947,
+          "efloat_shortage_events": 344,
+          "unmet_cash_in_bdt": 2640230.0,
+          "cash_in_fill_rate": 0.9932,
+          "fully_serviceable_agent_hours": 44175,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4521610.0,
+          "combined_fill_rate": 0.9939,
+          "shortage_events_total": 625,
+          "agents_with_any_shortage": 136
+        },
+        "frozen_full_day_ml_p90": {
+          "cash_shortage_events": 139,
+          "unmet_cash_out_bdt": 1035595.0,
+          "cash_out_fill_rate": 0.9971,
+          "efloat_shortage_events": 307,
+          "unmet_cash_in_bdt": 2279345.0,
+          "cash_in_fill_rate": 0.9941,
+          "fully_serviceable_agent_hours": 44354,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3314940.0,
+          "combined_fill_rate": 0.9955,
+          "shortage_events_total": 446,
+          "agents_with_any_shortage": 103
+        },
+        "yesterday_requirement": {
+          "cash_shortage_events": 340,
+          "unmet_cash_out_bdt": 2127349.0,
+          "cash_out_fill_rate": 0.994,
+          "efloat_shortage_events": 395,
+          "unmet_cash_in_bdt": 3217983.0,
+          "cash_in_fill_rate": 0.9917,
+          "fully_serviceable_agent_hours": 44065,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 5345332.0,
+          "combined_fill_rate": 0.9928,
+          "shortage_events_total": 735,
+          "agents_with_any_shortage": 142
+        },
+        "oracle_full_day": {
+          "cash_shortage_events": 0,
+          "unmet_cash_out_bdt": 0.0,
+          "cash_out_fill_rate": 1.0,
+          "efloat_shortage_events": 0,
+          "unmet_cash_in_bdt": 0.0,
+          "cash_in_fill_rate": 1.0,
+          "fully_serviceable_agent_hours": 44800,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 0.0,
+          "combined_fill_rate": 1.0,
+          "shortage_events_total": 0,
+          "agents_with_any_shortage": 0
+        }
+      },
+      "incremental": {
+        "combined_unmet_reduction_pct": 20.5535,
+        "cash_unmet_reduction_pct": 39.3543,
+        "efloat_unmet_reduction_pct": 7.5289,
+        "shortage_event_difference": -76
+      },
+      "conserved_all_policies": true,
+      "best_cautious_non_ml": "seasonal_requirement_q90_7d",
+      "conservation": {
+        "status_quo": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_mean7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_q90_7d": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_max7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "frozen_full_day_ml_p90": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "yesterday_requirement": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "oracle_full_day": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        }
+      },
+      "ml_p90_coverage": {
+        "cash": 0.8418,
+        "efloat": 0.8729
+      },
+      "historical_signal_coverage": {
+        "seasonal_requirement_mean7": {
+          "cash": 0.5368,
+          "efloat": 0.5921
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash": 0.7946,
+          "efloat": 0.7936
+        },
+        "seasonal_requirement_max7": {
+          "cash": 0.8532,
+          "efloat": 0.8511
+        },
+        "yesterday_requirement": {
+          "cash": 0.485,
+          "efloat": 0.6493
+        }
+      },
+      "forecast_mae": {
+        "cash": {
+          "ml_p50": 9716.8664,
+          "seasonal_mean7": 10794.7306
+        },
+        "efloat": {
+          "ml_p50": 13064.4896,
+          "seasonal_mean7": 13524.573
+        }
+      },
+      "harm_vs_status_quo": {
+        "seasonal_requirement_q90_7d": {
+          "better": 106,
+          "worse": 47,
+          "unchanged": 47,
+          "total_benefit_bdt": 4751906.0,
+          "total_harm_bdt": 559539.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0066",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 66306.0
+            },
+            {
+              "agent_id": "AG-0126",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 58093.0
+            },
+            {
+              "agent_id": "AG-0024",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 52290.0
+            },
+            {
+              "agent_id": "AG-0174",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 36936.0
+            },
+            {
+              "agent_id": "AG-0051",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 33075.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2386,
+                "efloat_ratio": 0.7079,
+                "combined_unmet_change_pct": -59.168,
+                "harmed_agents": 6,
+                "agents": 72
+              },
+              "urban_core": {
+                "cash_ratio": 0.8094,
+                "efloat_ratio": 1.129,
+                "combined_unmet_change_pct": -60.7412,
+                "harmed_agents": 17,
+                "agents": 68
+              },
+              "urban_periphery": {
+                "cash_ratio": 0.9893,
+                "efloat_ratio": 1.0069,
+                "combined_unmet_change_pct": -25.9131,
+                "harmed_agents": 24,
+                "agents": 60
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9977,
+                "efloat_ratio": 0.9953,
+                "combined_unmet_change_pct": -45.9749,
+                "harmed_agents": 11,
+                "agents": 42
+              },
+              "low": {
+                "cash_ratio": 1.0509,
+                "efloat_ratio": 0.9529,
+                "combined_unmet_change_pct": -51.6367,
+                "harmed_agents": 16,
+                "agents": 71
+              },
+              "medium": {
+                "cash_ratio": 0.9852,
+                "efloat_ratio": 1.0198,
+                "combined_unmet_change_pct": -56.1151,
+                "harmed_agents": 20,
+                "agents": 87
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 14,
+            "harmed": 6,
+            "change_pct": -15.3335
+          }
+        },
+        "frozen_full_day_ml_p90": {
+          "better": 114,
+          "worse": 37,
+          "unchanged": 49,
+          "total_benefit_bdt": 5556152.0,
+          "total_harm_bdt": 506182.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0173",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 62903.0
+            },
+            {
+              "agent_id": "AG-0066",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 39841.0
+            },
+            {
+              "agent_id": "AG-0027",
+              "location_cluster": "urban_periphery",
+              "segment": "low",
+              "change_bdt": 36700.0
+            },
+            {
+              "agent_id": "AG-0051",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 30672.0
+            },
+            {
+              "agent_id": "AG-0181",
+              "location_cluster": "urban_core",
+              "segment": "low",
+              "change_bdt": 29870.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2381,
+                "efloat_ratio": 0.6637,
+                "combined_unmet_change_pct": -78.0271,
+                "harmed_agents": 3,
+                "agents": 72
+              },
+              "urban_core": {
+                "cash_ratio": 0.7976,
+                "efloat_ratio": 1.1125,
+                "combined_unmet_change_pct": -54.7832,
+                "harmed_agents": 19,
+                "agents": 68
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0029,
+                "efloat_ratio": 1.0564,
+                "combined_unmet_change_pct": -38.4509,
+                "harmed_agents": 15,
+                "agents": 60
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9914,
+                "efloat_ratio": 0.9917,
+                "combined_unmet_change_pct": -58.8499,
+                "harmed_agents": 5,
+                "agents": 42
+              },
+              "low": {
+                "cash_ratio": 1.0635,
+                "efloat_ratio": 0.9219,
+                "combined_unmet_change_pct": -51.4136,
+                "harmed_agents": 16,
+                "agents": 71
+              },
+              "medium": {
+                "cash_ratio": 0.9873,
+                "efloat_ratio": 1.0335,
+                "combined_unmet_change_pct": -66.3178,
+                "harmed_agents": 16,
+                "agents": 87
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 14,
+            "harmed": 2,
+            "change_pct": -36.26
+          }
+        },
+        "seasonal_requirement_mean7": {
+          "better": 103,
+          "worse": 36,
+          "unchanged": 61,
+          "total_benefit_bdt": 3996849.0,
+          "total_harm_bdt": 334066.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0066",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 46355.0
+            },
+            {
+              "agent_id": "AG-0126",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 37345.0
+            },
+            {
+              "agent_id": "AG-0174",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 25713.0
+            },
+            {
+              "agent_id": "AG-0055",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 24947.0
+            },
+            {
+              "agent_id": "AG-0024",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 21367.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.1645,
+                "efloat_ratio": 0.8419,
+                "combined_unmet_change_pct": -48.3804,
+                "harmed_agents": 4,
+                "agents": 72
+              },
+              "urban_core": {
+                "cash_ratio": 0.8402,
+                "efloat_ratio": 1.0894,
+                "combined_unmet_change_pct": -58.883,
+                "harmed_agents": 11,
+                "agents": 68
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0245,
+                "efloat_ratio": 0.9773,
+                "combined_unmet_change_pct": -22.1695,
+                "harmed_agents": 21,
+                "agents": 60
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9971,
+                "efloat_ratio": 0.9866,
+                "combined_unmet_change_pct": -39.0508,
+                "harmed_agents": 10,
+                "agents": 42
+              },
+              "low": {
+                "cash_ratio": 1.0344,
+                "efloat_ratio": 1.0013,
+                "combined_unmet_change_pct": -41.5697,
+                "harmed_agents": 9,
+                "agents": 71
+              },
+              "medium": {
+                "cash_ratio": 0.9913,
+                "efloat_ratio": 1.0134,
+                "combined_unmet_change_pct": -52.1988,
+                "harmed_agents": 17,
+                "agents": 87
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 14,
+            "harmed": 6,
+            "change_pct": -10.3177
+          }
+        }
+      },
+      "ml_vs_best_cautious": {
+        "better": 86,
+        "worse": 47,
+        "unchanged": 67,
+        "total_benefit_bdt": 1397701.0,
+        "total_harm_bdt": 540098.0,
+        "worst_harmed": [
+          {
+            "agent_id": "AG-0177",
+            "location_cluster": "urban_core",
+            "segment": "high",
+            "change_bdt": 69331.0
+          },
+          {
+            "agent_id": "AG-0027",
+            "location_cluster": "urban_periphery",
+            "segment": "low",
+            "change_bdt": 34997.0
+          },
+          {
+            "agent_id": "AG-0173",
+            "location_cluster": "urban_periphery",
+            "segment": "medium",
+            "change_bdt": 34658.0
+          },
+          {
+            "agent_id": "AG-0120",
+            "location_cluster": "rural",
+            "segment": "high",
+            "change_bdt": 30238.0
+          },
+          {
+            "agent_id": "AG-0181",
+            "location_cluster": "urban_core",
+            "segment": "low",
+            "change_bdt": 29781.0
+          }
+        ],
+        "groups": {
+          "location_cluster": {
+            "rural": {
+              "cash_ratio": 1.2381,
+              "efloat_ratio": 0.6637,
+              "combined_unmet_change_pct": -46.1872,
+              "harmed_agents": 11,
+              "agents": 72
+            },
+            "urban_core": {
+              "cash_ratio": 0.7976,
+              "efloat_ratio": 1.1125,
+              "combined_unmet_change_pct": 15.1763,
+              "harmed_agents": 25,
+              "agents": 68
+            },
+            "urban_periphery": {
+              "cash_ratio": 1.0029,
+              "efloat_ratio": 1.0564,
+              "combined_unmet_change_pct": -16.9232,
+              "harmed_agents": 11,
+              "agents": 60
+            }
+          },
+          "agent_volume_segment": {
+            "high": {
+              "cash_ratio": 0.9914,
+              "efloat_ratio": 0.9917,
+              "combined_unmet_change_pct": -23.8316,
+              "harmed_agents": 6,
+              "agents": 42
+            },
+            "low": {
+              "cash_ratio": 1.0635,
+              "efloat_ratio": 0.9219,
+              "combined_unmet_change_pct": 0.4613,
+              "harmed_agents": 23,
+              "agents": 71
+            },
+            "medium": {
+              "cash_ratio": 0.9873,
+              "efloat_ratio": 1.0335,
+              "combined_unmet_change_pct": -23.2487,
+              "harmed_agents": 18,
+              "agents": 87
+            }
+          }
+        },
+        "urban_periphery_high_volume": {
+          "agents": 14,
+          "harmed": 1,
+          "change_pct": -24.7164
+        }
+      },
+      "secondary_combined_unmet": {
+        "status_quo": 8618050.0,
+        "seasonal_requirement_mean7": 4848298.0,
+        "seasonal_requirement_q90_7d": 4300321.0,
+        "seasonal_requirement_max7": 4645730.0,
+        "frozen_full_day_ml_p90": 3445218.0,
+        "yesterday_requirement": 5509058.0,
+        "oracle_full_day": 2508.0
+      }
+    },
+    "2039": {
+      "prim": {
+        "status_quo": {
+          "cash_shortage_events": 580,
+          "unmet_cash_out_bdt": 2783570.0,
+          "cash_out_fill_rate": 0.9924,
+          "efloat_shortage_events": 624,
+          "unmet_cash_in_bdt": 5447190.0,
+          "cash_in_fill_rate": 0.9868,
+          "fully_serviceable_agent_hours": 43596,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 8230760.0,
+          "combined_fill_rate": 0.9894,
+          "shortage_events_total": 1204,
+          "agents_with_any_shortage": 143
+        },
+        "seasonal_requirement_mean7": {
+          "cash_shortage_events": 210,
+          "unmet_cash_out_bdt": 1035184.0,
+          "cash_out_fill_rate": 0.9972,
+          "efloat_shortage_events": 401,
+          "unmet_cash_in_bdt": 3483013.0,
+          "cash_in_fill_rate": 0.9915,
+          "fully_serviceable_agent_hours": 44189,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4518197.0,
+          "combined_fill_rate": 0.9942,
+          "shortage_events_total": 611,
+          "agents_with_any_shortage": 127
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash_shortage_events": 173,
+          "unmet_cash_out_bdt": 864799.0,
+          "cash_out_fill_rate": 0.9976,
+          "efloat_shortage_events": 335,
+          "unmet_cash_in_bdt": 2989804.0,
+          "cash_in_fill_rate": 0.9927,
+          "fully_serviceable_agent_hours": 44292,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3854603.0,
+          "combined_fill_rate": 0.995,
+          "shortage_events_total": 508,
+          "agents_with_any_shortage": 122
+        },
+        "seasonal_requirement_max7": {
+          "cash_shortage_events": 196,
+          "unmet_cash_out_bdt": 984081.0,
+          "cash_out_fill_rate": 0.9973,
+          "efloat_shortage_events": 379,
+          "unmet_cash_in_bdt": 3292638.0,
+          "cash_in_fill_rate": 0.992,
+          "fully_serviceable_agent_hours": 44225,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4276719.0,
+          "combined_fill_rate": 0.9945,
+          "shortage_events_total": 575,
+          "agents_with_any_shortage": 133
+        },
+        "frozen_full_day_ml_p90": {
+          "cash_shortage_events": 86,
+          "unmet_cash_out_bdt": 430837.0,
+          "cash_out_fill_rate": 0.9988,
+          "efloat_shortage_events": 300,
+          "unmet_cash_in_bdt": 2525120.0,
+          "cash_in_fill_rate": 0.9939,
+          "fully_serviceable_agent_hours": 44414,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 2955957.0,
+          "combined_fill_rate": 0.9962,
+          "shortage_events_total": 386,
+          "agents_with_any_shortage": 87
+        },
+        "yesterday_requirement": {
+          "cash_shortage_events": 291,
+          "unmet_cash_out_bdt": 1360046.0,
+          "cash_out_fill_rate": 0.9963,
+          "efloat_shortage_events": 469,
+          "unmet_cash_in_bdt": 3949901.0,
+          "cash_in_fill_rate": 0.9904,
+          "fully_serviceable_agent_hours": 44040,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 5309947.0,
+          "combined_fill_rate": 0.9932,
+          "shortage_events_total": 760,
+          "agents_with_any_shortage": 146
+        },
+        "oracle_full_day": {
+          "cash_shortage_events": 0,
+          "unmet_cash_out_bdt": 0.0,
+          "cash_out_fill_rate": 1.0,
+          "efloat_shortage_events": 0,
+          "unmet_cash_in_bdt": 0.0,
+          "cash_in_fill_rate": 1.0,
+          "fully_serviceable_agent_hours": 44800,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 0.0,
+          "combined_fill_rate": 1.0,
+          "shortage_events_total": 0,
+          "agents_with_any_shortage": 0
+        }
+      },
+      "incremental": {
+        "combined_unmet_reduction_pct": 23.3136,
+        "cash_unmet_reduction_pct": 50.1807,
+        "efloat_unmet_reduction_pct": 15.5423,
+        "shortage_event_difference": -122
+      },
+      "conserved_all_policies": true,
+      "best_cautious_non_ml": "seasonal_requirement_q90_7d",
+      "conservation": {
+        "status_quo": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_mean7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_q90_7d": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_max7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "frozen_full_day_ml_p90": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "yesterday_requirement": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "oracle_full_day": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        }
+      },
+      "ml_p90_coverage": {
+        "cash": 0.8511,
+        "efloat": 0.8811
+      },
+      "historical_signal_coverage": {
+        "seasonal_requirement_mean7": {
+          "cash": 0.5293,
+          "efloat": 0.6079
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash": 0.8064,
+          "efloat": 0.7968
+        },
+        "seasonal_requirement_max7": {
+          "cash": 0.8718,
+          "efloat": 0.8493
+        },
+        "yesterday_requirement": {
+          "cash": 0.4882,
+          "efloat": 0.6421
+        }
+      },
+      "forecast_mae": {
+        "cash": {
+          "ml_p50": 9491.7554,
+          "seasonal_mean7": 10302.6893
+        },
+        "efloat": {
+          "ml_p50": 13737.9674,
+          "seasonal_mean7": 15045.8918
+        }
+      },
+      "harm_vs_status_quo": {
+        "seasonal_requirement_q90_7d": {
+          "better": 111,
+          "worse": 50,
+          "unchanged": 39,
+          "total_benefit_bdt": 4879504.0,
+          "total_harm_bdt": 503347.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0021",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 62769.0
+            },
+            {
+              "agent_id": "AG-0105",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 44572.0
+            },
+            {
+              "agent_id": "AG-0072",
+              "location_cluster": "urban_core",
+              "segment": "medium",
+              "change_bdt": 43736.0
+            },
+            {
+              "agent_id": "AG-0128",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 39214.0
+            },
+            {
+              "agent_id": "AG-0060",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 28830.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2947,
+                "efloat_ratio": 0.6605,
+                "combined_unmet_change_pct": -73.5776,
+                "harmed_agents": 12,
+                "agents": 74
+              },
+              "urban_core": {
+                "cash_ratio": 0.7545,
+                "efloat_ratio": 1.1136,
+                "combined_unmet_change_pct": -52.1867,
+                "harmed_agents": 18,
+                "agents": 61
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0294,
+                "efloat_ratio": 1.0377,
+                "combined_unmet_change_pct": -40.5083,
+                "harmed_agents": 20,
+                "agents": 65
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9512,
+                "efloat_ratio": 1.0367,
+                "combined_unmet_change_pct": -51.7989,
+                "harmed_agents": 8,
+                "agents": 52
+              },
+              "low": {
+                "cash_ratio": 1.1229,
+                "efloat_ratio": 0.9358,
+                "combined_unmet_change_pct": -59.5668,
+                "harmed_agents": 16,
+                "agents": 72
+              },
+              "medium": {
+                "cash_ratio": 1.0177,
+                "efloat_ratio": 0.9653,
+                "combined_unmet_change_pct": -52.449,
+                "harmed_agents": 26,
+                "agents": 76
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 21,
+            "harmed": 4,
+            "change_pct": -39.7047
+          }
+        },
+        "frozen_full_day_ml_p90": {
+          "better": 124,
+          "worse": 29,
+          "unchanged": 47,
+          "total_benefit_bdt": 5822637.0,
+          "total_harm_bdt": 547834.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0072",
+              "location_cluster": "urban_core",
+              "segment": "medium",
+              "change_bdt": 81621.0
+            },
+            {
+              "agent_id": "AG-0060",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 71437.0
+            },
+            {
+              "agent_id": "AG-0062",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 54500.0
+            },
+            {
+              "agent_id": "AG-0091",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 48772.0
+            },
+            {
+              "agent_id": "AG-0128",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 37461.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2998,
+                "efloat_ratio": 0.5871,
+                "combined_unmet_change_pct": -88.6502,
+                "harmed_agents": 2,
+                "agents": 74
+              },
+              "urban_core": {
+                "cash_ratio": 0.7583,
+                "efloat_ratio": 1.0908,
+                "combined_unmet_change_pct": -45.4533,
+                "harmed_agents": 15,
+                "agents": 61
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.0216,
+                "efloat_ratio": 1.1081,
+                "combined_unmet_change_pct": -57.4155,
+                "harmed_agents": 12,
+                "agents": 65
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9456,
+                "efloat_ratio": 1.0371,
+                "combined_unmet_change_pct": -64.8176,
+                "harmed_agents": 6,
+                "agents": 52
+              },
+              "low": {
+                "cash_ratio": 1.1485,
+                "efloat_ratio": 0.8973,
+                "combined_unmet_change_pct": -57.43,
+                "harmed_agents": 13,
+                "agents": 72
+              },
+              "medium": {
+                "cash_ratio": 1.0152,
+                "efloat_ratio": 0.9778,
+                "combined_unmet_change_pct": -65.8654,
+                "harmed_agents": 10,
+                "agents": 76
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 21,
+            "harmed": 2,
+            "change_pct": -62.3104
+          }
+        },
+        "seasonal_requirement_mean7": {
+          "better": 115,
+          "worse": 40,
+          "unchanged": 45,
+          "total_benefit_bdt": 4063718.0,
+          "total_harm_bdt": 351155.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0021",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 32577.0
+            },
+            {
+              "agent_id": "AG-0072",
+              "location_cluster": "urban_core",
+              "segment": "medium",
+              "change_bdt": 30868.0
+            },
+            {
+              "agent_id": "AG-0190",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 27583.0
+            },
+            {
+              "agent_id": "AG-0184",
+              "location_cluster": "rural",
+              "segment": "medium",
+              "change_bdt": 23354.0
+            },
+            {
+              "agent_id": "AG-0128",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 21087.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.1997,
+                "efloat_ratio": 0.8193,
+                "combined_unmet_change_pct": -65.4072,
+                "harmed_agents": 8,
+                "agents": 74
+              },
+              "urban_core": {
+                "cash_ratio": 0.8056,
+                "efloat_ratio": 1.0829,
+                "combined_unmet_change_pct": -48.689,
+                "harmed_agents": 14,
+                "agents": 61
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.049,
+                "efloat_ratio": 0.9907,
+                "combined_unmet_change_pct": -30.2749,
+                "harmed_agents": 18,
+                "agents": 65
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9691,
+                "efloat_ratio": 1.0185,
+                "combined_unmet_change_pct": -43.5192,
+                "harmed_agents": 9,
+                "agents": 52
+              },
+              "low": {
+                "cash_ratio": 1.0854,
+                "efloat_ratio": 0.9971,
+                "combined_unmet_change_pct": -52.1936,
+                "harmed_agents": 10,
+                "agents": 72
+              },
+              "medium": {
+                "cash_ratio": 1.0083,
+                "efloat_ratio": 0.9724,
+                "combined_unmet_change_pct": -44.4128,
+                "harmed_agents": 21,
+                "agents": 76
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 21,
+            "harmed": 5,
+            "change_pct": -30.1203
+          }
+        }
+      },
+      "ml_vs_best_cautious": {
+        "better": 98,
+        "worse": 35,
+        "unchanged": 67,
+        "total_benefit_bdt": 1505442.0,
+        "total_harm_bdt": 606796.0,
+        "worst_harmed": [
+          {
+            "agent_id": "AG-0129",
+            "location_cluster": "urban_core",
+            "segment": "high",
+            "change_bdt": 99947.0
+          },
+          {
+            "agent_id": "AG-0062",
+            "location_cluster": "urban_periphery",
+            "segment": "medium",
+            "change_bdt": 51821.0
+          },
+          {
+            "agent_id": "AG-0091",
+            "location_cluster": "urban_core",
+            "segment": "high",
+            "change_bdt": 48772.0
+          },
+          {
+            "agent_id": "AG-0066",
+            "location_cluster": "urban_core",
+            "segment": "low",
+            "change_bdt": 45111.0
+          },
+          {
+            "agent_id": "AG-0060",
+            "location_cluster": "urban_core",
+            "segment": "high",
+            "change_bdt": 42607.0
+          }
+        ],
+        "groups": {
+          "location_cluster": {
+            "rural": {
+              "cash_ratio": 1.2998,
+              "efloat_ratio": 0.5871,
+              "combined_unmet_change_pct": -57.0447,
+              "harmed_agents": 9,
+              "agents": 74
+            },
+            "urban_core": {
+              "cash_ratio": 0.7583,
+              "efloat_ratio": 1.0908,
+              "combined_unmet_change_pct": 14.0826,
+              "harmed_agents": 17,
+              "agents": 61
+            },
+            "urban_periphery": {
+              "cash_ratio": 1.0216,
+              "efloat_ratio": 1.1081,
+              "combined_unmet_change_pct": -28.4194,
+              "harmed_agents": 9,
+              "agents": 65
+            }
+          },
+          "agent_volume_segment": {
+            "high": {
+              "cash_ratio": 0.9456,
+              "efloat_ratio": 1.0371,
+              "combined_unmet_change_pct": -27.0091,
+              "harmed_agents": 7,
+              "agents": 52
+            },
+            "low": {
+              "cash_ratio": 1.1485,
+              "efloat_ratio": 0.8973,
+              "combined_unmet_change_pct": 5.2848,
+              "harmed_agents": 14,
+              "agents": 72
+            },
+            "medium": {
+              "cash_ratio": 1.0152,
+              "efloat_ratio": 0.9778,
+              "combined_unmet_change_pct": -28.2148,
+              "harmed_agents": 14,
+              "agents": 76
+            }
+          }
+        },
+        "urban_periphery_high_volume": {
+          "agents": 21,
+          "harmed": 0,
+          "change_pct": -37.4916
+        }
+      },
+      "secondary_combined_unmet": {
+        "status_quo": 8508720.0,
+        "seasonal_requirement_mean7": 4648804.0,
+        "seasonal_requirement_q90_7d": 3948275.0,
+        "seasonal_requirement_max7": 4380179.0,
+        "frozen_full_day_ml_p90": 3033684.0,
+        "yesterday_requirement": 5460073.0,
+        "oracle_full_day": 0.0
+      }
+    },
+    "2040": {
+      "prim": {
+        "status_quo": {
+          "cash_shortage_events": 693,
+          "unmet_cash_out_bdt": 3340220.0,
+          "cash_out_fill_rate": 0.99,
+          "efloat_shortage_events": 630,
+          "unmet_cash_in_bdt": 5361360.0,
+          "cash_in_fill_rate": 0.9853,
+          "fully_serviceable_agent_hours": 43477,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 8701580.0,
+          "combined_fill_rate": 0.9875,
+          "shortage_events_total": 1323,
+          "agents_with_any_shortage": 132
+        },
+        "seasonal_requirement_mean7": {
+          "cash_shortage_events": 195,
+          "unmet_cash_out_bdt": 856329.0,
+          "cash_out_fill_rate": 0.9974,
+          "efloat_shortage_events": 419,
+          "unmet_cash_in_bdt": 3546027.0,
+          "cash_in_fill_rate": 0.9903,
+          "fully_serviceable_agent_hours": 44186,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 4402356.0,
+          "combined_fill_rate": 0.9937,
+          "shortage_events_total": 614,
+          "agents_with_any_shortage": 121
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash_shortage_events": 127,
+          "unmet_cash_out_bdt": 575774.0,
+          "cash_out_fill_rate": 0.9983,
+          "efloat_shortage_events": 368,
+          "unmet_cash_in_bdt": 3161653.0,
+          "cash_in_fill_rate": 0.9914,
+          "fully_serviceable_agent_hours": 44305,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3737427.0,
+          "combined_fill_rate": 0.9946,
+          "shortage_events_total": 495,
+          "agents_with_any_shortage": 115
+        },
+        "seasonal_requirement_max7": {
+          "cash_shortage_events": 134,
+          "unmet_cash_out_bdt": 539661.0,
+          "cash_out_fill_rate": 0.9984,
+          "efloat_shortage_events": 416,
+          "unmet_cash_in_bdt": 3331648.0,
+          "cash_in_fill_rate": 0.9909,
+          "fully_serviceable_agent_hours": 44250,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3871309.0,
+          "combined_fill_rate": 0.9945,
+          "shortage_events_total": 550,
+          "agents_with_any_shortage": 133
+        },
+        "frozen_full_day_ml_p90": {
+          "cash_shortage_events": 83,
+          "unmet_cash_out_bdt": 372026.0,
+          "cash_out_fill_rate": 0.9989,
+          "efloat_shortage_events": 405,
+          "unmet_cash_in_bdt": 2855014.0,
+          "cash_in_fill_rate": 0.9922,
+          "fully_serviceable_agent_hours": 44312,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 3227040.0,
+          "combined_fill_rate": 0.9954,
+          "shortage_events_total": 488,
+          "agents_with_any_shortage": 100
+        },
+        "yesterday_requirement": {
+          "cash_shortage_events": 255,
+          "unmet_cash_out_bdt": 1194026.0,
+          "cash_out_fill_rate": 0.9964,
+          "efloat_shortage_events": 506,
+          "unmet_cash_in_bdt": 3885064.0,
+          "cash_in_fill_rate": 0.9894,
+          "fully_serviceable_agent_hours": 44039,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 5079090.0,
+          "combined_fill_rate": 0.9927,
+          "shortage_events_total": 761,
+          "agents_with_any_shortage": 147
+        },
+        "oracle_full_day": {
+          "cash_shortage_events": 0,
+          "unmet_cash_out_bdt": 0.0,
+          "cash_out_fill_rate": 1.0,
+          "efloat_shortage_events": 0,
+          "unmet_cash_in_bdt": 0.0,
+          "cash_in_fill_rate": 1.0,
+          "fully_serviceable_agent_hours": 44800,
+          "agent_hours": 44800,
+          "combined_unmet_bdt": 0.0,
+          "combined_fill_rate": 1.0,
+          "shortage_events_total": 0,
+          "agents_with_any_shortage": 0
+        }
+      },
+      "incremental": {
+        "combined_unmet_reduction_pct": 13.6561,
+        "cash_unmet_reduction_pct": 35.3868,
+        "efloat_unmet_reduction_pct": 9.6987,
+        "shortage_event_difference": -7
+      },
+      "conserved_all_policies": true,
+      "best_cautious_non_ml": "seasonal_requirement_q90_7d",
+      "conservation": {
+        "status_quo": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_mean7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_q90_7d": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "seasonal_requirement_max7": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "frozen_full_day_ml_p90": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "yesterday_requirement": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        },
+        "oracle_full_day": {
+          "exact": true,
+          "max_abs_district_diff_bdt": 0
+        }
+      },
+      "ml_p90_coverage": {
+        "cash": 0.8614,
+        "efloat": 0.8814
+      },
+      "historical_signal_coverage": {
+        "seasonal_requirement_mean7": {
+          "cash": 0.5339,
+          "efloat": 0.5979
+        },
+        "seasonal_requirement_q90_7d": {
+          "cash": 0.8018,
+          "efloat": 0.7957
+        },
+        "seasonal_requirement_max7": {
+          "cash": 0.8604,
+          "efloat": 0.855
+        },
+        "yesterday_requirement": {
+          "cash": 0.4832,
+          "efloat": 0.6396
+        }
+      },
+      "forecast_mae": {
+        "cash": {
+          "ml_p50": 8727.9221,
+          "seasonal_mean7": 9537.4536
+        },
+        "efloat": {
+          "ml_p50": 12100.9005,
+          "seasonal_mean7": 13128.6362
+        }
+      },
+      "harm_vs_status_quo": {
+        "seasonal_requirement_q90_7d": {
+          "better": 101,
+          "worse": 47,
+          "unchanged": 52,
+          "total_benefit_bdt": 5428176.0,
+          "total_harm_bdt": 464023.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0003",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 69715.0
+            },
+            {
+              "agent_id": "AG-0020",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 42236.0
+            },
+            {
+              "agent_id": "AG-0136",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 30288.0
+            },
+            {
+              "agent_id": "AG-0138",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 26972.0
+            },
+            {
+              "agent_id": "AG-0150",
+              "location_cluster": "urban_core",
+              "segment": "high",
+              "change_bdt": 21323.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.3584,
+                "efloat_ratio": 0.6654,
+                "combined_unmet_change_pct": -83.3303,
+                "harmed_agents": 8,
+                "agents": 65
+              },
+              "urban_core": {
+                "cash_ratio": 0.7723,
+                "efloat_ratio": 1.1216,
+                "combined_unmet_change_pct": -61.5322,
+                "harmed_agents": 17,
+                "agents": 67
+              },
+              "urban_periphery": {
+                "cash_ratio": 0.9893,
+                "efloat_ratio": 1.0126,
+                "combined_unmet_change_pct": -27.4338,
+                "harmed_agents": 22,
+                "agents": 68
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9845,
+                "efloat_ratio": 1.0355,
+                "combined_unmet_change_pct": -61.2934,
+                "harmed_agents": 9,
+                "agents": 41
+              },
+              "low": {
+                "cash_ratio": 1.1004,
+                "efloat_ratio": 0.9991,
+                "combined_unmet_change_pct": -73.4821,
+                "harmed_agents": 12,
+                "agents": 78
+              },
+              "medium": {
+                "cash_ratio": 0.9811,
+                "efloat_ratio": 0.962,
+                "combined_unmet_change_pct": -40.5061,
+                "harmed_agents": 26,
+                "agents": 81
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 13,
+            "harmed": 5,
+            "change_pct": -29.4877
+          }
+        },
+        "frozen_full_day_ml_p90": {
+          "better": 113,
+          "worse": 37,
+          "unchanged": 50,
+          "total_benefit_bdt": 5960702.0,
+          "total_harm_bdt": 486162.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0049",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 46900.0
+            },
+            {
+              "agent_id": "AG-0189",
+              "location_cluster": "urban_core",
+              "segment": "low",
+              "change_bdt": 46716.0
+            },
+            {
+              "agent_id": "AG-0008",
+              "location_cluster": "urban_periphery",
+              "segment": "low",
+              "change_bdt": 34980.0
+            },
+            {
+              "agent_id": "AG-0023",
+              "location_cluster": "urban_periphery",
+              "segment": "low",
+              "change_bdt": 28000.0
+            },
+            {
+              "agent_id": "AG-0193",
+              "location_cluster": "urban_periphery",
+              "segment": "low",
+              "change_bdt": 26710.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.3645,
+                "efloat_ratio": 0.5892,
+                "combined_unmet_change_pct": -90.2811,
+                "harmed_agents": 5,
+                "agents": 65
+              },
+              "urban_core": {
+                "cash_ratio": 0.7695,
+                "efloat_ratio": 1.1154,
+                "combined_unmet_change_pct": -57.7706,
+                "harmed_agents": 17,
+                "agents": 67
+              },
+              "urban_periphery": {
+                "cash_ratio": 0.9879,
+                "efloat_ratio": 1.0596,
+                "combined_unmet_change_pct": -38.9008,
+                "harmed_agents": 15,
+                "agents": 68
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9846,
+                "efloat_ratio": 1.0376,
+                "combined_unmet_change_pct": -68.9007,
+                "harmed_agents": 3,
+                "agents": 41
+              },
+              "low": {
+                "cash_ratio": 1.1075,
+                "efloat_ratio": 0.9551,
+                "combined_unmet_change_pct": -61.9498,
+                "harmed_agents": 16,
+                "agents": 78
+              },
+              "medium": {
+                "cash_ratio": 0.9786,
+                "efloat_ratio": 0.9751,
+                "combined_unmet_change_pct": -52.7824,
+                "harmed_agents": 18,
+                "agents": 81
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 13,
+            "harmed": 2,
+            "change_pct": -45.8668
+          }
+        },
+        "seasonal_requirement_mean7": {
+          "better": 104,
+          "worse": 38,
+          "unchanged": 58,
+          "total_benefit_bdt": 4661637.0,
+          "total_harm_bdt": 362413.0,
+          "worst_harmed": [
+            {
+              "agent_id": "AG-0003",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 65044.0
+            },
+            {
+              "agent_id": "AG-0020",
+              "location_cluster": "urban_periphery",
+              "segment": "high",
+              "change_bdt": 30943.0
+            },
+            {
+              "agent_id": "AG-0073",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 29717.0
+            },
+            {
+              "agent_id": "AG-0164",
+              "location_cluster": "rural",
+              "segment": "high",
+              "change_bdt": 25514.0
+            },
+            {
+              "agent_id": "AG-0136",
+              "location_cluster": "urban_periphery",
+              "segment": "medium",
+              "change_bdt": 18580.0
+            }
+          ],
+          "groups": {
+            "location_cluster": {
+              "rural": {
+                "cash_ratio": 1.2468,
+                "efloat_ratio": 0.8227,
+                "combined_unmet_change_pct": -74.0802,
+                "harmed_agents": 6,
+                "agents": 65
+              },
+              "urban_core": {
+                "cash_ratio": 0.8191,
+                "efloat_ratio": 1.0902,
+                "combined_unmet_change_pct": -60.143,
+                "harmed_agents": 12,
+                "agents": 67
+              },
+              "urban_periphery": {
+                "cash_ratio": 1.019,
+                "efloat_ratio": 0.9731,
+                "combined_unmet_change_pct": -17.0657,
+                "harmed_agents": 20,
+                "agents": 68
+              }
+            },
+            "agent_volume_segment": {
+              "high": {
+                "cash_ratio": 0.9877,
+                "efloat_ratio": 1.0208,
+                "combined_unmet_change_pct": -53.1245,
+                "harmed_agents": 7,
+                "agents": 41
+              },
+              "low": {
+                "cash_ratio": 1.0742,
+                "efloat_ratio": 1.0289,
+                "combined_unmet_change_pct": -60.7494,
+                "harmed_agents": 11,
+                "agents": 78
+              },
+              "medium": {
+                "cash_ratio": 0.9869,
+                "efloat_ratio": 0.9675,
+                "combined_unmet_change_pct": -36.5874,
+                "harmed_agents": 20,
+                "agents": 81
+              }
+            }
+          },
+          "urban_periphery_high_volume": {
+            "agents": 13,
+            "harmed": 5,
+            "change_pct": -20.2943
+          }
+        }
+      },
+      "ml_vs_best_cautious": {
+        "better": 87,
+        "worse": 46,
+        "unchanged": 67,
+        "total_benefit_bdt": 1074945.0,
+        "total_harm_bdt": 564558.0,
+        "worst_harmed": [
+          {
+            "agent_id": "AG-0092",
+            "location_cluster": "urban_core",
+            "segment": "high",
+            "change_bdt": 52727.0
+          },
+          {
+            "agent_id": "AG-0049",
+            "location_cluster": "urban_periphery",
+            "segment": "medium",
+            "change_bdt": 46900.0
+          },
+          {
+            "agent_id": "AG-0189",
+            "location_cluster": "urban_core",
+            "segment": "low",
+            "change_bdt": 46716.0
+          },
+          {
+            "agent_id": "AG-0008",
+            "location_cluster": "urban_periphery",
+            "segment": "low",
+            "change_bdt": 35360.0
+          },
+          {
+            "agent_id": "AG-0023",
+            "location_cluster": "urban_periphery",
+            "segment": "low",
+            "change_bdt": 26842.0
+          }
+        ],
+        "groups": {
+          "location_cluster": {
+            "rural": {
+              "cash_ratio": 1.3645,
+              "efloat_ratio": 0.5892,
+              "combined_unmet_change_pct": -41.697,
+              "harmed_agents": 8,
+              "agents": 65
+            },
+            "urban_core": {
+              "cash_ratio": 0.7695,
+              "efloat_ratio": 1.1154,
+              "combined_unmet_change_pct": 9.7785,
+              "harmed_agents": 22,
+              "agents": 67
+            },
+            "urban_periphery": {
+              "cash_ratio": 0.9879,
+              "efloat_ratio": 1.0596,
+              "combined_unmet_change_pct": -15.8021,
+              "harmed_agents": 16,
+              "agents": 68
+            }
+          },
+          "agent_volume_segment": {
+            "high": {
+              "cash_ratio": 0.9846,
+              "efloat_ratio": 1.0376,
+              "combined_unmet_change_pct": -19.6538,
+              "harmed_agents": 5,
+              "agents": 41
+            },
+            "low": {
+              "cash_ratio": 1.1075,
+              "efloat_ratio": 0.9551,
+              "combined_unmet_change_pct": 43.4884,
+              "harmed_agents": 24,
+              "agents": 78
+            },
+            "medium": {
+              "cash_ratio": 0.9786,
+              "efloat_ratio": 0.9751,
+              "combined_unmet_change_pct": -20.6345,
+              "harmed_agents": 17,
+              "agents": 81
+            }
+          }
+        },
+        "urban_periphery_high_volume": {
+          "agents": 13,
+          "harmed": 1,
+          "change_pct": -23.2287
+        }
+      },
+      "secondary_combined_unmet": {
+        "status_quo": 9017880.0,
+        "seasonal_requirement_mean7": 4542685.0,
+        "seasonal_requirement_q90_7d": 3844681.0,
+        "seasonal_requirement_max7": 3985931.0,
+        "frozen_full_day_ml_p90": 3323070.0,
+        "yesterday_requirement": 5255047.0,
+        "oracle_full_day": 0.0
+      }
+    }
+  },
+  "incremental_vs_best_cautious_summary": {
+    "combined_unmet_reduction_pct": {
+      "mean": 21.026,
+      "median": 20.5535,
+      "min": 13.6561,
+      "max": 29.7506
+    },
+    "cash_unmet_reduction_pct": {
+      "mean": 41.0483,
+      "median": 39.3543,
+      "min": 35.3868,
+      "max": 50.1807
+    },
+    "efloat_unmet_reduction_pct": {
+      "mean": 13.0599,
+      "median": 9.6987,
+      "min": 7.5289,
+      "max": 23.4493
+    },
+    "shortage_event_difference": {
+      "mean": -87.4,
+      "median": -76.0,
+      "min": -176.0,
+      "max": -7.0
+    }
+  },
+  "pooled_ml_p90_coverage": {
+    "cash": 0.8517,
+    "efloat": 0.8801
+  },
+  "success_bar": {
+    "seeds_ml_le_q90": 5,
+    "seeds_ml_le_max7": 5,
+    "median_incremental_vs_best_cautious_pct": 20.5535,
+    "seeds_side_worse_gt5pct": 0,
+    "checks": {
+      "A_ml_le_q90_in_4_of_5": true,
+      "B_ml_le_max7_in_4_of_5": true,
+      "C_median_incremental_vs_best_cautious_ge_5pct": true,
+      "D_side_worse_gt5pct_in_at_most_1_seed": true,
+      "E_exact_conservation_all": true
+    },
+    "passes": true
+  }
+}

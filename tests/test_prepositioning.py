@@ -143,3 +143,20 @@ def test_bar_logic():
            for s, r in zip(pp.SEEDS, (8.0, 6.0, 5.0, 1.0, -1.0))}
     ob = pp.overall_bar(per)
     assert ob["seeds_passing"] == 4 and ob["median_combined_reduction_pct"] == 5.0 and ob["passes"]
+
+
+def test_allocation_rows_align_with_agent_order_across_interleaved_districts():
+    # regression: rows must come back in agent_id order (not grouped by district), so positional
+    # arrays line up with the replay's agent columns
+    v = pd.DataFrame({"agent_id": ["AG-0001", "AG-0002", "AG-0003", "AG-0004"],
+                      "district": ["Sylhet", "Dhaka", "Sylhet", "Dhaka"],
+                      "target_cash_level": [10_000.0, 20_000.0, 30_000.0, 40_000.0],
+                      "target_efloat_level": [10_000.0] * 4,
+                      "pred_net_requirement_p90_6h": [0.0] * 4, "pred_efloat_requirement_p90_6h": [0.0] * 4})
+    a, _ = pp.allocate_day(v)
+    assert list(a["agent_id"]) == list(v["agent_id"])
+    assert list(a["district"]) == list(v["district"])
+    assert list(a["sq_cash"]) == [10_000, 20_000, 30_000, 40_000]
+    # positional conservation per district using the INPUT's district labels
+    assert (pd.Series(a["alloc_cash"].to_numpy()).groupby(v["district"].to_numpy()).sum()
+            == v.groupby("district")["target_cash_level"].sum().astype(int)).all()

@@ -88,7 +88,8 @@ def allocate_day(view: pd.DataFrame) -> tuple[pd.DataFrame, int]:
         edges += int(ec) + int(ee)
         out.append(pd.DataFrame({"agent_id": ids, "district": district, "alloc_cash": ac, "alloc_efloat": ae,
                                  "sq_cash": tc, "sq_efloat": te}))
-    return pd.concat(out, ignore_index=True), edges
+    # Return rows in agent_id order so positional arrays align with the replay's agent order.
+    return pd.concat(out, ignore_index=True).sort_values("agent_id", kind="stable").reset_index(drop=True), edges
 
 
 # ---------------------------------------------------------------- replay

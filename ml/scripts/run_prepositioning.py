@@ -61,6 +61,7 @@ def run_seed(seed: int) -> dict:
         view = rows[["agent_id", "district", "target_cash_level", "target_efloat_level"]].copy()
         view = view.join(bundle.predict(rows)[["pred_net_requirement_p90_6h", "pred_efloat_requirement_p90_6h"]])
         a, e = pp.allocate_day(view)
+        assert list(a["agent_id"]) == ids, "allocation must be in agent order"
         edges["agentflow"] += e
         plans["agentflow"][0][d], plans["agentflow"][1][d] = a["alloc_cash"].to_numpy(), a["alloc_efloat"].to_numpy()
         plans["status_quo"][0][d], plans["status_quo"][1][d] = sq_c, sq_e
@@ -70,12 +71,14 @@ def run_seed(seed: int) -> dict:
         o6["pred_net_requirement_p90_6h"] = rows["future_6h_net_cash_demand"].to_numpy()
         o6["pred_efloat_requirement_p90_6h"] = rows[EFLOAT_TARGET].to_numpy()
         a6, e6 = pp.allocate_day(o6)
+        assert list(a6["agent_id"]) == ids, "allocation must be in agent order"
         edges["oracle_6h"] += e6
         plans["oracle_6h"][0][d], plans["oracle_6h"][1][d] = a6["alloc_cash"].to_numpy(), a6["alloc_efloat"].to_numpy()
         fc, fe = full_day_requirement(req_out, req_in, hours, d)
         of = view.copy()
         of["pred_net_requirement_p90_6h"], of["pred_efloat_requirement_p90_6h"] = fc, fe
         af_, ef_ = pp.allocate_day(of)
+        assert list(af_["agent_id"]) == ids, "allocation must be in agent order"
         edges["oracle_full_day"] += ef_
         plans["oracle_full_day"][0][d], plans["oracle_full_day"][1][d] = af_["alloc_cash"].to_numpy(), af_["alloc_efloat"].to_numpy()
 
@@ -168,8 +171,8 @@ def main() -> None:
         r = run_seed(seed)
         per_seed[seed] = r
         i = r["impact"]
-        print(f"[seed {seed}] combined -{i['combined_unmet_reduction_pct']:.2f}% cash -{i['cash_unmet_reduction_pct']:.2f}% "
-              f"efloat -{i['efloat_unmet_reduction_pct']:.2f}% better={r['agents_better_worse']['better']} worse={r['agents_better_worse']['worse']} "
+        print(f"[seed {seed}] unmet reduction: combined {i['combined_unmet_reduction_pct']:.2f}% cash {i['cash_unmet_reduction_pct']:.2f}% "
+              f"efloat {i['efloat_unmet_reduction_pct']:.2f}% better={r['agents_better_worse']['better']} worse={r['agents_better_worse']['worse']} "
               f"conserved={r['conservation']['exact']} sq_fidelity={r['status_quo_replay_matches_world']} bar={r['bar']['passes']}")
     common = {"label": "Synthetic held-out simulation - Dual-Liquidity World v2 - forecast-guided prepositioning (research only)",
               "world_version": dw.WORLD_VERSION, "assumptions_version": dw.ASSUMPTIONS_VERSION,

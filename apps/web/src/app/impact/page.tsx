@@ -3,7 +3,8 @@
 import { Fragment } from "react";
 import { useApi } from "@/lib/api";
 import { bdt, bdtCompact, num, pct, titleCase } from "@/lib/format";
-import type { ImpactResponse, MetricsResponse, PolicyMetrics } from "@/lib/types";
+import type { ImpactResponse, MetricsResponse, MorningPlanEvidence, PolicyMetrics } from "@/lib/types";
+import { MorningEvidencePanel } from "@/components/MorningEvidence";
 import { CompareBars, DailyImpactChart } from "@/components/charts";
 import { Card, CardHeader, ErrorState, Loading, PageHeader, SourceTag, cx } from "@/components/ui";
 
@@ -20,6 +21,22 @@ function Delta({ before, after, lowerIsBetter = true, unit = "%" }: { before: nu
   const good = lowerIsBetter ? d < 0 : d > 0;
   const tone = Math.abs(d) < 0.05 ? "text-slate-500" : good ? "text-emerald-600" : "text-red-600";
   return <span className={cx("num text-xs font-semibold", tone)}>{`${d > 0 ? "+" : ""}${d.toFixed(1)}${unit === "pp" ? " pp" : "%"}`}</span>;
+}
+
+function MorningPlanResearch() {
+  const ev = useApi<MorningPlanEvidence>("/api/morning-plan/evidence");
+  return (
+    <section aria-label="Full-day Morning Plan research evidence" className="mt-8">
+      <h2 className="text-lg font-semibold tracking-tight">Full-day Morning Plan — research evidence</h2>
+      <p className="mb-3 mt-1 max-w-4xl text-xs text-slate-500">
+        A separate synthetic evaluation environment (Dual-Liquidity World v2, cash and e-float) from the legacy cash-only V1/V2
+        results above. These numbers must not be combined with the V1/V2 tables. Same working capital in every policy compared.
+      </p>
+      {ev.error && <ErrorState message={ev.error} onRetry={ev.reload} />}
+      {!ev.data && !ev.error && <Loading />}
+      {ev.data && <MorningEvidencePanel ev={ev.data} />}
+    </section>
+  );
 }
 
 function V1V2Glance({ v1, v2 }: { v1: PolicyMetrics; v2: PolicyMetrics }) {
@@ -388,6 +405,7 @@ export default function ImpactPage() {
           Forecast error is consistent across groups (WAPE within a few points). Alert recall is lower for urban-core agents, where shortages are rare (≈1.4% prevalence) — documented in docs/EVALUATION.md.
         </p>
       </Card>
+      <MorningPlanResearch />
     </>
   );
 }

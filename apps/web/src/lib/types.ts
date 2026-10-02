@@ -385,3 +385,147 @@ export interface ScenarioResponse extends Meta {
   scenario: ScenarioSummary;
   note: string;
 }
+
+// ---------------------------------------------------------------- Morning Liquidity Plan (proactive, full day)
+export type MorningResource = "cash" | "efloat";
+export type MorningReviewCode = "large_allocation_decrease" | "low_volume_review" | "rural_efloat_review" | "p90_not_covered";
+
+export interface MorningPlanMeta {
+  information_cutoff: string;
+  allocation_time: string;
+  horizon: string;
+  synthetic_data: true;
+  simulation_only: true;
+  world_version: string;
+  assumptions_version: string;
+  demo_seed: number;
+  frozen_model_spec_commit: string;
+  source_research_commit: string;
+  signal: string;
+  floors_bdt: Record<MorningResource, number>;
+  labels: { synthetic: string; human_review: string; same_working_capital: string; no_money_moves: string };
+  note: string;
+}
+
+export interface MorningPlanDates extends MorningPlanMeta {
+  dates: string[];
+  default_date: string;
+}
+
+export interface MorningResourceSummary {
+  status_quo_total_bdt: number;
+  recommended_total_bdt: number;
+  difference_bdt: number;
+  agents_increased: number;
+  agents_decreased: number;
+  agents_unchanged: number;
+  repositioned_bdt: number;
+  p90_need_total_bdt: number;
+  agents_p90_covered_before: number;
+  agents_p90_covered_after: number;
+}
+
+export interface MorningPlanDistrict {
+  district: string;
+  agents: number;
+  cash_budget_bdt: number;
+  cash_recommended_bdt: number;
+  cash_difference_bdt: number;
+  cash_p90_need_bdt: number;
+  efloat_budget_bdt: number;
+  efloat_recommended_bdt: number;
+  efloat_difference_bdt: number;
+  efloat_p90_need_bdt: number;
+  conserved: boolean;
+  agents_with_meaningful_change: number;
+}
+
+export interface MorningPlanAgent {
+  agent_id: string;
+  district: string;
+  location_cluster: string;
+  agent_volume_segment: "low" | "medium" | "high";
+  status_quo_cash: number;
+  recommended_cash: number;
+  cash_delta: number;
+  cash_p50: number;
+  cash_p90: number;
+  cash_coverage_before: number | null;
+  cash_coverage_after: number | null;
+  status_quo_efloat: number;
+  recommended_efloat: number;
+  efloat_delta: number;
+  efloat_p50: number;
+  efloat_p90: number;
+  efloat_coverage_before: number | null;
+  efloat_coverage_after: number | null;
+  review_flags: { code: MorningReviewCode; label: string }[];
+  explanation: { cash: string; efloat: string; constraint: string; safety: string };
+}
+
+export type MorningFocusAgent = Pick<
+  MorningPlanAgent,
+  "agent_id" | "district" | "location_cluster" | "agent_volume_segment" | "cash_delta" | "efloat_delta" |
+  "status_quo_cash" | "status_quo_efloat" | "recommended_cash" | "recommended_efloat"
+>;
+
+export interface MorningPlan {
+  date: string;
+  meta: MorningPlanMeta;
+  network: Record<MorningResource, MorningResourceSummary> & {
+    agents: number;
+    conserved: boolean;
+    extra_working_capital_bdt: number;
+    matches_frozen_demo_fixture_allocation: boolean;
+    flag_counts: Record<MorningReviewCode, number>;
+  };
+  districts: MorningPlanDistrict[];
+  agents: MorningPlanAgent[];
+  review_focus: {
+    conserved: boolean;
+    largest_cuts: MorningFocusAgent[];
+    low_volume_cuts: MorningFocusAgent[];
+    low_volume_cuts_total: number;
+    rural_efloat_cuts: MorningFocusAgent[];
+    rural_efloat_cuts_total: number;
+    note: string;
+  };
+}
+
+export interface MorningPlanEvidence {
+  label: string;
+  display_note: string;
+  synthetic_data: true;
+  world_family: string;
+  audit_seeds: number[];
+  comparison: string;
+  worlds_improved: number;
+  worlds_total: number;
+  pre_registered_bar_passed: boolean;
+  combined_unmet_reduction_pct: { median: number; min: number; max: number };
+  cash_unmet_reduction_pct_median: number;
+  efloat_unmet_reduction_pct_median: number;
+  exact_resource_conservation: boolean;
+  extra_working_capital_bdt: number;
+  pooled_p90_coverage: { cash: number; efloat: number; nominal: number };
+  historical_signal_coverage_range: Record<string, Record<MorningResource, [number, number]>>;
+  forecast_mae_improvement_vs_mean7_median_pct: Record<MorningResource, number>;
+  caveats: string[];
+  research_path: string[];
+}
+
+export interface MorningPlanSimulation {
+  simulation_id: string;
+  created_at: string;
+  date: string;
+  status: string;
+  simulation_only: true;
+  money_moved: false;
+  cash_repositioned_bdt: number;
+  efloat_repositioned_bdt: number;
+  conservation: {
+    conserved: boolean;
+    extra_working_capital_bdt: number;
+    network: Record<MorningResource, { status_quo_total_bdt: number; recommended_total_bdt: number; difference_bdt: number }>;
+  };
+}

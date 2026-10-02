@@ -43,21 +43,23 @@ export function DemoGuide() {
     },
     {
       n: 2,
-      title: `Open ${DEMO_AGENT}`,
-      detail: ag.data ? `${ag.data.risk.risk_level} risk · ${ag.data.risk.risk_score.toFixed(0)}/100` : "Agent Intelligence",
-      href: `/agents/${DEMO_AGENT}`,
-      match: (p) => p.startsWith("/agents/"),
+      title: "Morning Plan",
+      detail: "07:00 predict → 08:00 position cash + e-float · same working capital",
+      href: "/morning-plan",
+      match: (p) => p.startsWith("/morning-plan"),
     },
     {
       n: 3,
-      title: "Why this risk?",
-      detail: cov !== null && cov !== undefined ? `Cash covers ~${(100 * cov).toFixed(0)}% of forecast peak need` : "Evidence-based reasons",
+      title: `Explain ${DEMO_AGENT}`,
+      detail: ag.data
+        ? `${ag.data.risk.risk_level} risk ${ag.data.risk.risk_score.toFixed(0)}/100${cov !== null && cov !== undefined ? ` · cash covers ~${(100 * cov).toFixed(0)}% of need` : ""}`
+        : "Intraday risk and evidence-based reasons",
       href: `/agents/${DEMO_AGENT}#why`,
-      match: () => false,
+      match: (p) => p.startsWith("/agents/"),
     },
     {
       n: 4,
-      title: "V2 recommendation",
+      title: "V2 intraday rebalancing",
       detail: rec ? `${rec.id}: ${bdt(rec.recommended_amount)} from ${rec.source_agent}` : "Recipient benefit & donor safety",
       href: `/rebalancing?focus=${DEMO_AGENT}`,
       match: (p) => p.startsWith("/rebalancing"),

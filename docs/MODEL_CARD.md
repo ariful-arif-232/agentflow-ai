@@ -153,3 +153,18 @@ for manual review rather than receiving rebalancing recommendations.
 * Agents showing unusual behavioural activity — review the activity first.
 * When forecast error monitoring (MAE vs. baseline, P90 coverage) drifts from the evaluated values.
 * Before validation on real, consented operational data and a supervised pilot.
+
+## 13. Full-day Morning Plan model (frozen research model, served as a fixture)
+
+| | |
+|---|---|
+| Purpose | Forecast each agent's **full operating-day** (08:00–23:59) peak physical-cash and e-float requirement at 07:00, for the proactive 08:00 Morning Plan |
+| Environment | Dual-Liquidity World v2 (synthetic, assumptions 2A.1); separate from the legacy cash-only world |
+| Specification | Frozen in commit `3128176`: 30 features from completed prior days only (static agent attributes, calendar, previous-day and 3/7-day flow history, 7-day mean/max/std of requirements, same-weekday history, trends); four `HistGradientBoostingRegressor` models (P50 squared error, P90 0.9 quantile) with the legacy settings; P90 ≥ P50 ≥ 0 |
+| Serving | Pre-computed decision-time forecasts for one synthetic demo world (seed 2036, 14 dates) in `ml/artifacts/morning_plan_demo.json`; the allocation is recomputed live; no training at start-up |
+| Evidence | On fresh synthetic audit worlds (2036–2040), the frozen ML P90 plan reduced combined unmet demand by a median **20.6%** (13.7–29.8%) versus the best cautious non-ML rule (historical 7-day q90), with exact conservation. Full-day P50 MAE was about 8% lower than the 7-day mean. **Synthetic held-out evidence, not measured upay performance.** |
+| Calibration | Pooled P90 coverage: cash 85.2%, e-float 88.0% (nominal 90%). Cash is under-covered, and more so for high-volume agents. It was not recalibrated. |
+| Subgroups | Low-volume agents did worse than the q90 rule in 4 of 5 audit worlds. Rural e-float allocations can fall materially. Both are surfaced as review flags. |
+| Explainability | Deterministic templates over the plan's numbers. Permutation importance (the 7-day mean requirement dominates, then market day, calendar and cluster) describes the model, not causes. |
+
+See [MORNING_PLAN.md](MORNING_PLAN.md).

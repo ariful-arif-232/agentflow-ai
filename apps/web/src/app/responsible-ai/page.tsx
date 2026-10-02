@@ -34,6 +34,10 @@ const PRINCIPLES = [
     body: "Without personal attributes, consistency is checked across operational groups (urban core / periphery / rural; low / medium / high volume) for forecast error, alert precision/recall and impact. Lower alert recall for urban-core agents (rare shortages) is disclosed.",
   },
   {
+    title: "Morning Liquidity Plan safeguards",
+    body: "The proactive Morning Plan uses a separate synthetic environment (Dual-Liquidity World v2, no customer PII). It only repositions the same working capital: every district keeps exactly its cash and e-float budget, every agent keeps a BDT 5,000 floor, and approval only simulates. Known limitations are shown with the plan: the cautious P90 forecast under-covers cash (about 85% vs 90% nominal), low-volume agents did worse than a cautious q90 rule in 4 of 5 synthetic audit worlds, and rural e-float allocations can fall materially. Subgroup review flags surface these cases for a person. Real-data shadow validation is required before any deployment.",
+  },
+  {
     title: "Security",
     body: "Secrets only via environment variables (.env is git-ignored; .env.example has placeholders). Strict request validation (Pydantic, ID patterns, bounded inputs), configurable CORS, structured errors without stack traces, no user-supplied code execution, and basic security headers on the web app.",
   },
@@ -44,6 +48,7 @@ const NOT_TRUST = [
   "For agents with less than 7 days of history (features are incomplete).",
   "When an agent shows unusual behavioural activity — review the activity first.",
   "Before validation on real, consented operational data and a supervised pilot.",
+  "When a Morning Plan sharply cuts a low-volume or rural agent's allocation — check the review focus before approving.",
 ];
 
 export default function ResponsibleAiPage() {

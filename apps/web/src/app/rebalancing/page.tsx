@@ -546,6 +546,10 @@ export default function RebalancingPage() {
         title="Rebalancing Center"
         subtitle="Explainable, safety-constrained peer liquidity rebalancing. Review each recommendation's evidence, then approve a simulation — AgentFlow never moves real money."
       />
+      <p className="-mt-3 mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        <b>Morning Plan</b> is proactive full-day positioning of cash and e-float at 08:00. <b>V2</b> (this page) is reactive
+        intraday <b>physical-cash</b> rebalancing — it does not optimise e-float.
+      </p>
       <Suspense fallback={<Loading />}>
         <RebalancingInner />
       </Suspense>

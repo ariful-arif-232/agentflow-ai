@@ -66,11 +66,38 @@ measurable operational recommendation:
 4. **What improves?** A held-out simulation measures shortage events, unmet demand and service
    availability with and without AgentFlow.
 
+### Two time scales: proactive and reactive
+
+```
+PLAN → PREDICT → EXPLAIN → REBALANCE → HUMAN REVIEW → MEASURE
+```
+
+* **Proactive: Morning Liquidity Plan.** At 07:00, forecast each agent's **full-day** (08:00–23:59)
+  physical-cash *and* e-float requirement. At 08:00, propose where the **same** district working
+  capital should sit before demand arrives. The plan is human-reviewed, and approval only simulates.
+* **Reactive: intraday.** The 6-hour cash risk, explanations and **V2** peer rebalancing (physical
+  cash) apply when pressure emerges during the day.
+
+In fresh synthetic worlds from the same pre-registered world family, the frozen full-day ML policy
+reduced combined unmet demand by a median **20.6%** versus the strongest cautious historical
+baseline, while conserving each district's cash and e-float budgets exactly. **This is synthetic
+held-out evidence, not measured upay performance.**
+
+It runs in a separate synthetic environment (Dual-Liquidity World v2) and must not be combined with
+the V1/V2 numbers above. Details, research path and caveats: [docs/MORNING_PLAN.md](docs/MORNING_PLAN.md).
+
+**How we got there.** Each step was pre-registered, and the negative results are kept:
+1. naive peer cash/e-float swaps were rejected because local complementarity was sparse;
+2. the 6-hour ML was rejected for morning planning because seasonal full-day history beat it;
+3. the prediction horizon was then aligned to the actual full-day decision;
+4. the final frozen model survived fresh cautious-baseline (historical q90/max) attribution.
+
 ## Product
 
 | Page | What it shows |
 |---|---|
 | **Command Center** | Active / at-risk / critical agents, projected service readiness (now and after the recommended plan), 6-h forecast demand, recommended rebalancing value, 48-h forecast-vs-actual trend, risk distribution, top at-risk agents, urgent recommendations, district overview |
+| **Morning Plan** | Proactive full-day cash + e-float positioning with the same working capital. Before/after totals match exactly (BDT 0 extra). Shows cash and e-float plans, a review focus (largest cuts, low-volume cuts, rural e-float reductions), a sortable agent table with an explanation drawer, a district conservation proof, **Approve Simulation**, and historical research evidence with caveats. |
 | **Agents** | Sortable, filterable table (risk level, behaviour, district, location cluster, volume segment, search) |
 | **Agent Intelligence** | Current cash, 6-h forecasts (P50/P90), expected gap, risk score with component breakdown, *Why this risk?* (with a deterministic **বাংলায় ব্যাখ্যা করুন** Bangla toggle), recommended action, behavioural drivers, 72-h history, model evidence |
 | **Rebalancing Center** | V2 (default) / V1 policy toggle; recommendations with source/destination reserves, risk before/after and V2 evidence (expected recipient benefit, donor margin above its dynamic reserve) → **Review Recommendation** → evidence drawer → acknowledgement → **Approve Simulation** → portfolio before/after + audit log; escalations and held-for-review lists |
@@ -91,6 +118,7 @@ A decision-time selector (top bar) lets you replay any hour of the held-out peri
 | Risk engine | deterministic, monotone, bounded formula (coverage, P90 tail, shortfall, velocity, history) |
 | Rebalancing | V1: greedy nearest-donor optimiser (same district, ≤ 15 km, donor safe surplus, protected level). V2 (default): the same constraints plus a dynamic donor reserve, minimum-benefit gate and benefit–cost–safety donor ranking, with parameters selected on training-period validation folds |
 | Impact | hour-by-hour held-out replay of four policies (status quo, naive-forecast rebalancing, AgentFlow V1, AgentFlow V2) with identical exogenous demand |
+| Morning Plan (proactive) | frozen full-day `HistGradientBoostingRegressor` P50/P90 forecasts of cash and e-float requirements (research spec `3128176`), served from a compact synthetic fixture; deterministic need-first allocator with fixed district budgets, BDT 5,000 floors and exact conservation, recomputed live |
 
 No LLM is used in the decision path; the core system has no external API dependency.
 
@@ -108,6 +136,9 @@ episodes. No PII. See [docs/DATA_CARD.md](docs/DATA_CARD.md).
 Synthetic data → Feature engineering → Forecast models ┐
                                       → Anomaly model   ┴→ Risk engine → Explainability
 → Rebalancing engine → FastAPI → Next.js dashboard → Human review → Simulation → Impact evaluation
+
+Proactive layer (separate, additive):
+frozen full-day forecasts (compact JSON fixture) → live district-constrained allocator → /api/morning-plan → Morning Plan page → human-review simulation
 ```
 
 Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -117,21 +148,22 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (79 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (103 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
 ```
 agentflow-ai/
   apps/
-    api/app/          FastAPI service (main.py routes, schemas.py, service.py)
+    api/app/          FastAPI service (main.py routes, schemas.py, service.py, morning_plan.py)
     web/src/          Next.js dashboard (app/ pages, components/, lib/)
   ml/
     agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation
-    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py
-    artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json (committed)
+    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py; research/ (Morning Plan fixture builder)
+    artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json,
+                      morning_plan_demo.json, morning_plan_evidence.json (committed)
     data/ models/     generated data and model binaries (git-ignored, reproducible)
-  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY
+  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY, MORNING_PLAN
   tests/              data, forecast, risk/anomaly, rebalancing, impact, API, contract tests
   .github/workflows/  CI
 ```
@@ -188,7 +220,7 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 79 tests (data, leakage, models, risk, rebalancing V1/V2, policy selection, impact, API, contract)
+python -m pytest -q                       # from repo root: 103 tests (data, leakage, models, risk, rebalancing V1/V2, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 
@@ -201,7 +233,8 @@ Demo scripts (90 s / 3 min / 5 min), an API-failure plan and judge Q&A are in
 (client-side only), **Judge demo** shows a six-step guide with live values, and if the API is
 unreachable the app shows a clear *"Live decision service is temporarily unavailable"* message with
 **Retry**. It never shows cached numbers as live. Short version (decision
-time Mon 31 Aug 13:00): Command Center → agent **AG-0171** (BDT 20,640 cash vs. BDT 38,675 forecast
+time Mon 31 Aug 13:00): Command Center → **Morning Plan** (proactive full-day positioning, same working
+capital) → agent **AG-0171** (BDT 20,640 cash vs. BDT 38,675 forecast
 requirement, HIGH) → *Why this risk?* → Rebalancing Center (policy V2) → review **RB-013** → Approve
 Simulation → Impact page policy comparison.
 
@@ -236,6 +269,14 @@ Security & prototype threat model: [docs/SECURITY.md](docs/SECURITY.md)
   were still 14 donor shortage events (V1: 25). V2 is slightly worse than V1 for rural agents.
 * Simulator assumes exogenous demand, 1-hour transfers and simple costs; e-float not binding.
 * Audit log is in memory (resets when the API restarts); no authentication (out of scope for the prototype).
+* **Morning Plan:**
+  * The demo is a synthetic fixture (one world, 14 dates), and its evidence comes from the same
+    synthetic world family.
+  * Cash P90 coverage is about 85%, against a nominal 90%.
+  * Low-volume agents did worse than a cautious q90 rule in 4 of 5 audit worlds.
+  * Rural e-float allocations can fall materially.
+  * Morning repositioning is assumed free and instantaneous.
+  * Real-data shadow validation is required before any deployment.
 
 ## Future real-data validation path
 

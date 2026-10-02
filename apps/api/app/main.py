@@ -15,7 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from .schemas import AgentsResponse, ErrorResponse, HealthResponse, ScenarioRequest, SimulateRequest
+from .morning_plan import get_morning_plan
+from .schemas import (AgentsResponse, ErrorResponse, HealthResponse, MorningPlanSimulateRequest, ScenarioRequest,
+                      SimulateRequest)
 from .service import get_service
 
 log = logging.getLogger("agentflow.api")
@@ -175,3 +177,54 @@ def model_metrics():
         raise HTTPException(status_code=404, detail="Metrics artifact missing - run python ml/scripts/evaluate.py")
     return {"label": "Synthetic held-out evaluation", "metrics": svc.metrics, "training": svc.training,
             "dataset": svc.dataset}
+
+
+# ---------------------------------------------------------------- Morning Liquidity Plan (proactive, full day)
+PlanDate = Query(default=None, max_length=10, pattern=r"^\d{4}-\d{2}-\d{2}$",
+                 description="Morning Plan date (YYYY-MM-DD) from /api/morning-plan/dates")
+
+
+def _morning_plan():
+    mp = get_morning_plan()
+    if not mp.available:
+        raise HTTPException(status_code=404, detail="Morning Plan artifact missing")
+    return mp
+
+
+@app.get("/api/morning-plan/dates")
+def morning_plan_dates():
+    return _morning_plan().dates_payload()
+
+
+@app.get("/api/morning-plan")
+def morning_plan(date: Optional[str] = PlanDate):
+    mp = _morning_plan()
+    d = date or mp.default_date
+    try:
+        return mp.plan(d)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"No Morning Plan for {d}; see /api/morning-plan/dates")
+
+
+@app.get("/api/morning-plan/evidence")
+def morning_plan_evidence():
+    ev = get_morning_plan().evidence()
+    if len(ev) <= 2:
+        raise HTTPException(status_code=404, detail="Morning Plan evidence artifact missing")
+    return ev
+
+
+@app.post("/api/morning-plan/simulate")
+def morning_plan_simulate(req: MorningPlanSimulateRequest):
+    if not req.reviewer_acknowledged:
+        raise HTTPException(status_code=400, detail="reviewer acknowledgement is required before a simulation")
+    mp = _morning_plan()
+    try:
+        return mp.simulate(req.date, req.reviewer_note)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"No Morning Plan for {req.date}")
+
+
+@app.get("/api/morning-plan/audit")
+def morning_plan_audit():
+    return {"simulations": get_morning_plan().audit_log, "note": "Simulated Morning Plan approvals only — no money is moved."}

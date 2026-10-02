@@ -15,6 +15,8 @@ venv/
 ml/data/*.parquet
 ml/data/*.csv
 ml/models/*.joblib
+ml/data_dual/*.parquet
+ml/models_dual/*.joblib
 
 # Node / Next.js
 node_modules/

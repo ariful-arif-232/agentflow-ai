@@ -8,8 +8,7 @@
   `047b733` before the comparison ran.
 * **Entry point:** `python ml/scripts/run_ml_attribution.py`.
 * **Artifacts:** `ml/artifacts_dual/ml_attribution_seed_2026.json` and
-  `ml_attribution_multiseed.json`. A byte-for-byte reproducibility rerun is in progress; its result
-  will be recorded here.
+  `ml_attribution_multiseed.json`. A second full run reproduced both byte-for-byte.
 * **Earlier artifacts:** none were overwritten. Seed 2026 regenerated the Phase 2A artifacts
   exactly.
 * **Comparability:** in every seed, the ML policy reproduces the Phase 2C result exactly

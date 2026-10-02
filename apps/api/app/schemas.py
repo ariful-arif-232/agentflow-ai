@@ -77,3 +77,11 @@ class ScenarioRequest(BaseModel):
     district: Optional[str] = Field(default=None, max_length=40)
     regional_shock_pct: float = Field(default=0.0, ge=0, le=100)
     as_of: Optional[str] = Field(default=None, max_length=40)
+
+
+class MorningPlanSimulateRequest(BaseModel):
+    """Human-review simulation of a Morning Liquidity Plan. Never moves money."""
+    model_config = ConfigDict(extra="forbid")
+    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$", max_length=10)
+    reviewer_acknowledged: bool
+    reviewer_note: Optional[str] = Field(default=None, max_length=500)

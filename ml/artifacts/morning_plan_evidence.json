@@ -1,0 +1,72 @@
+{
+  "label": "Historical synthetic research evidence - NOT measured upay performance and NOT an expected saving for any date",
+  "synthetic_data": true,
+  "world_family": "dual-liquidity-world-v2 (assumptions 2A.1)",
+  "audit_seeds": [
+    2036,
+    2037,
+    2038,
+    2039,
+    2040
+  ],
+  "frozen_model_spec_commit": "3128176e23b4a5a2dde883e8dff8a75f21e35540",
+  "source_research_commit": "c7418041f7b6c43873a8a45c1d43b32cafaf2a33",
+  "comparison": "frozen full-day ML P90 vs best cautious non-ML baseline (historical 7-day q90, best in every audit seed)",
+  "worlds_improved": 5,
+  "worlds_total": 5,
+  "pre_registered_bar_passed": true,
+  "combined_unmet_reduction_pct": {
+    "median": 20.5535,
+    "min": 13.6561,
+    "max": 29.7506
+  },
+  "cash_unmet_reduction_pct_median": 39.3543,
+  "efloat_unmet_reduction_pct_median": 9.6987,
+  "exact_resource_conservation": true,
+  "extra_working_capital_bdt": 0,
+  "pooled_p90_coverage": {
+    "cash": 0.8517,
+    "efloat": 0.8801,
+    "nominal": 0.9
+  },
+  "historical_signal_coverage_range": {
+    "seasonal_requirement_q90_7d": {
+      "cash": [
+        0.7946,
+        0.8064
+      ],
+      "efloat": [
+        0.7764,
+        0.7996
+      ]
+    },
+    "seasonal_requirement_max7": {
+      "cash": [
+        0.8532,
+        0.8718
+      ],
+      "efloat": [
+        0.8339,
+        0.8571
+      ]
+    }
+  },
+  "forecast_mae_improvement_vs_mean7_median_pct": {
+    "cash": 8.487920717118879,
+    "efloat": 7.828198484165483
+  },
+  "caveats": [
+    "Synthetic world family only - not real upay data and not external validation.",
+    "No guaranteed savings; results are historical synthetic simulations.",
+    "Cash P90 coverage is about 85%, below the nominal 90%.",
+    "Low-volume agents did worse than the cautious q90 baseline in 4 of 5 synthetic audit seeds.",
+    "Rural e-float allocations can fall materially (about 0.55-0.66x status quo in the audit).",
+    "Human review is required; the plan never moves money."
+  ],
+  "research_path": [
+    "Peer cash/e-float swaps rejected: local same-time complementarity was sparse (0/5 worlds met the bar).",
+    "6-hour ML rejected for morning planning: a seasonal full-day history baseline beat it in 5/5 worlds.",
+    "Horizon aligned to the decision: full-day ML beat the seasonal mean in 5/5 fresh confirmatory worlds.",
+    "Final attribution: the frozen full-day ML beat cautious historical q90/max baselines in 5/5 fresh worlds."
+  ]
+}

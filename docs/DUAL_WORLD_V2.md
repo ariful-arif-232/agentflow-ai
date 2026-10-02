@@ -307,3 +307,14 @@ Both sides are exercised by the pre-specified rules, with no test-set tuning.
 * A shadow-mode pilot with operations staff before any decision is acted on.
 
 Only aggregated amounts and counts would be needed, never customer-level data.
+
+## 9. Follow-up: forecast-guided prepositioning (Phase 2C)
+
+A pre-registered, five-seed held-out simulation redistributes the **same** district cash and
+e-float budgets at 08:00 using 6-hour P90 forecasts, with exact conservation.
+
+* Protocol: [PREPOSITIONING_PROTOCOL.md](PREPOSITIONING_PROTOCOL.md)
+* Results: [PREPOSITIONING_RESULTS.md](PREPOSITIONING_RESULTS.md)
+
+**Outcome: the research bar passed in 5 of 5 seeds** (median combined unmet −35.5%). The
+status-quo baseline is crude, and a stronger non-ML baseline is still to be tested.

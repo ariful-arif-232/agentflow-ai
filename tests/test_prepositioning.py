@@ -160,3 +160,23 @@ def test_allocation_rows_align_with_agent_order_across_interleaved_districts():
     # positional conservation per district using the INPUT's district labels
     assert (pd.Series(a["alloc_cash"].to_numpy()).groupby(v["district"].to_numpy()).sum()
             == v.groupby("district")["target_cash_level"].sum().astype(int)).all()
+
+
+def test_committed_prepositioning_artifacts_match_preregistration():
+    import json
+    art = Path(__file__).resolve().parents[1] / "ml" / "artifacts_dual" / "prepositioning_multiseed.json"
+    if not art.exists():
+        pytest.skip("prepositioning artifacts not generated")
+    m = json.loads(art.read_text())
+    assert m["assumptions_version"] == "2A.1"
+    assert m["constants"]["seeds"] == list(pp.SEEDS) and list(m["per_seed"]) == [str(s) for s in pp.SEEDS]
+    assert m["constants"]["bar"] == pp.BAR
+    for r in m["per_seed"].values():
+        assert r["resources_exactly_conserved"] is True
+    ob = m["overall_bar"]
+    assert ob["seeds_passing"] == sum(r["bar"]["passes"] for r in m["per_seed"].values())
+    assert ob["passes"] == all(ob["checks"].values())
+    s26 = json.loads(art.with_name("prepositioning_seed_2026.json").read_text())
+    assert s26["conservation"]["max_abs_district_diff_bdt"] == 0
+    assert s26["status_quo_replay_matches_world"] is True and s26["phase_2a_artifacts_reproduced"] is True
+    assert s26["oracle"]["label"].startswith("ORACLE")

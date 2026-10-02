@@ -1,0 +1,319 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2 - forecast-guided prepositioning (research only)",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "protocol": "docs/PREPOSITIONING_PROTOCOL.md",
+  "constants": {
+    "seeds": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030
+    ],
+    "floor_cash_bdt": 5000,
+    "floor_efloat_bdt": 5000,
+    "decision_hour": 8,
+    "forecast_row_hour": 7,
+    "forecast_signal": "6h P90 cash and e-float requirement",
+    "bar": {
+      "max_side_unmet_increase_pct": 2.0,
+      "min_seeds_passing": 4,
+      "min_seeds_reducing_combined": 4,
+      "min_median_combined_reduction_pct": 5.0
+    },
+    "concentration_flag": [
+      0.5,
+      2.0
+    ]
+  },
+  "seed": 2026,
+  "world_hash": "1e90db46bfb1cff39827dfe3a6507724d50f24c71f5b30364e37729000bb0231",
+  "window": [
+    "2026-08-18 08:00:00",
+    "2026-08-31 23:00:00"
+  ],
+  "held_out_days": 14,
+  "status_quo": {
+    "cash_shortage_events": 1005,
+    "unmet_cash_out_bdt": 3751880.0,
+    "cash_out_fill_rate": 0.9897,
+    "efloat_shortage_events": 1267,
+    "unmet_cash_in_bdt": 4627190.0,
+    "cash_in_fill_rate": 0.9884,
+    "fully_serviceable_agent_hours": 63328,
+    "agent_hours": 65600,
+    "combined_unmet_bdt": 8379070.0,
+    "combined_fill_rate": 0.989,
+    "shortage_events_total": 2272,
+    "agents_with_any_shortage": 139
+  },
+  "agentflow": {
+    "cash_shortage_events": 208,
+    "unmet_cash_out_bdt": 979795.0,
+    "cash_out_fill_rate": 0.9973,
+    "efloat_shortage_events": 1045,
+    "unmet_cash_in_bdt": 3745361.0,
+    "cash_in_fill_rate": 0.9906,
+    "fully_serviceable_agent_hours": 64347,
+    "agent_hours": 65600,
+    "combined_unmet_bdt": 4725156.0,
+    "combined_fill_rate": 0.9938,
+    "shortage_events_total": 1253,
+    "agents_with_any_shortage": 106
+  },
+  "impact": {
+    "cash_unmet_reduction_pct": 73.8852,
+    "efloat_unmet_reduction_pct": 19.0575,
+    "combined_unmet_reduction_pct": 43.6076,
+    "shortage_event_reduction_pct": 44.8504,
+    "shortage_events_avoided": 1019,
+    "combined_fill_rate_change_pp": 0.4782,
+    "unmet_bdt_avoided": 3653914.0,
+    "unmet_avoided_per_1m_daily_working_capital_bdt": 118527.7431,
+    "extra_liquidity_bdt": 0
+  },
+  "conservation": {
+    "exact": true,
+    "max_abs_district_diff_bdt": 0,
+    "days": 14,
+    "network_daily_cash_bdt": 15507000,
+    "network_daily_efloat_bdt": 15320500,
+    "district_daily_budgets": {
+      "Barishal": {
+        "cash": 977000,
+        "efloat": 952500
+      },
+      "Chattogram": {
+        "cash": 2837500,
+        "efloat": 2717500
+      },
+      "Dhaka": {
+        "cash": 4636000,
+        "efloat": 5185500
+      },
+      "Gazipur": {
+        "cash": 1941500,
+        "efloat": 1814000
+      },
+      "Khulna": {
+        "cash": 1517500,
+        "efloat": 1367000
+      },
+      "Rajshahi": {
+        "cash": 1743000,
+        "efloat": 1532000
+      },
+      "Rangpur": {
+        "cash": 747000,
+        "efloat": 680000
+      },
+      "Sylhet": {
+        "cash": 1107500,
+        "efloat": 1072000
+      }
+    }
+  },
+  "status_quo_replay_matches_world": true,
+  "agents_better_worse": {
+    "better": 109,
+    "worse": 32,
+    "unchanged": 59,
+    "worst_harmed": [
+      {
+        "agent_id": "AG-0082",
+        "location_cluster": "urban_periphery",
+        "segment": "high",
+        "combined_unmet_change_bdt": 21293.0
+      },
+      {
+        "agent_id": "AG-0144",
+        "location_cluster": "urban_periphery",
+        "segment": "high",
+        "combined_unmet_change_bdt": 20568.0
+      },
+      {
+        "agent_id": "AG-0149",
+        "location_cluster": "urban_periphery",
+        "segment": "high",
+        "combined_unmet_change_bdt": 15708.0
+      },
+      {
+        "agent_id": "AG-0012",
+        "location_cluster": "urban_periphery",
+        "segment": "high",
+        "combined_unmet_change_bdt": 15056.0
+      },
+      {
+        "agent_id": "AG-0005",
+        "location_cluster": "urban_periphery",
+        "segment": "medium",
+        "combined_unmet_change_bdt": 13871.0
+      }
+    ],
+    "total_harm_bdt": 210468.0,
+    "total_benefit_bdt": 3864382.0
+  },
+  "allocation_shifts": {
+    "max_increase_cash_bdt": 116200,
+    "max_decrease_cash_bdt": -88134,
+    "max_increase_efloat_bdt": 61020,
+    "max_decrease_efloat_bdt": -37994,
+    "floor_only_agent_days_cash": 0,
+    "floor_only_agent_days_efloat": 0,
+    "agent_days": 2800,
+    "floor_edge_cases": {
+      "agentflow": 0,
+      "oracle_6h": 0,
+      "oracle_full_day": 0
+    }
+  },
+  "allocation_ratios": {
+    "location_cluster": {
+      "rural": {
+        "cash_ratio": 1.2098,
+        "efloat_ratio": 0.9938
+      },
+      "urban_core": {
+        "cash_ratio": 0.791,
+        "efloat_ratio": 1.0318
+      },
+      "urban_periphery": {
+        "cash_ratio": 1.0246,
+        "efloat_ratio": 0.9625
+      }
+    },
+    "agent_volume_segment": {
+      "high": {
+        "cash_ratio": 0.9516,
+        "efloat_ratio": 0.9868
+      },
+      "low": {
+        "cash_ratio": 1.0844,
+        "efloat_ratio": 1.0746
+      },
+      "medium": {
+        "cash_ratio": 1.0355,
+        "efloat_ratio": 0.9918
+      }
+    },
+    "district": {
+      "Barishal": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      },
+      "Chattogram": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      },
+      "Dhaka": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      },
+      "Gazipur": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      },
+      "Khulna": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      },
+      "Rajshahi": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      },
+      "Rangpur": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      },
+      "Sylhet": {
+        "cash_ratio": 1.0,
+        "efloat_ratio": 1.0
+      }
+    }
+  },
+  "concentration_flags": [],
+  "group_impact": {
+    "location_cluster": {
+      "rural": {
+        "status_quo_unmet_bdt": 3581360.0,
+        "agentflow_unmet_bdt": 883180.0,
+        "change_pct": -75.3395
+      },
+      "urban_core": {
+        "status_quo_unmet_bdt": 2124050.0,
+        "agentflow_unmet_bdt": 1330460.0,
+        "change_pct": -37.3621
+      },
+      "urban_periphery": {
+        "status_quo_unmet_bdt": 2673660.0,
+        "agentflow_unmet_bdt": 2511516.0,
+        "change_pct": -6.0645
+      }
+    },
+    "agent_volume_segment": {
+      "high": {
+        "status_quo_unmet_bdt": 3784450.0,
+        "agentflow_unmet_bdt": 2908984.0,
+        "change_pct": -23.1332
+      },
+      "low": {
+        "status_quo_unmet_bdt": 1587810.0,
+        "agentflow_unmet_bdt": 357173.0,
+        "change_pct": -77.5053
+      },
+      "medium": {
+        "status_quo_unmet_bdt": 3006810.0,
+        "agentflow_unmet_bdt": 1458999.0,
+        "change_pct": -51.4768
+      }
+    }
+  },
+  "oracle": {
+    "label": "ORACLE - evaluation only, impossible operationally",
+    "oracle_6h": {
+      "cash_shortage_events": 145,
+      "unmet_cash_out_bdt": 366826.0,
+      "cash_out_fill_rate": 0.999,
+      "efloat_shortage_events": 1001,
+      "unmet_cash_in_bdt": 3941091.0,
+      "cash_in_fill_rate": 0.9901,
+      "fully_serviceable_agent_hours": 64454,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 4307917.0,
+      "combined_fill_rate": 0.9944,
+      "shortage_events_total": 1146,
+      "agents_with_any_shortage": 94,
+      "combined_unmet_reduction_pct": 48.5872,
+      "cash_unmet_reduction_pct": 90.2229,
+      "efloat_unmet_reduction_pct": 14.8276
+    },
+    "oracle_full_day": {
+      "cash_shortage_events": 0,
+      "unmet_cash_out_bdt": 0.0,
+      "cash_out_fill_rate": 1.0,
+      "efloat_shortage_events": 0,
+      "unmet_cash_in_bdt": 0.0,
+      "cash_in_fill_rate": 1.0,
+      "fully_serviceable_agent_hours": 65600,
+      "agent_hours": 65600,
+      "combined_unmet_bdt": 0.0,
+      "combined_fill_rate": 1.0,
+      "shortage_events_total": 0,
+      "agents_with_any_shortage": 0,
+      "combined_unmet_reduction_pct": 100.0,
+      "cash_unmet_reduction_pct": 100.0,
+      "efloat_unmet_reduction_pct": 100.0
+    }
+  },
+  "phase_2a_artifacts_reproduced": true,
+  "bar": {
+    "checks": {
+      "combined_unmet_not_increased": true,
+      "cash_unmet_increase_within_2pct": true,
+      "efloat_unmet_increase_within_2pct": true,
+      "resources_exactly_conserved": true
+    },
+    "passes": true
+  }
+}

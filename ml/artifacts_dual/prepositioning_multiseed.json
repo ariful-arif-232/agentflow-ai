@@ -1,0 +1,249 @@
+{
+  "label": "Synthetic held-out simulation - Dual-Liquidity World v2 - forecast-guided prepositioning (research only)",
+  "world_version": "dual-liquidity-world-v2",
+  "assumptions_version": "2A.1",
+  "protocol": "docs/PREPOSITIONING_PROTOCOL.md",
+  "constants": {
+    "seeds": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030
+    ],
+    "floor_cash_bdt": 5000,
+    "floor_efloat_bdt": 5000,
+    "decision_hour": 8,
+    "forecast_row_hour": 7,
+    "forecast_signal": "6h P90 cash and e-float requirement",
+    "bar": {
+      "max_side_unmet_increase_pct": 2.0,
+      "min_seeds_passing": 4,
+      "min_seeds_reducing_combined": 4,
+      "min_median_combined_reduction_pct": 5.0
+    },
+    "concentration_flag": [
+      0.5,
+      2.0
+    ]
+  },
+  "per_seed": {
+    "2026": {
+      "cash_unmet_reduction_pct": 73.8852,
+      "efloat_unmet_reduction_pct": 19.0575,
+      "combined_unmet_reduction_pct": 43.6076,
+      "shortage_event_reduction_pct": 44.8504,
+      "combined_fill_rate_change_pp": 0.4782,
+      "unmet_avoided_per_1m_daily_working_capital_bdt": 118527.7431,
+      "agents_better": 109,
+      "agents_worse": 32,
+      "resources_exactly_conserved": true,
+      "status_quo_combined_unmet_bdt": 8379070.0,
+      "agentflow_combined_unmet_bdt": 4725156.0,
+      "oracle_6h_combined_reduction_pct": 48.5872,
+      "oracle_full_day_combined_reduction_pct": 100.0,
+      "concentration_flags": 0,
+      "bar": {
+        "checks": {
+          "combined_unmet_not_increased": true,
+          "cash_unmet_increase_within_2pct": true,
+          "efloat_unmet_increase_within_2pct": true,
+          "resources_exactly_conserved": true
+        },
+        "passes": true
+      }
+    },
+    "2027": {
+      "cash_unmet_reduction_pct": 74.8882,
+      "efloat_unmet_reduction_pct": 14.0644,
+      "combined_unmet_reduction_pct": 31.8556,
+      "shortage_event_reduction_pct": 34.9545,
+      "combined_fill_rate_change_pp": 0.4139,
+      "unmet_avoided_per_1m_daily_working_capital_bdt": 101203.5943,
+      "agents_better": 102,
+      "agents_worse": 43,
+      "resources_exactly_conserved": true,
+      "status_quo_combined_unmet_bdt": 9333710.0,
+      "agentflow_combined_unmet_bdt": 6360399.0,
+      "oracle_6h_combined_reduction_pct": 35.0123,
+      "oracle_full_day_combined_reduction_pct": 98.1723,
+      "concentration_flags": 0,
+      "bar": {
+        "checks": {
+          "combined_unmet_not_increased": true,
+          "cash_unmet_increase_within_2pct": true,
+          "efloat_unmet_increase_within_2pct": true,
+          "resources_exactly_conserved": true
+        },
+        "passes": true
+      }
+    },
+    "2028": {
+      "cash_unmet_reduction_pct": 78.493,
+      "efloat_unmet_reduction_pct": 9.2906,
+      "combined_unmet_reduction_pct": 41.1023,
+      "shortage_event_reduction_pct": 38.7882,
+      "combined_fill_rate_change_pp": 0.4331,
+      "unmet_avoided_per_1m_daily_working_capital_bdt": 106089.2631,
+      "agents_better": 109,
+      "agents_worse": 36,
+      "resources_exactly_conserved": true,
+      "status_quo_combined_unmet_bdt": 7940250.0,
+      "agentflow_combined_unmet_bdt": 4676626.0,
+      "oracle_6h_combined_reduction_pct": 50.7407,
+      "oracle_full_day_combined_reduction_pct": 100.0,
+      "concentration_flags": 0,
+      "bar": {
+        "checks": {
+          "combined_unmet_not_increased": true,
+          "cash_unmet_increase_within_2pct": true,
+          "efloat_unmet_increase_within_2pct": true,
+          "resources_exactly_conserved": true
+        },
+        "passes": true
+      }
+    },
+    "2029": {
+      "cash_unmet_reduction_pct": 60.189,
+      "efloat_unmet_reduction_pct": 14.186,
+      "combined_unmet_reduction_pct": 31.0538,
+      "shortage_event_reduction_pct": 31.5201,
+      "combined_fill_rate_change_pp": 0.2881,
+      "unmet_avoided_per_1m_daily_working_capital_bdt": 71516.1647,
+      "agents_better": 98,
+      "agents_worse": 32,
+      "resources_exactly_conserved": true,
+      "status_quo_combined_unmet_bdt": 7176870.0,
+      "agentflow_combined_unmet_bdt": 4948176.0,
+      "oracle_6h_combined_reduction_pct": 36.4151,
+      "oracle_full_day_combined_reduction_pct": 100.0,
+      "concentration_flags": 0,
+      "bar": {
+        "checks": {
+          "combined_unmet_not_increased": true,
+          "cash_unmet_increase_within_2pct": true,
+          "efloat_unmet_increase_within_2pct": true,
+          "resources_exactly_conserved": true
+        },
+        "passes": true
+      }
+    },
+    "2030": {
+      "cash_unmet_reduction_pct": 77.2321,
+      "efloat_unmet_reduction_pct": 15.3373,
+      "combined_unmet_reduction_pct": 35.4807,
+      "shortage_event_reduction_pct": 29.769,
+      "combined_fill_rate_change_pp": 0.4078,
+      "unmet_avoided_per_1m_daily_working_capital_bdt": 101070.5927,
+      "agents_better": 115,
+      "agents_worse": 43,
+      "resources_exactly_conserved": true,
+      "status_quo_combined_unmet_bdt": 8276340.0,
+      "agentflow_combined_unmet_bdt": 5339835.0,
+      "oracle_6h_combined_reduction_pct": 41.5854,
+      "oracle_full_day_combined_reduction_pct": 100.0,
+      "concentration_flags": 0,
+      "bar": {
+        "checks": {
+          "combined_unmet_not_increased": true,
+          "cash_unmet_increase_within_2pct": true,
+          "efloat_unmet_increase_within_2pct": true,
+          "resources_exactly_conserved": true
+        },
+        "passes": true
+      }
+    }
+  },
+  "robustness_summary": {
+    "cash_unmet_reduction_pct": {
+      "mean": 72.9375,
+      "median": 74.8882,
+      "min": 60.189,
+      "max": 78.493
+    },
+    "efloat_unmet_reduction_pct": {
+      "mean": 14.3872,
+      "median": 14.186,
+      "min": 9.2906,
+      "max": 19.0575
+    },
+    "combined_unmet_reduction_pct": {
+      "mean": 36.62,
+      "median": 35.4807,
+      "min": 31.0538,
+      "max": 43.6076
+    },
+    "shortage_event_reduction_pct": {
+      "mean": 35.9764,
+      "median": 34.9545,
+      "min": 29.769,
+      "max": 44.8504
+    },
+    "combined_fill_rate_change_pp": {
+      "mean": 0.4043,
+      "median": 0.4139,
+      "min": 0.2881,
+      "max": 0.4782
+    },
+    "unmet_avoided_per_1m_daily_working_capital_bdt": {
+      "mean": 99681.4716,
+      "median": 101203.5943,
+      "min": 71516.1647,
+      "max": 118527.7431
+    },
+    "agents_better": {
+      "mean": 106.6,
+      "median": 109.0,
+      "min": 98.0,
+      "max": 115.0
+    },
+    "agents_worse": {
+      "mean": 37.2,
+      "median": 36.0,
+      "min": 32.0,
+      "max": 43.0
+    },
+    "status_quo_combined_unmet_bdt": {
+      "mean": 8221248.0,
+      "median": 8276340.0,
+      "min": 7176870.0,
+      "max": 9333710.0
+    },
+    "agentflow_combined_unmet_bdt": {
+      "mean": 5210038.4,
+      "median": 4948176.0,
+      "min": 4676626.0,
+      "max": 6360399.0
+    },
+    "oracle_6h_combined_reduction_pct": {
+      "mean": 42.4681,
+      "median": 41.5854,
+      "min": 35.0123,
+      "max": 50.7407
+    },
+    "oracle_full_day_combined_reduction_pct": {
+      "mean": 99.6345,
+      "median": 100.0,
+      "min": 98.1723,
+      "max": 100.0
+    },
+    "concentration_flags": {
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  "overall_bar": {
+    "seeds_passing": 5,
+    "seeds_reducing_combined": 5,
+    "median_combined_reduction_pct": 35.4807,
+    "checks": {
+      "seeds_passing": true,
+      "seeds_reducing_combined": true,
+      "median_combined_reduction": true,
+      "conservation_all_seeds": true
+    },
+    "passes": true
+  }
+}

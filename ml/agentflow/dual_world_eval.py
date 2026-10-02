@@ -169,7 +169,7 @@ def world_hash(world: dw.DualWorld) -> str:
     return hashlib.sha256(hv.tobytes() + av.tobytes()).hexdigest()
 
 
-def run(world: dw.DualWorld, max_iter: int = 400, model_path=dw.MODEL_PATH) -> dict:
+def run(world: dw.DualWorld, max_iter: int = 400, model_path=dw.MODEL_PATH, return_state: bool = False):
     f = build(world)
     train_df, test_df = features.time_split(f)
     has_hist = f["out_same_window_avg7"].notna() & f["out_rolling_mean_168h"].notna()
@@ -232,5 +232,8 @@ def run(world: dw.DualWorld, max_iter: int = 400, model_path=dw.MODEL_PATH) -> d
     meta = {**common, **{k: v for k, v in bundle.metadata.items() if k != "model_specs"},
             "features_cash": bundle.features, "features_efloat": bundle.efloat_features,
             "validation_fit_seconds": fit_val}
-    return {"world_summary.json": _r(summary), "forecast_metrics.json": _r(fm),
+    arts = {"world_summary.json": _r(summary), "forecast_metrics.json": _r(fm),
             "status_quo_impact.json": _r(sq), "training_metadata.json": _r(meta)}
+    if return_state:  # additive hook for read-only follow-up studies; outputs above are unchanged
+        return arts, {"features": f, "bundle": bundle}
+    return arts

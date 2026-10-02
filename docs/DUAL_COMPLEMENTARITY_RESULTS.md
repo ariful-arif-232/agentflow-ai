@@ -12,7 +12,10 @@
   * `ml/artifacts_dual/complementarity_seed_2026.json`;
   * `ml/artifacts_dual/complementarity_multiseed.json`.
 
-  A second full run reproduced both files byte-for-byte.
+  A full second run to confirm byte-for-byte reproducibility was started but stopped before it
+  finished (the container was overloaded), so it is **not yet confirmed** at the artifact level.
+  Determinism is covered by tests (identical analysis output on reordered input), and seed 2026
+  regenerated the Phase 2A artifacts exactly.
 * **Phase 2A artifacts were not overwritten.** Seed 2026 regenerated them identically
   (`phase_2a_artifacts_reproduced: true`).
 

@@ -40,8 +40,9 @@ cash-only.
 3. **Runtime assertions.**
    * Conservation per district and network, floors, non-negativity and the absence of any
      future/outcome field are all checked when the plan is built.
-   * The plan matches the frozen research allocation exactly
-     (`matches_frozen_research_allocation: true`).
+   * Live allocation matches the frozen serving fixture exactly
+     (`matches_frozen_demo_fixture_allocation: true`). The compact fixture differs from the original
+     unrounded research allocation by at most BDT 1 due to forecast rounding.
 4. **Explanations.** These are fixed templates over the plan's numbers, with no LLM. Example: *"Cash
    increased because the full-day P90 requirement exceeds the current morning allocation while the
    district budget remains fixed."*

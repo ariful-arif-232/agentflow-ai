@@ -476,7 +476,7 @@ export interface MorningPlan {
     agents: number;
     conserved: boolean;
     extra_working_capital_bdt: number;
-    matches_frozen_research_allocation: boolean;
+    matches_frozen_demo_fixture_allocation: boolean;
     flag_counts: Record<MorningReviewCode, number>;
   };
   districts: MorningPlanDistrict[];

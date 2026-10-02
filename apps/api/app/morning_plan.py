@@ -211,7 +211,7 @@ class MorningPlanService:
         conserved = all(row["conserved"] for row in dist_rows) and all(v["difference_bdt"] == 0 for v in net.values())
         plan = {"date": date, "meta": self.meta(),
                 "network": {**net, "agents": n, "conserved": conserved, "extra_working_capital_bdt": 0,
-                            "matches_frozen_research_allocation": parity,
+                            "matches_frozen_demo_fixture_allocation": parity,
                             "flag_counts": {k: sum(k in [f["code"] for f in x["review_flags"]] for x in agents_out)
                                             for k in REVIEW_FLAGS}},
                 "districts": dist_rows, "agents": agents_out, "review_focus": self._focus(agents_out, conserved)}

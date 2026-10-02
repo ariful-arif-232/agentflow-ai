@@ -75,7 +75,7 @@ def test_live_allocation_conserves_every_district_exactly_and_matches_research(m
     for date in mp.dates:
         plan = mp.plan(date)
         assert plan["network"]["conserved"] and plan["network"]["extra_working_capital_bdt"] == 0
-        assert plan["network"]["matches_frozen_research_allocation"] is True
+        assert plan["network"]["matches_frozen_demo_fixture_allocation"] is True
         for r in ("cash", "efloat"):
             assert plan["network"][r]["difference_bdt"] == 0
             assert plan["network"][r]["status_quo_total_bdt"] == plan["network"][r]["recommended_total_bdt"]

@@ -155,6 +155,11 @@ function DistrictTable({ plan }: { plan: MorningPlan }) {
           </tbody>
         </table>
       </div>
+      <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
+        {plan.network.matches_frozen_demo_fixture_allocation
+          ? "Live allocation matches the frozen serving fixture exactly. The compact fixture differs from the original unrounded research allocation by at most BDT 1 due to forecast rounding."
+          : "Live allocation does not match the frozen serving fixture — do not use this plan."}
+      </p>
     </Card>
   );
 }

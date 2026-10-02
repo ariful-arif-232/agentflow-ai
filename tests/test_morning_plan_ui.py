@@ -27,7 +27,7 @@ def test_typescript_contract_covers_api_response():
     for k in plan["network"]["cash"]:
         assert re.search(rf"\b{k}\??:", res_t), f"MorningResourceSummary missing {k}"
     plan_t = _iface("MorningPlan")
-    for k in ("conserved", "extra_working_capital_bdt", "matches_frozen_research_allocation", "flag_counts", "review_focus"):
+    for k in ("conserved", "extra_working_capital_bdt", "matches_frozen_demo_fixture_allocation", "flag_counts", "review_focus"):
         assert k in plan_t
     ev_t = _iface("MorningPlanEvidence")
     for k in mp.evidence():
@@ -52,6 +52,8 @@ def test_conservation_and_review_ui_is_present():
         assert text in PAGE, text
     assert "Future outcomes are unknown at 07:00" in PAGE
     assert "will be harmed" not in PAGE.lower()
+    assert "matches_frozen_demo_fixture_allocation" in PAGE and "matches the frozen serving fixture exactly" in PAGE
+    assert "by at most BDT 1 due to forecast rounding" in PAGE
 
 
 def test_loading_error_retry_empty_and_date_switching_states():

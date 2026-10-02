@@ -2,10 +2,12 @@
 
 **Explainable Predictive Liquidity Orchestration for MFS Agent Networks**
 
-> **Predict. Explain. Rebalance.**
+> **Same liquidity. Placed ahead of demand.**
 
-AgentFlow predicts where an MFS agent may run short of liquidity before customers are affected,
-explains why, and recommends a safe, human-reviewed rebalancing action.
+AgentFlow forecasts where MFS agents will need liquidity and recommends placing the **same** working
+capital ahead of demand. Each morning it plans physical cash and e-float. During the day it monitors
+cash pressure, explains the risk and recommends safe, human-reviewed peer recovery. It never moves
+real money. See [Two time scales](#two-time-scales-proactive-and-reactive).
 
 Built for the **AI DEV FEST 2026 AI Hackathon** (Track 05: Merchant & Agent Intelligence — Agent Liquidity Forecasting) organised by **DIU CPC × upay** by a registered
 3-member team. Engineering was carried out by one primary implementer, and the development workflow
@@ -16,7 +18,10 @@ is organised around that. Teammate briefing: [docs/TEAM_BRIEFING.md](docs/TEAM_B
 
 ---
 
-## Results at a glance (synthetic held-out evaluation, last 14 days, never used in training)
+## Results at a glance: intraday system (synthetic held-out evaluation, last 14 days, never used in training)
+
+These results come from the legacy intraday environment, where e-float is tracked but is not a
+binding constraint. The Morning Plan is evaluated separately (see below).
 
 | | Result |
 |---|---|
@@ -28,12 +33,20 @@ is organised around that. Teammate briefing: [docs/TEAM_BRIEFING.md](docs/TEAM_B
 | Business impact, original policy V1 | shortage events −37.8%, unmet cash demand −38.9% (BDT 37.1 lakh avoided), 501 transfers, 25 donor shortage events, BDT 1.58 lakh logistics cost |
 
 Every number is produced by `python ml/scripts/run_pipeline.py` and stored in
-[`ml/artifacts/`](ml/artifacts/); a fresh clone reproduces them byte-for-byte. Full details and
-trade-offs (false alerts, donor risk, group differences): [docs/EVALUATION.md](docs/EVALUATION.md).
+[`ml/artifacts/`](ml/artifacts/). With the pinned project environment (`requirements.txt` and the
+Docker base-image digest), the evaluated decision outputs, business-impact metrics and demo values
+reproduce. Runtime `fit_seconds` metadata is excluded, and tiny cross-machine floating-point variation
+may occur in internal anomaly thresholds. Full details and trade-offs (false alerts, donor risk,
+group differences): [docs/EVALUATION.md](docs/EVALUATION.md).
 
 ---
 
 ## Problem
+
+> For MFS liquidity operations teams, agents running short of physical cash or e-float during demand
+> peaks can cause failed customer transactions and lost agent income. AgentFlow uses per-agent
+> transaction-flow aggregates to forecast liquidity need and recommend human-reviewed placement
+> decisions, with success measured by unmet demand under the same working-capital budget.
 
 Mobile Financial Services agents need physical cash to serve cash-out and electronic float to serve
 cash-in. Demand shifts by hour, weekday, salary period and local events. When an agent's drawer
@@ -44,14 +57,14 @@ salary-day afternoon rush in a garment-worker neighbourhood or a rural market da
 We frame this as a **future-ready MFS capability**; we make no claim about upay's current
 operations.
 
-## Solution — the complete intelligence loop
+## Solution — the intraday intelligence loop (*Predict. Explain. Rebalance.*)
 
 ```
 FORECAST → RISK → EXPLAIN → RECOMMEND → HUMAN REVIEW → SIMULATE → MEASURE IMPACT
 ```
 
-AgentFlow does not stop at prediction. It converts a prediction into an explainable, safe and
-measurable operational recommendation:
+During the day, AgentFlow does not stop at prediction. It converts a 6-hour cash prediction into an
+explainable, safe and measurable operational recommendation:
 
 1. **What is likely to happen?** ML forecasts each agent's next-6-hour cash-out demand and the
    *peak cash requirement* (max cumulative net cash drain), with a P90 uncertainty band.
@@ -68,29 +81,58 @@ measurable operational recommendation:
 
 ### Two time scales: proactive and reactive
 
-```
-PLAN → PREDICT → EXPLAIN → REBALANCE → HUMAN REVIEW → MEASURE
-```
+**Same liquidity. Placed ahead of demand.**
 
-* **Proactive: Morning Liquidity Plan.** At 07:00, forecast each agent's **full-day** (08:00–23:59)
-  physical-cash *and* e-float requirement. At 08:00, propose where the **same** district working
-  capital should sit before demand arrives. The plan is human-reviewed, and approval only simulates.
-* **Reactive: intraday.** The 6-hour cash risk, explanations and **V2** peer rebalancing (physical
-  cash) apply when pressure emerges during the day.
+| | What AgentFlow does |
+|---|---|
+| **Morning** (07:00 → 08:00) | Predict each agent's **full-day** (08:00–23:59) physical-cash *and* e-float requirement, then recommend where the **same** district working capital should sit before demand arrives (the Morning Liquidity Plan) |
+| **Intraday** (hourly) | Monitor 6-hour **cash** pressure, explain the risk and recommend safe **V2** peer recovery (*Predict. Explain. Rebalance.*) |
+| **Human** | Reviews and acknowledges every consequential action. Approval only runs a simulation. |
+| **Measure** | Each environment is evaluated separately, and the results are never combined |
 
-In fresh synthetic worlds from the same pre-registered world family, the frozen full-day ML policy
-reduced combined unmet demand by a median **20.6%** versus the strongest cautious historical
-baseline, while conserving each district's cash and e-float budgets exactly. **This is synthetic
-held-out evidence, not measured upay performance.**
+The two layers are evaluated in **two separate synthetic environments**. They are not one combined
+simulation:
+* **Intraday (V1/V2):** the legacy environment. E-float is tracked but is not a binding constraint;
+  cash-in is never declined.
+* **Morning Plan:** the separate Dual-Liquidity World v2. Physical cash **and** e-float are both
+  binding: cash-out fails when cash runs out, and cash-in fails when e-float runs out.
 
-It runs in a separate synthetic environment (Dual-Liquidity World v2) and must not be combined with
-the V1/V2 numbers above. Details, research path and caveats: [docs/MORNING_PLAN.md](docs/MORNING_PLAN.md).
+**Morning Plan evidence.** In fresh synthetic worlds from the same world family, the frozen full-day
+ML policy reduced combined unmet demand by a median **20.6%** versus the strongest cautious historical
+baseline (7-day q90), while conserving each district's cash and e-float budgets exactly. **This is
+synthetic held-out evidence, not measured upay performance, and not an expected saving for the date
+shown in the demo.**
 
-**How we got there.** Each step was pre-registered, and the negative results are kept:
-1. naive peer cash/e-float swaps were rejected because local complementarity was sparse;
-2. the 6-hour ML was rejected for morning planning because seasonal full-day history beat it;
-3. the prediction horizon was then aligned to the actual full-day decision;
-4. the final frozen model survived fresh cautious-baseline (historical q90/max) attribution.
+* **Success bar.** The protocol and success bar were committed before the audit seeds (2036–2040)
+  were generated. ML had to:
+  * match or beat both the q90 and the 7-day-max rule in at least 4 of 5 worlds;
+  * reach a median combined-unmet reduction of at least 5% against the better of the two;
+  * worsen cash or e-float unmet by more than 5% in at most 1 world;
+  * conserve both budgets exactly.
+
+  All five checks passed.
+* **Absolute example (audit world seed 2036: 200 agents, 14 held-out operating days, 08:00–23:59).**
+  Combined unmet demand fell from about BDT 49.7 lakh under the q90 rule to about BDT 40.8 lakh under
+  the frozen ML (−17.9% in this world). Cash-out fill rose from 99.65% to 99.80%.
+
+Details, research path and caveats: [docs/MORNING_PLAN.md](docs/MORNING_PLAN.md).
+
+**Who moves the liquidity?** Nobody, in this prototype. AgentFlow only recommends target levels and
+simulates approval; it never executes a financial transfer. A future deployment could hand *approved*
+target levels to an existing distributor, field-officer or bank-deposit replenishment workflow.
+Whether such targets can be changed daily is a real-world validation question.
+
+**How we got there.** For every step, the protocol and success bar were committed before results were
+computed, and the negative results are kept:
+1. naive peer cash/e-float swaps were rejected because local complementarity was sparse
+   (development seeds 2026–2030);
+2. the 6-hour ML was rejected for morning planning because seasonal full-day history beat it (same
+   seeds);
+3. the prediction horizon was then aligned to the actual full-day decision. A full-day ML beat the
+   7-day mean on confirmatory seeds 2031–2035, whose protocol was committed before they were
+   generated;
+4. the final frozen model survived the cautious-baseline (historical q90/max) attribution on audit
+   seeds 2036–2040.
 
 ## Product
 
@@ -267,7 +309,9 @@ Security & prototype threat model: [docs/SECURITY.md](docs/SECURITY.md)
 * HIGH+ alerts catch ~42% of shortage windows; sudden spikes remain hard to anticipate.
 * Policy V2: 24.3% of its 345 simulated transfers were not strictly needed (V1: 21.4% of 501), and there
   were still 14 donor shortage events (V1: 25). V2 is slightly worse than V1 for rural agents.
-* Simulator assumes exogenous demand, 1-hour transfers and simple costs; e-float not binding.
+* The intraday simulator assumes exogenous demand, 1-hour transfers and simple costs. In this legacy
+  environment, e-float is tracked but is not a binding constraint. Only the separate Morning Plan
+  environment treats e-float as binding.
 * Audit log is in memory (resets when the API restarts); no authentication (out of scope for the prototype).
 * **Morning Plan:**
   * The demo is a synthetic fixture (one world, 14 dates), and its evidence comes from the same

@@ -79,7 +79,9 @@ FORECAST → RISK → EXPLAIN → RECOMMEND → HUMAN REVIEW → SIMULATE → ME
 
 **Why it is credible.** We compare the ML model against simple baselines and report where it is only
 slightly better. We report the costs (unnecessary transfers, donor risk). Anyone can rerun everything
-with one command and get identical numbers.
+with one command. With the pinned project environment, the evaluated decision outputs,
+business-impact metrics and demo values reproduce. Runtime timing metadata is excluded, and tiny
+cross-machine floating-point variation may occur in internal anomaly thresholds.
 
 ---
 
@@ -131,12 +133,29 @@ at 19:00 and BDT 11,830 of cash-out is turned away.
 - **Morning Plan (proactive):** full-day cash **and** e-float positioning before the day starts.
 - **V2 (reactive):** intraday **physical-cash** rebalancing when 6-hour risk appears. V2 does not
   handle e-float.
+- **Two separate synthetic environments, never combined:**
+  - V1/V2 are evaluated in the legacy intraday world, where e-float is tracked but not binding.
+  - The Morning Plan is evaluated in Dual-Liquidity World v2, where cash **and** e-float are both
+    binding.
+- **One-line story:** *Same liquidity. Placed ahead of demand.*
+  - Morning: predict and position cash and e-float.
+  - Intraday: monitor cash pressure and recommend safe V2 recovery.
+  - A human reviews every consequential action.
+  - Each environment is measured separately.
 - **The evidence, to quote exactly:**
-  - *"In fresh synthetic worlds from the same pre-registered world family, the frozen full-day ML
-    policy reduced combined unmet demand by a median 20.6% versus the strongest cautious historical
-    baseline, while conserving each district's cash and e-float budgets exactly. This is synthetic
-    held-out evidence, not measured upay performance."*
+  - *"In fresh synthetic worlds from the same world family, the frozen full-day ML policy reduced
+    combined unmet demand by a median 20.6% versus the strongest cautious historical baseline,
+    while conserving each district's cash and e-float budgets exactly. This is synthetic held-out
+    evidence, not measured upay performance."*
   - The range across worlds was 13.7–29.8%, and 5 of 5 worlds improved.
+  - The protocol and success bar were committed before the audit seeds were generated.
+  - **Absolute example (audit world seed 2036, 14 days):** combined unmet fell from about BDT 49.7
+    lakh (q90 rule) to about BDT 40.8 lakh (ML), −17.9% in that world. Cash-out fill went from 99.65%
+    to 99.80%.
+- **If asked "who moves the cash?":** nobody, in this prototype. AgentFlow recommends target levels
+  and only simulates approval. A real deployment could hand approved targets to an existing
+  distributor, field-officer or bank-deposit replenishment workflow. Whether targets can change
+  daily is something real-world validation must answer.
 - **Caveats to volunteer:**
   - cash P90 coverage is about 85% (nominal 90%);
   - low-volume agents did worse than the cautious q90 rule in 4 of 5 worlds;
@@ -378,9 +397,10 @@ between them. An automated test confirms that no prediction uses future informat
 - V2's settings were tuned on two 14-day practice periods of the same synthetic world. Real data would
   need re-tuning.
 - The simulator assumes customers don't retry or go to another agent, transfers take 1 hour, and a
-  simple cost model. E-float is tracked but not used as a limit.
-- The number of agents with *at least one* shortage did not fall (140 → 140). AgentFlow reduces how
-  often and how badly agents run short, not whether stress ever happens.
+  simple cost model. In this legacy intraday world, e-float is tracked but not used as a limit; only
+  the separate Morning Plan world treats it as binding.
+- The number of agents with *at least one* shortage barely fell: 140 → 137 with V2, and 140 → 140 with
+  V1. AgentFlow reduces how often and how badly agents run short, not whether stress ever happens.
 - The approval audit log is kept in memory and resets when the server restarts.
 - There is no login or user roles; that is out of scope for the prototype.
 
@@ -468,7 +488,10 @@ These are **future steps**, not done today:
 25. **Is an LLM or chatbot involved?** No. There is no language model in the decision path; the Bangla
     explanation uses fixed templates.
 26. **Can others reproduce your results?** Yes. `python ml/scripts/run_pipeline.py` regenerates the
-    data, retrains and re-evaluates; a fresh copy reproduces the metrics files exactly.
+    data, retrains and re-evaluates. With the pinned project environment, the evaluated decision
+    outputs, business-impact metrics and demo values reproduce. Runtime `fit_seconds` metadata is
+    excluded, and tiny cross-machine floating-point variation may occur in internal anomaly
+    thresholds. Do not claim byte-for-byte reproduction on every machine.
 27. **How is it tested?** 103 automated tests (data, leakage, models, risk, rebalancing V1/V2 safety,
     simulation, API, frontend–backend contract). GitHub Actions also checks the frontend build.
 28. **What is the tech stack?** Python (pandas, scikit-learn), FastAPI backend, Next.js + TypeScript +
@@ -538,6 +561,13 @@ click **Retry**; nothing was changed or approved.
 - ❌ Do **not** say the Morning Plan "adds liquidity" or that V2 optimises e-float. The plan
   repositions the same working capital, and V2 is cash-only.
 - ❌ Do **not** say an agent "will be harmed". Say the plan *flags it for review*.
+- ❌ Do **not** say "it reproduces byte-for-byte on every machine". Use the pinned-environment
+  wording above.
+- ❌ Do **not** quote a commission rate or a taka figure for agent income. The only formula we use
+  is illustrative: protected income ≈ avoided unmet transaction value × a *verified* commission
+  rate.
+- ❌ Do **not** describe how upay moves liquidity today. AgentFlow only recommends target levels and
+  simulates approval.
 
 **Safe phrases to use:**
 - "In our synthetic held-out simulation…"

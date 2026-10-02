@@ -13,13 +13,32 @@ AgentFlow works on two operational time scales:
 | **Proactive: Morning Plan** | 07:00 forecast → 08:00 positioning | Forecast each agent's **full operating-day** (08:00–23:59) physical-cash and e-float requirement, then propose where the **same** district working capital should sit before demand arrives | cash **and** e-float |
 | **Reactive: intraday** | every hour | 6-hour cash risk, explanations and **V2** peer rebalancing when pressure emerges | physical cash |
 
-```
-PLAN → PREDICT → EXPLAIN → REBALANCE → HUMAN REVIEW → MEASURE
-```
+**Same liquidity. Placed ahead of demand.**
+* **Morning:** predict, then position cash and e-float.
+* **Intraday:** monitor cash pressure and recommend safe V2 recovery (*Predict. Explain. Rebalance.*).
+* **Human:** a person reviews every consequential action.
+* **Measure:** each environment is evaluated separately.
 
 An MFS agent manages two coupled resources: physical cash serves cash-out, and e-float serves cash-in.
 Each transaction shifts value from one side to the other. The Morning Plan positions both. V2 stays
 cash-only.
+
+**Two separate evaluation environments.** They are not one combined simulation:
+* **Intraday (V1/V2):** the legacy environment. E-float is tracked but is not a binding constraint;
+  cash-in is never declined.
+* **Morning Plan:** Dual-Liquidity World v2. Physical cash **and** e-float are both binding:
+  cash-out fails when cash runs out, and cash-in fails when e-float runs out.
+
+The environment is described in
+[DATA_CARD.md](DATA_CARD.md#dual-liquidity-world-v2-morning-plan-environment).
+
+## Who moves the liquidity?
+
+In this prototype, nobody. AgentFlow only recommends target levels and simulates approval; it never
+executes a financial transfer. A future deployment could hand *approved* target levels to an existing
+distributor, field-officer or bank-deposit replenishment workflow. Whether those targets can be
+changed daily, and at what cost, is a real-world validation question. We make no claim about any
+operator's current process.
 
 ## How a plan is made (serving path)
 
@@ -76,11 +95,37 @@ creates a second engine. To regenerate both files exactly, run
 
 ## Research evidence (historical, synthetic)
 
-> In fresh synthetic worlds from the same pre-registered world family, the frozen full-day ML policy
-> reduced combined unmet demand by a median **20.6%** versus the strongest cautious historical
-> baseline, while conserving each district's cash and e-float budgets exactly.
+> In fresh synthetic worlds from the same world family, the frozen full-day ML policy reduced
+> combined unmet demand by a median **20.6%** versus the strongest cautious historical baseline,
+> while conserving each district's cash and e-float budgets exactly.
 >
 > **This is synthetic held-out evidence, not measured upay performance.**
+
+**Success bar.** The protocol and success bar were committed before the audit seeds were generated
+(protocol `c01c79f`, implementation freeze `f2840f3`, results `c741804`). ML attribution counted as
+demonstrated only if all five checks held on seeds 2036–2040:
+
+| Check | Required | Result |
+|---|---|---|
+| A. ML combined unmet ≤ 7-day q90 rule | in ≥ 4 of 5 worlds | 5 of 5 |
+| B. ML combined unmet ≤ 7-day max rule | in ≥ 4 of 5 worlds | 5 of 5 |
+| C. Median reduction vs the better cautious rule | ≥ 5% | 20.6% |
+| D. Cash or e-float unmet worsened by > 5% | in ≤ 1 world | 0 worlds |
+| E. Exact cash and e-float conservation | every policy, every world | yes |
+
+Success is measured as unmet demand under the same working-capital budget.
+
+**Absolute example: audit world seed 2036.** Values are from the committed research artifact
+`ml/artifacts_dual/quantile_attribution_seed_2036.json` at `c741804`. They cover 200 agents and 14
+held-out operating days (08:00–23:59):
+
+| | 7-day q90 rule | Frozen full-day ML |
+|---|---:|---:|
+| Combined unmet demand | BDT 49,70,137 (≈ 49.7 lakh) | BDT 40,82,646 (≈ 40.8 lakh) |
+| Cash-out fill rate | 99.65% | 99.80% |
+| Cash-in (e-float) fill rate | 99.08% | 99.16% |
+
+This world's reduction is 17.9%; 20.6% is the median across the five audit worlds.
 
 | Frozen full-day ML P90 vs best cautious non-ML rule (historical 7-day q90) | Value |
 |---|---|
@@ -96,16 +141,20 @@ against a 7-day mean (−33.2% in Phase 2E) is deliberately **not** the headline
 
 ## How we got here: negative results kept on purpose
 
-Each research phase was pre-registered, run once on fresh seeds and pushed before results.
+For every research phase, the protocol and success bar were committed and pushed before results
+were computed.
 
 1. **Peer cash ↔ e-float swaps were rejected.** Safe, local, same-time complementary counterparties
-   were too sparse: 0 of 5 worlds met the bar.
+   were too sparse: 0 of 5 worlds met the bar (development seeds 2026–2030).
 2. **The 6-hour ML was rejected for morning planning.** A non-ML seasonal full-day history baseline
-   beat it in 5 of 5 worlds, because the forecast horizon did not match the decision.
+   beat it in 5 of 5 worlds (the same development seeds), because the forecast horizon did not match
+   the decision.
 3. **The horizon was aligned to the decision.** A full-day ML model beat the seasonal mean in 5 of 5
-   fresh confirmatory worlds.
+   confirmatory worlds (seeds 2031–2035). Their protocol was committed (`80310d4`) and the model spec
+   frozen (`3128176`) before those seeds were generated.
 4. **The final attribution survived cautious baselines.** The frozen full-day ML beat the historical
-   q90 and max-7-day rules in 5 of 5 fresh worlds.
+   q90 and max-7-day rules in 5 of 5 audit worlds (seeds 2036–2040). Their protocol and success bar
+   were committed before those seeds were generated.
 
 The full protocols and results live on research branches `research/dual-complementarity-feasibility`,
 `research/prepositioning-ml-attribution`, `research/full-day-ml-confirmatory` and

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Activity, ArrowLeftRight, FlaskConical, Gauge, LayoutDashboard, PlayCircle, RotateCcw, ShieldCheck, Users } from "lucide-react";
+import { Activity, ArrowLeftRight, FlaskConical, Gauge, LayoutDashboard, PlayCircle, RotateCcw, ShieldCheck, Sunrise, Users } from "lucide-react";
 import { useAsOf } from "@/lib/asof";
 import { DemoGuide } from "./DemoGuide";
 import { ErrorState, Loading, cx } from "./ui";
 
 const NAV = [
   { href: "/", label: "Command Center", icon: LayoutDashboard },
+  { href: "/morning-plan", label: "Morning Plan", icon: Sunrise },
   { href: "/agents", label: "Agents", icon: Users },
   { href: "/rebalancing", label: "Rebalancing", icon: ArrowLeftRight },
   { href: "/scenario", label: "Scenario Lab", icon: FlaskConical },

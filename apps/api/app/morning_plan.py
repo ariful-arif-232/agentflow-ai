@@ -45,10 +45,26 @@ REVIEW_FLAGS = {
     "large_allocation_decrease": "Large allocation decrease",
     "low_volume_review": "Low-volume review",
     "rural_efloat_review": "Rural e-float review",
-    "p90_not_covered": "Allocation below full-day P90 need",
+    "p90_not_covered": "Below full-day P90 need",
 }
 # Fields that would leak future information; the operational response must never contain them.
 FORBIDDEN_FIELDS = ("future", "actual", "realised", "realized", "unmet", "oracle", "target_requirement", "outcome")
+
+
+def bdt_in(x: float) -> str:
+    """Whole BDT with South-Asian digit grouping (e.g. 1,39,000), matching the dashboard."""
+    n = int(round(float(x)))
+    sign, s = ("-" if n < 0 else ""), str(abs(n))
+    if len(s) <= 3:
+        return sign + s
+    head, tail = s[:-3], s[-3:]
+    parts = []
+    while len(head) > 2:
+        parts.insert(0, head[-2:])
+        head = head[:-2]
+    if head:
+        parts.insert(0, head)
+    return sign + ",".join(parts + [tail])
 
 
 # ---------------------------------------------------------------- allocator (port of the validated research code)
@@ -224,23 +240,23 @@ class MorningPlanService:
         for r in ("cash", "efloat"):
             name, s, rc, q90 = RES_LABEL[r], row[f"status_quo_{r}"], row[f"recommended_{r}"], row[f"{r}_p90"]
             d = rc - s
-            floor_note = f" It is held at the BDT {FLOOR_BDT[r]:,} minimum floor." if rc == FLOOR_BDT[r] else ""
+            floor_note = f" It is held at the BDT {bdt_in(FLOOR_BDT[r])} minimum floor." if rc == FLOOR_BDT[r] else ""
             if d > 0 and q90 > s:
-                text = (f"{name} increased by BDT {d:,} because the full-day P90 requirement (BDT {q90:,.0f}) exceeds the "
-                        f"current morning allocation (BDT {s:,}) while the district budget remains fixed.")
+                text = (f"{name} increased by BDT {bdt_in(d)} because the full-day P90 requirement (BDT {bdt_in(q90)}) exceeds the "
+                        f"current morning allocation (BDT {bdt_in(s)}) while the district budget remains fixed.")
             elif d > 0:
-                text = (f"{name} increased by BDT {d:,}. The full-day P90 requirement (BDT {q90:,.0f}) is already within the "
-                        f"current allocation (BDT {s:,}); this is its share of the {row['district']} budget left over after "
+                text = (f"{name} increased by BDT {bdt_in(d)}. The full-day P90 requirement (BDT {bdt_in(q90)}) is already within the "
+                        f"current allocation (BDT {bdt_in(s)}); this is its share of the {row['district']} budget left over after "
                         "every agent's P90 need is covered.")
             elif d < 0 and q90 < s:
-                text = (f"{name} reduced by BDT {-d:,}: the full-day P90 requirement (BDT {q90:,.0f}) is below the current "
-                        f"allocation (BDT {s:,}), so the surplus is repositioned to higher-need agents in {row['district']} "
+                text = (f"{name} reduced by BDT {bdt_in(-d)}: the full-day P90 requirement (BDT {bdt_in(q90)}) is below the current "
+                        f"allocation (BDT {bdt_in(s)}), so the surplus is repositioned to higher-need agents in {row['district']} "
                         f"within the same district budget.{floor_note}")
             elif d < 0:
-                text = (f"{name} reduced by BDT {-d:,}: the {row['district']} budget cannot cover every agent's full-day P90 "
+                text = (f"{name} reduced by BDT {bdt_in(-d)}: the {row['district']} budget cannot cover every agent's full-day P90 "
                         f"need, and agents with a larger uncovered need were served first.{floor_note}")
             else:
-                text = f"{name} unchanged at BDT {s:,}."
+                text = f"{name} unchanged at BDT {bdt_in(s)}."
             if rc > q90 and d != 0 and not (d > 0 and q90 <= s):
                 text += (" After all P90 needs in the district are covered, the remaining budget is shared in proportion "
                          "to status-quo allocations.")
@@ -248,8 +264,8 @@ class MorningPlanService:
                 text += (" The fixed district budget does not cover this agent's full P90 need; agents with a larger "
                          "uncovered need were served first.")
             out[r] = text
-        out["constraint"] = (f"{row['district']} budgets stay fixed (cash BDT {district['cash_budget_bdt']:,}, e-float "
-                             f"BDT {district['efloat_budget_bdt']:,}). Every agent keeps at least BDT 5,000 of each resource. "
+        out["constraint"] = (f"{row['district']} budgets stay fixed (cash BDT {bdt_in(district['cash_budget_bdt'])}, e-float "
+                             f"BDT {bdt_in(district['efloat_budget_bdt'])}). Every agent keeps at least BDT 5,000 of each resource. "
                              "Allocation is need-first by full-day P90 requirement, ties broken by agent ID.")
         out["safety"] = "Human review required. Synthetic decision support. No automatic transfer; approval only simulates."
         return out

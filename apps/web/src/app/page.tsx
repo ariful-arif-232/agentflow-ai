@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight, Sunrise } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useAsOf } from "@/lib/asof";
 import { bdt, bdtCompact, dateTime, pct, ratioPct, titleCase } from "@/lib/format";
@@ -50,6 +50,19 @@ export default function CommandCenter() {
         right={data && <span className="text-xs text-slate-500">Snapshot: {dateTime(data.as_of)} · next {data.horizon_hours}h horizon</span>}
       />
       <FlowStrip />
+      <Link
+        href="/morning-plan"
+        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50/60 px-4 py-2.5 hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+      >
+        <span className="flex items-center gap-2 text-sm">
+          <Sunrise className="h-4 w-4 text-indigo-700" aria-hidden />
+          <span className="font-semibold text-indigo-950">Before the day starts:</span>
+          <span className="text-slate-700">Morning Plan — full-day cash + e-float positioning, same working capital</span>
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white">
+          Open Morning Plan <ArrowRight className="h-3 w-3" />
+        </span>
+      </Link>
       {error && <ErrorState message={error} onRetry={reload} />}
       {!data && !error && <Loading />}
       {data && (

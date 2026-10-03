@@ -3,16 +3,34 @@
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --color-brand-50: #eef6ff;
-  --color-brand-100: #d9eaff;
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe6ff;
   --color-brand-500: #2563eb;
   --color-brand-600: #1d4ed8;
   --color-brand-700: #1e40af;
   --color-ink-900: #0b1220;
+  /* Deep fintech surface used only for decision areas. */
+  --color-navy-950: #07101f;
+  --color-navy-900: #0b1730;
+  --color-navy-800: #12213f;
+  --color-navy-700: #1b2d52;
+  /* Resource identities (Morning Plan): physical cash vs e-float. Never emerald/amber/red,
+     which are reserved for safe / review / critical states. */
+  --color-cash-50: #eef0ff;
+  --color-cash-100: #dfe2ff;
+  --color-cash-300: #a5adfb;
+  --color-cash-600: #4f46e5;
+  --color-cash-700: #4338ca;
+  --color-efloat-50: #ecfbff;
+  --color-efloat-100: #cff4fc;
+  --color-efloat-300: #67d4ec;
+  --color-efloat-600: #0891b2;
+  --color-efloat-700: #0e7490;
 }
 
-html, body {
-  background: #f6f7f9;
+html,
+body {
+  background: #f4f6f9;
   color: #0f172a;
 }
 
@@ -23,4 +41,96 @@ body {
 
 .num {
   font-variant-numeric: tabular-nums;
+}
+
+/* Visible, consistent keyboard focus everywhere (mouse clicks do not show it). */
+:where(a, button, select, input, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Navy decision surface: restrained, no glow. */
+.surface-navy {
+  background: linear-gradient(180deg, #0b1730 0%, #0a1428 100%);
+  color: #e2e8f0;
+}
+
+/* ---------------------------------------------------------------- motion
+   Subtle, comprehension-only motion. Everything is disabled for users who
+   prefer reduced motion. */
+@keyframes af-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes af-slide-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes af-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes af-confirm {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+.af-rise {
+  animation: af-rise 220ms ease-out both;
+}
+.af-drawer {
+  animation: af-slide-in 200ms ease-out both;
+}
+.af-backdrop {
+  animation: af-fade 160ms ease-out both;
+}
+.af-confirm {
+  animation: af-confirm 900ms ease-out 1;
+}
+.af-lift {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+.af-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -10px rgba(15, 23, 42, 0.35);
+}
+.af-bar {
+  transition: width 400ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .af-lift:hover {
+    transform: none;
+  }
 }

@@ -82,34 +82,38 @@ export function DemoGuide() {
   const offDefault = asOf && defaultAsOf && asOf !== defaultAsOf;
 
   return (
-    <section aria-label="Judge demo guide" className="mb-5 rounded-xl border border-blue-200 bg-blue-50/50 px-4 py-3">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-blue-900">
+    <section aria-label="Judge demo guide" className="af-rise mb-5 rounded-xl border border-blue-200 bg-gradient-to-b from-blue-50/80 to-white px-4 py-3.5">
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-900">
           Judge demo · snapshot Mon 31 Aug 2026, 13:00 · live values
-          {offDefault && <span className="ml-2 font-normal normal-case text-amber-800">(you are viewing a different decision time — use Reset demo)</span>}
+          {offDefault && <span className="ml-2 font-normal normal-case tracking-normal text-amber-800">(you are viewing a different decision time — use Reset demo)</span>}
         </div>
         <button onClick={() => setGuideOpen(false)} aria-label="Close judge demo guide" className="rounded p-1 text-blue-900 hover:bg-blue-100">
           <X className="h-4 w-4" />
         </button>
       </div>
       <ol className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
-        {steps.map((s) => (
-          <li key={s.n}>
-            <Link
-              href={s.href}
-              className={cx(
-                "block h-full rounded-lg border px-3 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600",
-                s.match(path) ? "border-blue-600 bg-white shadow-sm" : "border-blue-100 bg-white/70 hover:border-blue-300",
-              )}
-            >
-              <div className="text-xs font-semibold text-slate-900">
-                <span className="mr-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-blue-700 text-[10px] text-white">{s.n}</span>
-                {s.title}
-              </div>
-              <div className="mt-0.5 text-[11px] leading-snug text-slate-600">{s.detail}</div>
-            </Link>
-          </li>
-        ))}
+        {steps.map((s) => {
+          const current = s.match(path);
+          return (
+            <li key={s.n}>
+              <Link
+                href={s.href}
+                aria-current={current ? "step" : undefined}
+                className={cx(
+                  "af-lift block h-full rounded-lg border px-3 py-2.5 text-left",
+                  current ? "border-blue-600 bg-white shadow-sm ring-1 ring-blue-600/20" : "border-blue-100 bg-white/80 hover:border-blue-300",
+                )}
+              >
+                <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
+                  <span className={cx("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] text-white", current ? "bg-blue-700" : "bg-slate-800")}>{s.n}</span>
+                  {s.title}
+                </div>
+                <div className="mt-1 text-xs leading-snug text-slate-600">{s.detail}</div>
+              </Link>
+            </li>
+          );
+        })}
       </ol>
     </section>
   );

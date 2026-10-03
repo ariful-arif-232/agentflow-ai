@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Banknote, ChevronRight, Lightbulb, MousePointerClick, ShieldCheck, Smartphone, Sunrise, UserCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, Banknote, ChevronRight, CircleAlert, Lightbulb, MousePointerClick, ShieldCheck, Smartphone, Sunrise, UserCheck } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useAsOf } from "@/lib/asof";
 import { bdt, bdtCompact, dateTime, pct, ratioPct, titleCase } from "@/lib/format";
@@ -33,14 +33,14 @@ function Step({ children, strong = false }: { children: React.ReactNode; strong?
 
 function Proof({ icon, value, label, note }: { icon: React.ReactNode; value: string; label: string; note: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-slate-200 border-l-[3px] border-l-blue-600 bg-white px-3.5 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sun-100 text-navy-900 ring-1 ring-inset ring-sun-400/70">{icon}</div>
-      <div className="min-w-0 leading-tight">
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200/90 border-l-[3px] border-l-blue-600 bg-white px-4 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sun-100 text-navy-900 ring-1 ring-inset ring-sun-400/60">{icon}</div>
+      <div className="min-w-0 leading-snug">
         <div className="text-[13px] text-slate-600">
-          <span className="num mr-1.5 text-base font-semibold text-navy-900">{value}</span>
+          <span className="num mr-1.5 text-[15px] font-semibold text-navy-900">{value}</span>
           {label}
         </div>
-        <div className="mt-0.5 text-xs text-slate-500">{note}</div>
+        <div className="text-xs text-slate-500">{note}</div>
       </div>
     </div>
   );
@@ -57,21 +57,112 @@ function Lane({ icon, title, children, accent = false }: { icon: React.ReactNode
   );
 }
 
+/* Decorative hero backdrop (inline SVG, aria-hidden). The wave sits low; the trust illustration only
+   renders where the panel has empty space beside the text (container queries), never behind it. */
+function slab(cx: number, cy: number, a: number, b: number, t: number, id: string) {
+  return (
+    <g>
+      <path d={`M${cx - a} ${cy} L${cx} ${cy + b} L${cx} ${cy + b + t} L${cx - a} ${cy + t} Z`} fill={`url(#${id}-l)`} />
+      <path d={`M${cx} ${cy + b} L${cx + a} ${cy} L${cx + a} ${cy + t} L${cx} ${cy + b + t} Z`} fill={`url(#${id}-r)`} />
+      <path d={`M${cx} ${cy - b} L${cx + a} ${cy} L${cx} ${cy + b} L${cx - a} ${cy} Z`} fill={`url(#${id}-t)`} stroke="#ffffff" strokeOpacity="0.8" strokeWidth="0.8" />
+    </g>
+  );
+}
+
+function TrustIllustration({ className, id }: { className: string; id: string }) {
+  return (
+    <svg viewBox="0 0 160 150" className={className} aria-hidden focusable="false">
+      <defs>
+        <linearGradient id={`${id}-t`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F2F8FF" /><stop offset="1" stopColor="#BFDFFF" /></linearGradient>
+        <linearGradient id={`${id}-l`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9CCBFF" stopOpacity="0.85" /><stop offset="1" stopColor="#78B7FF" stopOpacity="0.7" /></linearGradient>
+        <linearGradient id={`${id}-r`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#5C99F8" stopOpacity="0.75" /><stop offset="1" stopColor="#2F7CF6" stopOpacity="0.55" /></linearGradient>
+        <linearGradient id={`${id}-col`} x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#78B7FF" stopOpacity="0.45" /><stop offset="1" stopColor="#DCEEFF" stopOpacity="0" /></linearGradient>
+        <radialGradient id={`${id}-glow`}><stop offset="0" stopColor="#2F7CF6" stopOpacity="0.28" /><stop offset="1" stopColor="#2F7CF6" stopOpacity="0" /></radialGradient>
+        <radialGradient id={`${id}-sun`}><stop offset="0" stopColor="#F6C51B" stopOpacity="0.38" /><stop offset="1" stopColor="#F6C51B" stopOpacity="0" /></radialGradient>
+      </defs>
+      <ellipse cx="80" cy="138" rx="74" ry="14" fill={`url(#${id}-glow)`} />
+      {slab(80, 120, 58, 16, 11, id)}
+      {slab(80, 103, 42, 12, 8, id)}
+      <path d="M58 104 V44 L80 36 L102 44 V104 L80 112 Z" fill={`url(#${id}-col)`} />
+      <path d="M80 36 V112" stroke="#ffffff" strokeOpacity="0.55" strokeWidth="0.8" />
+      <circle cx="80" cy="60" r="30" fill={`url(#${id}-sun)`} />
+      <path d="M80 34 L101 41.5 V58 C101 71.5 92 80 80 85 C68 80 59 71.5 59 58 V41.5 Z" fill="#FFF4BF" stroke="#F6C51B" strokeWidth="2.6" strokeLinejoin="round" />
+      <path d="M70.5 58.5 L77.5 65.5 L90.5 51.5" fill="none" stroke="#0B1F3A" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function GeoPattern() {
+  return (
+    <svg viewBox="0 0 240 200" preserveAspectRatio="xMaxYMid slice" className="h-full w-full" aria-hidden focusable="false">
+      <g stroke="#BFDFFF" strokeOpacity="0.55" strokeWidth="1" fill="none">
+        <path d="M20 200 L140 0 M80 200 L200 0 M140 200 L240 30" />
+      </g>
+      <g stroke="#ffffff" strokeOpacity="0.9" strokeWidth="1">
+        <path d="M150 20 L190 45 L150 70 L110 45 Z" fill="#DCEEFF" fillOpacity="0.35" />
+        <path d="M200 70 L232 90 L200 110 L168 90 Z" fill="#BFDFFF" fillOpacity="0.28" />
+        <path d="M120 95 L150 113 L120 131 L90 113 Z" fill="#EAF4FF" fillOpacity="0.45" />
+        <path d="M190 140 L226 162 L190 184 L154 162 Z" fill="#DCEEFF" fillOpacity="0.3" />
+      </g>
+    </svg>
+  );
+}
+
+function HeroBackdrop() {
+  return (
+    <>
+      <svg viewBox="0 0 1000 200" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] w-full" aria-hidden focusable="false">
+        <defs>
+          <linearGradient id="afh-w1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#DCEEFF" stopOpacity="0.75" /><stop offset="0.6" stopColor="#EAF4FF" stopOpacity="0.45" /><stop offset="1" stopColor="#EAF4FF" stopOpacity="0.15" /></linearGradient>
+          <linearGradient id="afh-w2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#CFE6FF" stopOpacity="0.6" /><stop offset="0.55" stopColor="#DCEEFF" stopOpacity="0.35" /><stop offset="1" stopColor="#DCEEFF" stopOpacity="0.1" /></linearGradient>
+        </defs>
+        <path d="M0 110 C 180 55, 400 165, 640 128 S 900 70, 1000 96 L1000 200 L0 200 Z" fill="url(#afh-w1)" />
+        <path d="M0 158 C 230 108, 460 198, 720 164 S 930 122, 1000 140 L1000 200 L0 200 Z" fill="url(#afh-w2)" />
+      </svg>
+      {/* compact: beside the wrapped heading on ~1280-1366 px screens */}
+      <div className="pointer-events-none absolute right-0 top-0 hidden h-[150px] w-[210px] [mask-image:linear-gradient(to_left,black_55%,transparent)] @min-[500px]:block @min-[640px]:hidden">
+        <GeoPattern />
+      </div>
+      <TrustIllustration id="afh-c" className="pointer-events-none absolute right-4 top-10 hidden h-[92px] @min-[500px]:block @min-[640px]:hidden" />
+      {/* mid: ~1440-1536 px screens, smaller and quieter, in the lower-right corner below the heading */}
+      <div className="pointer-events-none absolute bottom-0 right-0 hidden h-[45%] w-[150px] opacity-60 [mask-image:linear-gradient(to_left,black_45%,transparent)] @min-[640px]:block @min-[880px]:hidden">
+        <GeoPattern />
+      </div>
+      <TrustIllustration id="afh-m" className="pointer-events-none absolute bottom-3 right-3 hidden h-[88px] opacity-80 @min-[640px]:block @min-[880px]:hidden" />
+      {/* full: wide screens, to the right of the heading and paragraph */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[240px] [mask-image:linear-gradient(to_left,black_50%,transparent)] @min-[880px]:block">
+        <GeoPattern />
+      </div>
+      <TrustIllustration id="afh-f" className="pointer-events-none absolute bottom-2 right-4 hidden h-[150px] @min-[880px]:block" />
+    </>
+  );
+}
+
 function Hero({ snapshot }: { snapshot?: string }) {
   return (
-    <section aria-labelledby="hero-title" className="af-rise mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-blue-50 px-6 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_32px_-24px_rgba(23,105,232,0.45)]">
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-center">
-        <div className="min-w-0">
-          <Eyebrow className="text-blue-700">Liquidity operations console{snapshot ? ` · Snapshot ${snapshot}` : ""}</Eyebrow>
-          <h1 id="hero-title" className="mt-1.5 text-[26px] font-semibold leading-[1.15] tracking-tight text-navy-900 2xl:text-[32px]">
-            {PRODUCT_TAGLINE}
-          </h1>
-          <p className="mt-2 max-w-2xl text-[15px] leading-snug text-slate-600">
-            Plan where each agent&apos;s physical cash and e-float should sit before the day starts, then watch intraday cash pressure and
-            recommend safe recovery. A person reviews every consequential action.
-          </p>
+    <section aria-labelledby="hero-title" className="af-rise mb-5 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_32px_-26px_rgba(23,105,232,0.4)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_390px]">
+        <div className="@container relative flex min-w-0 flex-col justify-center overflow-hidden rounded-xl bg-[linear-gradient(120deg,#ffffff_0%,#f8fbff_38%,#eef6ff_72%,#e9f3ff_100%)] px-5 py-5 ring-1 ring-inset ring-blue-100 sm:px-6">
+          <HeroBackdrop />
+          <div className="relative @min-[640px]:-my-1 @min-[880px]:my-0">
+            <Eyebrow className="text-slate-600">Liquidity operations console{snapshot ? ` · Snapshot ${snapshot}` : ""}</Eyebrow>
+            <span aria-hidden className="mt-2 block h-[3px] w-9 rounded-full bg-sun-400" />
+            <h1 id="hero-title" className="mt-3 text-[24px] font-semibold leading-[1.15] tracking-tight text-navy-900 sm:text-[28px] 2xl:text-[34px]">
+              {/* each sentence stays whole, so a narrow screen breaks the line between the two sentences */}
+              {PRODUCT_TAGLINE.split(/(?<=\.)\s/).map((sentence, i) => (
+                <span key={i}>
+                  {i > 0 && " "}
+                  <span className="inline-block">{sentence}</span>
+                </span>
+              ))}
+            </h1>
+            <p className="mt-2.5 max-w-[54rem] text-pretty text-[15px] leading-relaxed text-slate-600 @min-[640px]:max-w-[calc(100%-7.5rem)] @min-[880px]:max-w-[48rem]">
+              Plan where each agent&apos;s physical cash and e-float should sit before the day starts, then watch intraday cash pressure and
+              recommend safe recovery. A person reviews every consequential action.
+            </p>
+          </div>
         </div>
-        <div className="grid gap-2" aria-label="Guarantees by design">
+        <div className="grid content-center gap-2.5" aria-label="Guarantees by design">
           <Proof icon={<Banknote className="h-4 w-4" aria-hidden />} value="BDT 0" label="extra working capital" note="Morning Plan repositions the same district budgets" />
           <Proof icon={<Smartphone className="h-4 w-4" aria-hidden />} value="Cash + E-float" label="planned separately" note="Morning Plan positions both — never swapped" />
           <Proof icon={<UserCheck className="h-4 w-4" aria-hidden />} value="Human reviewed" label="no automatic transfers" note="Approval only runs a simulation" />
@@ -163,14 +254,20 @@ export default function CommandCenter() {
                   agents at risk <Tooltip text={data.kpi_definitions.at_risk_agents} />
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-slate-600">
-                <span>
-                  <b className="num text-red-600">{k.critical_agents}</b> critical (risk score ≥ 75)
-                </span>
-                <span>
-                  <b className="num text-slate-800">{k.medium_risk_agents}</b> more at MEDIUM
-                </span>
-              </div>
+              <ul className="mt-3 flex flex-wrap gap-2 text-[13px] text-slate-700" aria-label="Risk breakdown">
+                <li className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1 ring-1 ring-inset ring-red-200">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-600" aria-hidden />
+                  <span>
+                    <b className="num font-semibold text-red-700">{k.critical_agents} critical</b> (risk score ≥ 75)
+                  </span>
+                </li>
+                <li className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 ring-1 ring-inset ring-amber-200">
+                  <CircleAlert className="h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
+                  <span>
+                    <b className="num font-semibold text-slate-900">{k.medium_risk_agents}</b> more at MEDIUM
+                  </span>
+                </li>
+              </ul>
               <div className="mt-auto pt-3">
                 <div className="flex items-center gap-1 text-xs text-slate-500">
                   Projected service readiness <Tooltip text={data.kpi_definitions.projected_service_availability_pct} />

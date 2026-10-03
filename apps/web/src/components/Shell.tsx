@@ -136,20 +136,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   return (
     <div className="flex min-h-screen">
-      <aside className="surface-navy fixed inset-y-0 left-0 z-20 hidden w-[240px] flex-col border-r border-white/5 lg:flex" aria-label="AgentFlow navigation">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[240px] flex-col border-r border-slate-200/80 bg-white lg:flex" aria-label="AgentFlow navigation">
         <div className="px-5 pb-6 pt-6">
           <Link href="/" className="flex items-center gap-3 rounded-lg">
             <BrandMark />
             <div className="min-w-0">
-              <div className="text-[15px] font-semibold tracking-tight text-white">AgentFlow AI</div>
-              <div className="text-[11.5px] leading-snug text-slate-400">{PRODUCT_TAGLINE}</div>
+              <div className="text-[15px] font-semibold tracking-tight text-navy-900">AgentFlow AI</div>
+              <div className="text-[11.5px] leading-snug text-slate-500">{PRODUCT_TAGLINE}</div>
             </div>
           </Link>
         </div>
         <nav className="flex-1 space-y-5 px-3">
           {NAV_GROUPS.map((g) => (
             <div key={g.label}>
-              <div className="mb-1.5 px-3 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-slate-500">{g.label}</div>
+              <div className="mb-1.5 px-3 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-500">{g.label}</div>
               <div className="space-y-0.5">
                 {g.items.map(({ href, label, icon: Icon }) => {
                   const active = isActive(path, href);
@@ -159,12 +159,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
                       href={href}
                       aria-current={active ? "page" : undefined}
                       className={cx(
-                        "relative flex items-center gap-2.5 rounded-md px-3 py-2 text-[14px] transition-colors",
-                        active ? "bg-white/[0.09] font-medium text-white" : "text-slate-300 hover:bg-white/[0.05] hover:text-white",
+                        "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-[14px] transition-colors",
+                        active ? "bg-blue-50 font-semibold text-navy-900" : "text-slate-700 hover:bg-slate-50 hover:text-navy-900",
                       )}
                     >
                       {active && <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-sun-400" aria-hidden />}
-                      <Icon className={cx("h-[18px] w-[18px]", active ? "text-blue-300" : "text-slate-400")} aria-hidden />
+                      <Icon className={cx("h-[18px] w-[18px]", active ? "text-blue-600" : "text-slate-500 group-hover:text-slate-700")} aria-hidden />
                       {label}
                     </Link>
                   );
@@ -173,17 +173,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           ))}
         </nav>
-        <div className="m-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">Decision support only</div>
+        <div className="m-3 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-600">Decision support only</div>
           <ul className="space-y-1.5">
             {TRUST_SIGNALS.map(({ key, label, icon: Icon }) => (
-              <li key={key} className="flex items-center gap-2 text-[12.5px] text-slate-200">
-                <Icon className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              <li key={key} className="flex items-center gap-2 text-[12.5px] text-slate-700">
+                <Icon className="h-3.5 w-3.5 text-blue-600" aria-hidden />
                 {label}
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">Not production upay data. Approvals run simulations only.</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-600">Not production upay data. Approvals run simulations only.</p>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col lg:pl-[240px]">

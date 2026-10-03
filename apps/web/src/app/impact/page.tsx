@@ -1,12 +1,13 @@
 "use client";
 
 import { Fragment } from "react";
+import { ArrowRight, CheckCircle2, FlaskConical, XCircle } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { bdt, bdtCompact, num, pct, titleCase } from "@/lib/format";
 import type { ImpactResponse, MetricsResponse, MorningPlanEvidence, PolicyMetrics } from "@/lib/types";
 import { MorningEvidencePanel } from "@/components/MorningEvidence";
 import { CompareBars, DailyImpactChart } from "@/components/charts";
-import { Card, CardHeader, ErrorState, Loading, PageHeader, SourceTag, cx } from "@/components/ui";
+import { Card, CardHeader, ErrorState, Eyebrow, Loading, PageHeader, SourceTag, cx } from "@/components/ui";
 
 type PolicyKey = "status_quo" | "naive_rebalancing" | "agentflow" | "agentflow_v2";
 const COLS: { key: PolicyKey; label: string }[] = [
@@ -23,19 +24,83 @@ function Delta({ before, after, lowerIsBetter = true, unit = "%" }: { before: nu
   return <span className={cx("num text-xs font-semibold", tone)}>{`${d > 0 ? "+" : ""}${d.toFixed(1)}${unit === "pp" ? " pp" : "%"}`}</span>;
 }
 
-function MorningPlanResearch() {
-  const ev = useApi<MorningPlanEvidence>("/api/morning-plan/evidence");
+function MorningPlanResearch({ ev, error, reload }: { ev: MorningPlanEvidence | null; error: string | null; reload: () => void }) {
   return (
-    <section aria-label="Full-day Morning Plan research evidence" className="mt-8">
+    <section aria-label="Full-day Morning Plan research evidence" className="mt-8" id="morning-evidence">
       <h2 className="text-lg font-semibold tracking-tight">Full-day Morning Plan — research evidence</h2>
-      <p className="mb-3 mt-1 max-w-4xl text-xs text-slate-500">
-        A separate synthetic evaluation environment (Dual-Liquidity World v2, cash and e-float) from the legacy cash-only V1/V2
-        results above. These numbers must not be combined with the V1/V2 tables. Same working capital in every policy compared.
+      <p className="mb-3 mt-1 max-w-4xl text-[13px] text-slate-500">
+        A separate synthetic evaluation environment (Dual-Liquidity World v2, where cash and e-float are both binding) from the legacy intraday
+        environment of the V1/V2 results above. These numbers must not be combined with the V1/V2 tables. Same working capital in every policy compared.
       </p>
-      {ev.error && <ErrorState message={ev.error} onRetry={ev.reload} />}
-      {!ev.data && !ev.error && <Loading />}
-      {ev.data && <MorningEvidencePanel ev={ev.data} />}
+      {error && <ErrorState message={error} onRetry={reload} />}
+      {!ev && !error && <Loading />}
+      {ev && <MorningEvidencePanel ev={ev} />}
     </section>
+  );
+}
+
+/** Research path as documented on main (docs/MORNING_PLAN.md); detail text is served by the evidence API. */
+const JOURNEY = [
+  { title: "Peer cash ↔ e-float swap", verdict: "Rejected", why: "local complementarity insufficient" },
+  { title: "6-hour ML for morning positioning", verdict: "Rejected", why: "a strong seasonal full-day rule performed better" },
+  { title: "Full-day aligned ML", verdict: "Passed", why: "confirmatory test (seeds 2031–2035)" },
+  { title: "Frozen ML vs q90 / max rules", verdict: "Passed", why: "fresh audit worlds (seeds 2036–2040)" },
+] as const;
+
+function ResearchJourney({ ev }: { ev: MorningPlanEvidence }) {
+  return (
+    <section aria-labelledby="journey-title" className="mt-8">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <Eyebrow className="text-blue-700">Morning Plan research journey</Eyebrow>
+          <h2 id="journey-title" className="text-lg font-semibold tracking-tight">
+            We kept the experiments that failed.
+          </h2>
+        </div>
+        <span className="text-xs text-slate-500">For every step, the protocol and success bar were committed before results were computed.</span>
+      </div>
+      <ol className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {JOURNEY.map((j, i) => {
+          const passed = j.verdict === "Passed";
+          return (
+            <li key={j.title} className={cx("relative rounded-xl border bg-white p-4", passed ? "border-emerald-200" : "border-slate-300")}>
+              <div className="flex items-center justify-between gap-2">
+                <span className={cx("num flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold", i === JOURNEY.length - 1 ? "bg-sun-400 text-navy-900" : "bg-navy-900 text-white")}>{i + 1}</span>
+                <span
+                  className={cx(
+                    "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold uppercase tracking-wide ring-1 ring-inset",
+                    passed ? "bg-emerald-50 text-emerald-800 ring-emerald-600/25" : "bg-slate-100 text-slate-700 ring-slate-400/40",
+                  )}
+                >
+                  {passed ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <XCircle className="h-3.5 w-3.5" aria-hidden />}
+                  {j.verdict}
+                </span>
+              </div>
+              <h3 className="mt-2 text-[15px] font-semibold text-slate-900">{j.title}</h3>
+              <p className="text-[13px] font-medium text-slate-600">{j.why}</p>
+              {ev.research_path.length === JOURNEY.length && <p className="mt-2 text-xs leading-snug text-slate-500">{ev.research_path[i]}</p>}
+              {i < JOURNEY.length - 1 && (
+                <ArrowRight className="absolute -right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 rounded-full bg-[#f8f9fb] text-slate-400 xl:block" aria-hidden />
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
+function BeforeAfter({ label, before, after, change, tone = "good" }: { label: string; before: string; after: string; change: string; tone?: "good" | "brand" | "neutral" }) {
+  return (
+    <div className="rounded-lg bg-slate-50 px-4 py-3">
+      <div className="text-[13px] font-medium text-slate-600">{label}</div>
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+        <span className="num text-sm text-slate-500">{before}</span>
+        <ArrowRight className="h-3.5 w-3.5 self-center text-slate-400" aria-label="to" />
+        <span className="num text-2xl font-semibold tracking-tight text-slate-900">{after}</span>
+      </div>
+      <div className={cx("num text-[13px] font-semibold", tone === "good" ? "text-emerald-700" : tone === "brand" ? "text-blue-700" : "text-slate-600")}>{change}</div>
+    </div>
   );
 }
 
@@ -57,7 +122,7 @@ function V1V2Glance({ v1, v2 }: { v1: PolicyMetrics; v2: PolicyMetrics }) {
           <div key={it.label} className={cx("rounded-lg border p-3", it.better ? "border-emerald-200 bg-emerald-50/50" : "border-amber-300 bg-amber-50/60")}>
             <div className="text-xs text-slate-600">{it.label}</div>
             <div className="num mt-1 text-sm text-slate-500">V1 {it.a}</div>
-            <div className="num text-lg font-semibold text-slate-900">V2 {it.b}</div>
+            <div className="num whitespace-nowrap text-base font-semibold text-slate-900 2xl:text-lg">V2 {it.b}</div>
             <div className={cx("text-xs font-medium", it.better ? "text-emerald-700" : "text-amber-800")}>{it.better ? "✓ better with V2" : "✗ worse with V2"}</div>
           </div>
         ))}
@@ -73,6 +138,7 @@ function V1V2Glance({ v1, v2 }: { v1: PolicyMetrics; v2: PolicyMetrics }) {
 export default function ImpactPage() {
   const imp = useApi<ImpactResponse>("/api/impact");
   const met = useApi<MetricsResponse>("/api/model/metrics");
+  const mpEv = useApi<MorningPlanEvidence>("/api/morning-plan/evidence");
   if (imp.error || met.error) return <ErrorState message={(imp.error || met.error) as string} onRetry={() => { imp.reload(); met.reload(); }} />;
   if (!imp.data || !met.data) return <Loading />;
   const p = imp.data.policies;
@@ -113,71 +179,138 @@ export default function ImpactPage() {
   return (
     <>
       <PageHeader
+        eyebrow="Evidence first"
         title="Impact & Model Health"
         subtitle={`${imp.data.label}: every number below is computed by replaying the 14-day held-out period (${imp.data.period.start.slice(0, 10)} → ${imp.data.period.end.slice(0, 10)}, ${imp.data.period.agents} agents, never seen in training) with identical customer demand under each policy.`}
         right={<SourceTag kind="sim" />}
       />
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <Card className="p-4 md:col-span-1">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Shortage events avoided</div>
-          <div className="num mt-1 text-3xl font-semibold text-emerald-600">−{vs.shortage_events_reduction_pct.toFixed(1)}%</div>
-          <div className="text-xs text-slate-500">
-            {num(sq.shortage_events)} → {num(af.shortage_events)} agent-hours
+      <div className="grid gap-4 xl:grid-cols-2" aria-label="Evidence summary">
+        <section aria-labelledby="ev-intraday" className="af-rise rounded-2xl border border-slate-200 border-t-[3px] border-t-blue-600 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <Eyebrow className="text-blue-700">
+                <span id="ev-intraday">Intraday V1/V2 evidence</span>
+              </Eyebrow>
+              <p className="mt-0.5 text-[13px] text-slate-500">
+                Legacy intraday environment · 14 held-out days · {imp.data.period.agents} agents · same demand, same total cash · default policy {dflt.toUpperCase()}
+              </p>
+            </div>
+            <span className="rounded-md bg-sun-100 px-2 py-0.5 text-xs font-semibold text-navy-900 ring-1 ring-inset ring-sun-400">Synthetic held-out evaluation</span>
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Unmet cash demand avoided</div>
-          <div className="num mt-1 text-3xl font-semibold text-emerald-600">{bdtCompact(vs.unmet_demand_avoided_bdt)}</div>
-          <div className="text-xs text-slate-500">−{vs.unmet_demand_reduction_pct.toFixed(1)}% vs. without AgentFlow</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Service availability</div>
-          <div className="num mt-1 text-3xl font-semibold text-blue-700">{pct(af.service_availability_pct, 2)}</div>
-          <div className="text-xs text-slate-500">
-            +{vs.service_availability_gain_pp.toFixed(2)} pp (from {pct(sq.service_availability_pct, 2)})
+          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+            <BeforeAfter label="Shortage events (agent-hours)" before={num(sq.shortage_events)} after={num(af.shortage_events)} change={`−${vs.shortage_events_reduction_pct.toFixed(1)}%`} />
+            <BeforeAfter
+              label="Unmet cash demand"
+              before={bdtCompact(sq.unmet_cash_demand_bdt)}
+              after={bdtCompact(af.unmet_cash_demand_bdt)}
+              change={`−${vs.unmet_demand_reduction_pct.toFixed(1)}% · ${bdtCompact(vs.unmet_demand_avoided_bdt)} avoided`}
+            />
+            <BeforeAfter
+              label="Service availability"
+              before={pct(sq.service_availability_pct, 2)}
+              after={pct(af.service_availability_pct, 2)}
+              change={`+${vs.service_availability_gain_pp.toFixed(2)} pp`}
+              tone="brand"
+            />
+            <div className="rounded-lg bg-slate-50 px-4 py-3">
+              <div className="text-[13px] font-medium text-slate-600">Extra cash injected</div>
+              <div className="num mt-1 text-2xl font-semibold tracking-tight text-slate-900">BDT 0</div>
+              <div className="text-[13px] text-slate-600">peer rebalancing only — {num(af.interventions)} simulated transfers (policy {dflt.toUpperCase()})</div>
+            </div>
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Extra cash injected</div>
-          <div className="num mt-1 text-3xl font-semibold text-slate-900">BDT 0</div>
-          <div className="text-xs text-slate-500">peer rebalancing only — {num(af.interventions)} simulated transfers (policy {dflt.toUpperCase()})</div>
-        </Card>
+        </section>
+
+        <section aria-labelledby="ev-morning" className="af-rise rounded-2xl border border-slate-200 border-t-[3px] border-t-sun-400 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <Eyebrow className="text-blue-700">
+                <span id="ev-morning">Morning Plan evidence</span>
+              </Eyebrow>
+              <p className="mt-0.5 text-[13px] text-slate-500">
+                Dual-Liquidity World v2 · fresh audit worlds {mpEv.data ? `${mpEv.data.audit_seeds[0]}–${mpEv.data.audit_seeds[mpEv.data.audit_seeds.length - 1]}` : ""} · frozen full-day ML vs
+                the best cautious rule (7-day q90)
+              </p>
+            </div>
+            <span className="rounded-md bg-sun-100 px-2 py-0.5 text-xs font-semibold text-navy-900 ring-1 ring-inset ring-sun-400">
+              Synthetic held-out evaluation · not measured upay performance
+            </span>
+          </div>
+          {mpEv.data ? (
+            <>
+              <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-2">
+                <div>
+                  <div className="num text-[44px] font-semibold leading-none tracking-tight text-blue-600">{mpEv.data.combined_unmet_reduction_pct.median.toFixed(1)}%</div>
+                  <div className="mt-1 text-[13px] text-slate-600">median lower combined cash + e-float unmet demand</div>
+                </div>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-[13px]">
+                  <dt className="text-slate-500">Worlds improved</dt>
+                  <dd className="num font-semibold text-navy-900">
+                    {mpEv.data.worlds_improved}/{mpEv.data.worlds_total}
+                  </dd>
+                  <dt className="text-slate-500">Range across worlds</dt>
+                  <dd className="num font-semibold text-navy-900">
+                    {mpEv.data.combined_unmet_reduction_pct.min.toFixed(1)}–{mpEv.data.combined_unmet_reduction_pct.max.toFixed(1)}%
+                  </dd>
+                  <dt className="text-slate-500">Cash / e-float unmet</dt>
+                  <dd className="num font-semibold text-navy-900">
+                    −{mpEv.data.cash_unmet_reduction_pct_median.toFixed(1)}% / −{mpEv.data.efloat_unmet_reduction_pct_median.toFixed(1)}%
+                  </dd>
+                  <dt className="text-slate-500">Extra working capital</dt>
+                  <dd className="num font-semibold text-navy-900">BDT {mpEv.data.extra_working_capital_bdt}</dd>
+                </dl>
+              </div>
+              <p className="mt-3 text-xs text-slate-500">
+                Historical synthetic research — not an expected saving for any demo date. Caveats and the research path are below.{" "}
+                <a href="#morning-evidence" className="font-medium text-blue-700 hover:underline">
+                  See details
+                </a>
+              </p>
+            </>
+          ) : mpEv.error ? (
+            <p className="mt-3 text-sm text-slate-600">Morning Plan evidence is unavailable right now.</p>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500">Loading…</p>
+          )}
+        </section>
       </div>
+      <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+        <FlaskConical className="h-3.5 w-3.5" aria-hidden /> Two separate synthetic environments — they are never combined into one experiment.
+      </p>
 
       <V1V2Glance v1={p.agentflow} v2={p.agentflow_v2} />
 
       <Card className="mt-4">
         <CardHeader
           title="Policy comparison"
-          subtitle={`Same demand, same total cash. "Naive forecast" = same risk + rebalancing engine (V1) fed by a seasonal baseline forecast. V2 balances recipient benefit, donor safety and logistics cost. Default policy: ${dflt.toUpperCase()} (pre-registered decision rule).`}
+          subtitle={`Same demand, same total cash. "Naive forecast" = same risk + rebalancing engine (V1) fed by a seasonal baseline forecast. V2 balances recipient benefit, donor safety and logistics cost. Default policy: ${dflt.toUpperCase()} (fixed deployment rule; parameters selected on training-period validation folds only).`}
         />
         <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-sm">
+          <table className="w-full whitespace-nowrap text-[13px]">
             <thead className="bg-slate-50 text-left text-xs text-slate-500">
               <tr>
-                <th className="px-4 py-2 font-medium">Metric</th>
+                <th className="px-3 py-2 font-medium">Metric</th>
                 {COLS.map((c) => (
-                  <th key={c.key} className={cx("px-4 py-2 text-right font-medium", c.key === dfltKey && "text-slate-900")}>
+                  <th key={c.key} className={cx("px-3 py-2 text-right font-medium", c.key === dfltKey && "text-slate-900")}>
                     {c.label}
                     {c.key === dfltKey && " (default)"}
                   </th>
                 ))}
-                <th className="px-4 py-2 text-right font-medium">Default vs. without</th>
+                <th className="px-3 py-2 text-right font-medium">Default vs. without</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {rows.map((r) => (
                 <tr key={r.key}>
-                  <td className="px-4 py-2.5 text-slate-700" title={imp.data!.metric_definitions[r.key]}>
+                  <td className="px-3 py-2.5 text-slate-700" title={imp.data!.metric_definitions[r.key]}>
                     {r.label}
                   </td>
                   {COLS.map((c) => (
-                    <td key={c.key} className={cx("num px-4 py-2.5 text-right", c.key === dfltKey && "font-semibold")}>
+                    <td key={c.key} className={cx("num px-3 py-2.5 text-right", c.key === dfltKey && "font-semibold")}>
                       {cell(c.key, r)}
                     </td>
                   ))}
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-3 py-2.5 text-right">
                     <Delta before={sq[r.key] as number} after={af[r.key] as number} lowerIsBetter={r.lower !== false} unit={r.pp ? "pp" : "%"} />
                   </td>
                 </tr>
@@ -189,11 +322,11 @@ export default function ImpactPage() {
               </tr>
               {opRows.map((r) => (
                 <tr key={r.key}>
-                  <td className="px-4 py-2.5 text-slate-700" title={imp.data!.metric_definitions[r.key]}>
+                  <td className="px-3 py-2.5 text-slate-700" title={imp.data!.metric_definitions[r.key]}>
                     {r.label}
                   </td>
                   {COLS.map((c) => (
-                    <td key={c.key} className={cx("num px-4 py-2.5 text-right", c.key === dfltKey && "font-semibold")}>
+                    <td key={c.key} className={cx("num px-3 py-2.5 text-right", c.key === dfltKey && "font-semibold")}>
                       {c.key === "status_quo" ? "—" : cell(c.key, r)}
                     </td>
                   ))}
@@ -203,7 +336,7 @@ export default function ImpactPage() {
             </tbody>
           </table>
         </div>
-        <p className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
+        <p className="border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
           Hover a metric for its definition. V2 parameters were selected on training-period validation folds only; the held-out period was used once.
           Trade-off: V2 makes far fewer transfers, but a slightly higher share of them turn out unnecessary ({pct(p.agentflow_v2.unnecessary_interventions_pct, 1)} vs.{" "}
           {pct(p.agentflow.unnecessary_interventions_pct, 1)}). Assumptions: decisions at 09/11/13/15/17/19h, 1-hour transfer delay, same-district donors within 15 km, unusual-activity agents held for manual review.
@@ -228,7 +361,7 @@ export default function ImpactPage() {
               }))}
               bars={[
                 { key: "without", name: "Without AgentFlow", color: "#cbd5e1" },
-                { key: "with", name: `With AgentFlow (${dflt.toUpperCase()})`, color: "#1d4ed8" },
+                { key: "with", name: `With AgentFlow (${dflt.toUpperCase()})`, color: "#1769e8" },
               ]}
             />
           </div>
@@ -236,7 +369,7 @@ export default function ImpactPage() {
       </div>
 
       <h2 className="mb-3 mt-8 text-lg font-semibold tracking-tight">Model health</h2>
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
         <Card>
           <CardHeader title="Forecast accuracy: naive baselines vs. ML" subtitle={`Held-out ${fc.test_start.slice(0, 10)} → ${fc.test_end.slice(0, 10)} · ${num(fc.n_test_rows)} agent-hours`} right={<SourceTag kind="model" />} />
           <div className="overflow-x-auto">
@@ -288,7 +421,7 @@ export default function ImpactPage() {
               layout="vertical"
               height={300}
               data={fc.feature_importance_cash_demand.slice(0, 10).map((f) => ({ name: f.feature, value: f.mae_increase }))}
-              bars={[{ key: "value", name: "MAE increase (BDT)", color: "#1d4ed8" }]}
+              bars={[{ key: "value", name: "MAE increase (BDT)", color: "#1769e8" }]}
             />
           </div>
         </Card>
@@ -405,7 +538,8 @@ export default function ImpactPage() {
           Forecast error is consistent across groups (WAPE within a few points). Alert recall is lower for urban-core agents, where shortages are rare (≈1.4% prevalence) — documented in docs/EVALUATION.md.
         </p>
       </Card>
-      <MorningPlanResearch />
+      {mpEv.data && <ResearchJourney ev={mpEv.data} />}
+      <MorningPlanResearch ev={mpEv.data} error={mpEv.error} reload={mpEv.reload} />
     </>
   );
 }

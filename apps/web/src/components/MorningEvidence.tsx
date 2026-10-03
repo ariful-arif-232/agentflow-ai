@@ -7,8 +7,8 @@ import { Card, CardHeader, SourceTag } from "./ui";
 function Stat({ value, label, tone = "text-slate-900" }: { value: string; label: string; tone?: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
-      <div className={`num text-lg font-semibold leading-tight ${tone}`}>{value}</div>
-      <div className="mt-0.5 text-[11px] leading-snug text-slate-500">{label}</div>
+      <div className={`num text-xl font-semibold leading-tight tracking-tight ${tone}`}>{value}</div>
+      <div className="mt-0.5 text-xs leading-snug text-slate-500">{label}</div>
     </div>
   );
 }
@@ -33,7 +33,7 @@ export function MorningEvidencePanel({ ev, compact = false }: { ev: MorningPlanE
           <Stat value={`${ev.efloat_unmet_reduction_pct_median.toFixed(1)}%`} label="median lower unmet cash-in (e-float)" />
           <Stat value={`BDT ${ev.extra_working_capital_bdt}`} label="extra working capital" tone="text-blue-700" />
         </div>
-        <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2.5 text-xs leading-relaxed text-amber-950" role="note">
+        <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2.5 text-[13px] leading-relaxed text-amber-950" role="note">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
           <div>
             <span className="font-semibold">Caveats. </span>
@@ -47,7 +47,7 @@ export function MorningEvidencePanel({ ev, compact = false }: { ev: MorningPlanE
           <details className="text-xs text-slate-600">
             <summary className="cursor-pointer font-medium text-slate-700">
               <FlaskConical className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-              How we got here (pre-registered research path, including rejected ideas)
+              How we got here (research path, including rejected ideas — each protocol and success bar committed before its results)
             </summary>
             <ol className="mt-2 list-decimal space-y-1 pl-5">
               {ev.research_path.map((s) => (

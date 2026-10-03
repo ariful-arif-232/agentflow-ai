@@ -1,5 +1,5 @@
 import type { AnomalyStatus, RiskLevel } from "@/lib/types";
-import { Info } from "lucide-react";
+import { AlertTriangle, Banknote, CheckCircle2, CircleDashed, Database, Info, ShieldCheck, Smartphone, UserCheck } from "lucide-react";
 
 export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
@@ -16,7 +16,7 @@ export function RiskBadge({ level, score }: { level: RiskLevel; score?: number }
   const s = RISK_STYLE[level];
   return (
     <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset", s.badge)}>
-      <span className={cx("h-1.5 w-1.5 rounded-full", s.dot)} />
+      <span className={cx("h-1.5 w-1.5 rounded-full", s.dot)} aria-hidden />
       {level}
       {score !== undefined && <span className="num font-medium opacity-80">· {score.toFixed(0)}</span>}
     </span>
@@ -37,27 +37,39 @@ export function AnomalyBadge({ status }: { status: AnomalyStatus }) {
   );
 }
 
-export function Card({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cx("rounded-xl border border-slate-200 bg-white shadow-sm", className)}>{children}</div>;
+export function Card({ children, className, id }: { children: React.ReactNode; className?: string; id?: string }) {
+  return (
+    <div id={id} className={cx("rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function CardHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-3.5">
-      <div>
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}
+    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-slate-100 px-5 py-3.5">
+      <div className="min-w-[12rem] flex-1">
+        <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-[13px] leading-snug text-slate-500">{subtitle}</p>}
       </div>
       {right}
     </div>
   );
 }
 
+/** Small uppercase section label. */
+export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cx("text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500", className)}>{children}</div>;
+}
+
 export function Tooltip({ text }: { text: string }) {
   return (
-    <span className="group relative inline-flex">
-      <Info className="h-3.5 w-3.5 text-slate-400" aria-label={text} />
-      <span className="pointer-events-none absolute left-1/2 top-5 z-30 hidden w-64 -translate-x-1/2 rounded-md bg-slate-900 px-3 py-2 text-xs font-normal leading-relaxed text-white shadow-lg group-hover:block">
+    <span className="group relative inline-flex" tabIndex={0} aria-label={text}>
+      <Info className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 top-5 z-30 hidden w-64 -translate-x-1/2 rounded-md bg-slate-900 px-3 py-2 text-xs font-normal normal-case leading-relaxed tracking-normal text-white shadow-lg group-hover:block group-focus:block"
+      >
         {text}
       </span>
     </span>
@@ -81,17 +93,17 @@ export function Kpi({
     default: "text-slate-900",
     danger: "text-red-600",
     warn: "text-orange-600",
-    good: "text-emerald-600",
+    good: "text-emerald-700",
     brand: "text-blue-700",
   }[tone];
   return (
     <Card className="px-4 py-3.5">
-      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
         {label}
         {tip && <Tooltip text={tip} />}
       </div>
-      <div className={cx("num mt-1.5 text-[22px] font-semibold leading-tight sm:whitespace-nowrap", toneCls)}>{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
+      <div className={cx("num mt-1.5 text-[22px] font-semibold leading-tight tracking-tight", toneCls)}>{value}</div>
+      {sub && <div className="mt-0.5 text-xs leading-snug text-slate-500">{sub}</div>}
     </Card>
   );
 }
@@ -105,13 +117,95 @@ export function SourceTag({ kind }: { kind: "model" | "calc" | "rec" | "sim" | "
     data: ["Synthetic data", "bg-slate-50 text-slate-600 ring-slate-500/20"],
   } as const;
   const [label, cls] = map[kind];
-  return <span className={cx("inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset", cls)}>{label}</span>;
+  return <span className={cx("inline-flex shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ring-1 ring-inset", cls)}>{label}</span>;
+}
+
+/** The persistent trust signals: synthetic data, human review, no money moves. */
+export const TRUST_SIGNALS = [
+  { key: "data", label: "Synthetic data", icon: Database },
+  { key: "human", label: "Human reviewed", icon: UserCheck },
+  { key: "money", label: "No money moves", icon: ShieldCheck },
+] as const;
+
+export function TrustChips({ dark = false, className }: { dark?: boolean; className?: string }) {
+  return (
+    <ul className={cx("flex flex-wrap items-center gap-1.5", className)} aria-label="Operating mode">
+      {TRUST_SIGNALS.map(({ key, label, icon: Icon }) => (
+        <li
+          key={key}
+          className={cx(
+            "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium",
+            dark ? "bg-white/[0.07] text-slate-200 ring-1 ring-inset ring-white/10" : "bg-white text-slate-700 ring-1 ring-inset ring-slate-200",
+          )}
+        >
+          <Icon className={cx("h-3.5 w-3.5", dark ? "text-slate-400" : "text-slate-500")} aria-hidden />
+          {label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** State pill that never relies on colour alone: icon + text. */
+export function StatusPill({ tone, children }: { tone: "safe" | "review" | "critical" | "neutral" | "pending"; children: React.ReactNode }) {
+  const cfg = {
+    safe: ["bg-emerald-50 text-emerald-800 ring-emerald-600/25", CheckCircle2],
+    review: ["bg-amber-50 text-amber-900 ring-amber-600/30", AlertTriangle],
+    critical: ["bg-red-50 text-red-800 ring-red-600/25", AlertTriangle],
+    neutral: ["bg-slate-100 text-slate-700 ring-slate-500/20", Info],
+    pending: ["bg-white text-slate-700 ring-slate-300", CircleDashed],
+  } as const;
+  const [cls, Icon] = cfg[tone];
+  return (
+    <span className={cx("inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset", cls)}>
+      <Icon className="h-3.5 w-3.5" aria-hidden />
+      {children}
+    </span>
+  );
+}
+
+/** Visual identity for the two Morning Plan resources. Cash and e-float are never fungible. */
+export const RESOURCE_STYLE = {
+  cash: {
+    label: "Physical cash",
+    serves: "serves cash-out",
+    icon: Banknote,
+    text: "text-cash-700",
+    bg: "bg-cash-50",
+    ring: "ring-cash-600/20",
+    bar: "bg-cash-600",
+    soft: "bg-cash-100",
+    darkText: "text-cash-300",
+  },
+  efloat: {
+    label: "E-float",
+    serves: "serves cash-in",
+    icon: Smartphone,
+    text: "text-efloat-700",
+    bg: "bg-efloat-50",
+    ring: "ring-efloat-600/20",
+    bar: "bg-efloat-600",
+    soft: "bg-efloat-100",
+    darkText: "text-efloat-300",
+  },
+} as const;
+
+export function ResourceTag({ res, withServes = false }: { res: keyof typeof RESOURCE_STYLE; withServes?: boolean }) {
+  const r = RESOURCE_STYLE[res];
+  const Icon = r.icon;
+  return (
+    <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset", r.bg, r.text, r.ring)}>
+      <Icon className="h-3.5 w-3.5" aria-hidden />
+      {r.label}
+      {withServes && <span className="font-normal opacity-80">· {r.serves}</span>}
+    </span>
+  );
 }
 
 export function Loading({ label = "Loading…" }: { label?: string }) {
   return (
-    <div className="flex items-center gap-3 p-8 text-sm text-slate-500">
-      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+    <div className="flex items-center gap-3 p-8 text-sm text-slate-500" role="status">
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" aria-hidden />
       {label}
     </div>
   );
@@ -124,10 +218,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       <p className="mt-1 text-sm text-slate-600">Your data has not changed. Nothing was approved or moved.</p>
       <p className="mt-1 text-xs text-slate-500">Details: {message}</p>
       {onRetry && (
-        <button
-          onClick={onRetry}
-          className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-        >
+        <button onClick={onRetry} className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
           Retry
         </button>
       )}
@@ -140,23 +231,24 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   );
 }
 
-export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
+export function PageHeader({ title, subtitle, right, eyebrow }: { title: string; subtitle?: string; right?: React.ReactNode; eyebrow?: string }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
-        {subtitle && <p className="mt-1 max-w-3xl text-sm text-slate-500">{subtitle}</p>}
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        {eyebrow && <Eyebrow className="mb-1 text-blue-700">{eyebrow}</Eyebrow>}
+        <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-slate-900">{title}</h1>
+        {subtitle && <p className="mt-1 max-w-3xl text-[15px] leading-snug text-slate-600">{subtitle}</p>}
       </div>
       {right}
     </div>
   );
 }
 
-export function ScoreBar({ value, max = 100, color = "#2563eb" }: { value: number; max?: number; color?: string }) {
+export function ScoreBar({ value, max = 100, color = "#1769e8" }: { value: number; max?: number; color?: string }) {
   const w = Math.max(0, Math.min(100, (100 * value) / max));
   return (
     <div className="h-1.5 w-full rounded-full bg-slate-100">
-      <div className="h-1.5 rounded-full" style={{ width: `${w}%`, backgroundColor: color }} />
+      <div className="af-bar h-1.5 rounded-full" style={{ width: `${w}%`, backgroundColor: color }} />
     </div>
   );
 }

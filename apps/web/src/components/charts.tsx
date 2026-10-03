@@ -51,7 +51,7 @@ export function NetworkTrendChart({ data }: { data: TrendPoint[] }) {
         <Legend wrapperStyle={{ fontSize: 11 }} />
         <Area yAxisId="h" type="monotone" dataKey="cash_out" name="Hourly cash-out, actual (left axis)" fill="#dbeafe" stroke="#93c5fd" isAnimationActive={false} />
         <Bar yAxisId="h" dataKey="unmet" name="Hourly unmet cash-out (left)" fill="#dc2626" barSize={4} isAnimationActive={false} />
-        <Line yAxisId="w" type="monotone" dataKey="forecast_6h" name="Next-6h forecast made at that hour (right)" stroke="#1d4ed8" dot={false} strokeWidth={2} isAnimationActive={false} />
+        <Line yAxisId="w" type="monotone" dataKey="forecast_6h" name="Next-6h forecast made at that hour (right)" stroke="#1769e8" dot={false} strokeWidth={2} isAnimationActive={false} />
         <Line yAxisId="w" type="monotone" dataKey="actual_6h" name="Next-6h actual, once observable (right)" stroke="#0f172a" dot={false} strokeDasharray="4 3" strokeWidth={1.5} isAnimationActive={false} />
       </ComposedChart>
     </ResponsiveContainer>
@@ -70,7 +70,7 @@ export function AgentHistoryChart({ data }: { data: HistoryPoint[] }) {
         <Bar dataKey="cash_out_amount" name="Cash-out demand / h" fill="#bfdbfe" isAnimationActive={false} />
         <Bar dataKey="unmet_cash_out" name="Unmet cash-out" fill="#dc2626" isAnimationActive={false} />
         <Line type="stepAfter" dataKey="cash_balance" name="Cash balance" stroke="#0f766e" dot={false} strokeWidth={2} isAnimationActive={false} />
-        <Line type="monotone" dataKey="pred_net_requirement_6h" name="Forecast 6h peak requirement" stroke="#1d4ed8" dot={false} strokeWidth={1.5} isAnimationActive={false} />
+        <Line type="monotone" dataKey="pred_net_requirement_6h" name="Forecast 6h peak requirement" stroke="#1769e8" dot={false} strokeWidth={1.5} isAnimationActive={false} />
       </ComposedChart>
     </ResponsiveContainer>
   );
@@ -126,7 +126,7 @@ export function DailyImpactChart({ data }: { data: Record<string, number | strin
         <Legend wrapperStyle={{ fontSize: 11 }} />
         <Bar dataKey="status_quo_unmet_bdt" name="Without AgentFlow" fill="#cbd5e1" isAnimationActive={false} />
         <Bar dataKey="naive_rebalancing_unmet_bdt" name="Rebalancing w/ naive forecast" fill="#93c5fd" isAnimationActive={false} />
-        <Bar dataKey="agentflow_unmet_bdt" name="AgentFlow V1" fill="#1d4ed8" isAnimationActive={false} />
+        <Bar dataKey="agentflow_unmet_bdt" name="AgentFlow V1" fill="#1769e8" isAnimationActive={false} />
         <Bar dataKey="agentflow_v2_unmet_bdt" name="AgentFlow V2" fill="#0f766e" isAnimationActive={false} />
       </ComposedChart>
     </ResponsiveContainer>

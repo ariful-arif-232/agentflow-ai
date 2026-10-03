@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, ShieldCheck, X, XCircle } from "lucide-react";
 import { apiPost, useApi } from "@/lib/api";
 import { useAsOf } from "@/lib/asof";
 import { bdt, bdtCompact, dateTime, pct } from "@/lib/format";
 import type { Plan, PolicyName, Recommendation, SimulationResult } from "@/lib/types";
-import { Card, CardHeader, ErrorState, Kpi, Loading, PageHeader, RiskBadge, SourceTag, cx } from "@/components/ui";
+import { Card, CardHeader, ErrorState, Eyebrow, Kpi, Loading, PageHeader, RiskBadge, SourceTag, cx } from "@/components/ui";
 
 interface AuditEntry {
   simulation_id: string;
@@ -70,6 +70,119 @@ function RiskChange({ a, b }: { a: { risk_level: Recommendation["destination_ris
   );
 }
 
+/* ------------------------------------------------------------------ V2 safety gate
+   Built only from fields already on the recommendation; nothing is recomputed by a model. */
+type GateState = "pass" | "fail" | "pending";
+interface GateCheck {
+  label: string;
+  detail: string;
+  state: GateState;
+}
+
+function gateChecks(rec: Recommendation, approved: boolean): GateCheck[] {
+  const p50Short = Math.max(rec.destination_requirement_p50 - rec.destination_cash_before, 0);
+  const before = rec.destination_risk_before;
+  const after = rec.destination_risk_after;
+  const needs = before.risk_level === "HIGH" || before.risk_level === "CRITICAL" || p50Short > 0;
+  const margin = rec.donor_margin_after_plan ?? rec.source_cash_after - rec.source_protected_level;
+  const donorSafe = rec.source_risk_after.risk_level === "LOW" && margin >= 0;
+  const helps = after.risk_score < before.risk_score && (!rec.expected_benefit || !!rec.expected_benefit.gate_reason);
+  return [
+    {
+      label: "Recipient needs help",
+      detail: `${before.risk_level} ${before.risk_score.toFixed(0)}${p50Short > 0 ? ` · shortfall ${bdt(p50Short)}` : ""}`,
+      state: needs ? "pass" : "fail",
+    },
+    {
+      label: "Donor remains safe",
+      detail: `${rec.source_risk_after.risk_level} after · ${bdt(margin)} above reserve`,
+      state: donorSafe ? "pass" : "fail",
+    },
+    {
+      label: "Transfer materially helps",
+      detail: rec.expected_benefit ? rec.expected_benefit.gate_reason : `risk ${before.risk_score.toFixed(0)} → ${after.risk_score.toFixed(0)}`,
+      state: helps ? "pass" : "fail",
+    },
+    {
+      label: "Logistics considered",
+      detail: `${rec.distance_km.toFixed(1)} km · est. ${bdt(rec.estimated_cost_bdt)}`,
+      state: "pass",
+    },
+    {
+      label: "Human review required",
+      detail: approved ? "Simulation approved" : "awaiting a reviewer",
+      state: approved ? "pass" : "pending",
+    },
+  ];
+}
+
+function SafetyGate({ rec, approved = false, compact = false }: { rec: Recommendation; approved?: boolean; compact?: boolean }) {
+  const checks = gateChecks(rec, approved);
+  return (
+    <ol aria-label={`Safety gate for ${rec.id}`} className={cx("grid gap-2", compact ? "sm:grid-cols-2" : "sm:grid-cols-3 xl:grid-cols-5")}>
+      {checks.map((c) => {
+        const Icon = c.state === "pass" ? CheckCircle2 : c.state === "fail" ? XCircle : Circle;
+        return (
+          <li
+            key={c.label}
+            className={cx(
+              "flex items-start gap-2 rounded-lg border px-3 py-2",
+              c.state === "pass" ? "border-emerald-200 bg-emerald-50/60" : c.state === "fail" ? "border-amber-300 bg-amber-50" : "border-sun-400 border-dashed bg-sun-50",
+            )}
+          >
+            <Icon
+              className={cx("mt-0.5 h-4 w-4 shrink-0", c.state === "pass" ? "text-emerald-600" : c.state === "fail" ? "text-amber-700" : "text-slate-600")}
+              aria-hidden
+            />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold text-slate-900">
+                {c.label}
+                <span className="sr-only">: {c.state === "pass" ? "passed" : c.state === "fail" ? "not met" : "pending"}</span>
+              </span>
+              <span className="block text-xs leading-snug text-slate-600">{c.detail}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function FocusCard({ rec, policy, approved, onReview }: { rec: Recommendation; policy: PolicyName; approved: boolean; onReview: () => void }) {
+  return (
+    <Card className="af-rise mb-4 border-blue-200 border-t-[3px] border-t-sun-400">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+        <div className="min-w-0">
+          <Eyebrow className="text-blue-700">Next recommendation to review · policy {policy.toUpperCase()}</Eyebrow>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-xl font-semibold tracking-tight text-slate-900">
+              {rec.source_agent} <ArrowRight className="inline h-4 w-4 text-slate-400" aria-label="to" /> {rec.destination_agent}
+            </span>
+            <span className="num text-xl font-semibold text-slate-900">{bdt(rec.recommended_amount)}</span>
+            <span className="font-mono text-xs text-slate-400">{rec.id}</span>
+            <RiskChange a={rec.destination_risk_before} b={rec.destination_risk_after} />
+          </div>
+          <p className="mt-1 text-[13px] text-slate-500">
+            Constrained decision support — not &ldquo;send money to the nearest agent&rdquo;. Every check below comes from this recommendation&apos;s own evidence.
+          </p>
+        </div>
+        {approved ? (
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700">
+            <CheckCircle2 className="h-4 w-4" aria-hidden /> Simulation approved
+          </span>
+        ) : (
+          <button onClick={onReview} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+            Review Recommendation
+          </button>
+        )}
+      </div>
+      <div className="px-5 py-4">
+        <SafetyGate rec={rec} approved={approved} />
+      </div>
+    </Card>
+  );
+}
+
 function ReviewPanel({
   rec,
   onClose,
@@ -114,12 +227,12 @@ function ReviewPanel({
   const margin = rec.donor_margin_after_plan ?? rec.source_cash_after - rec.source_protected_level;
   const isV2 = !!rec.expected_benefit;
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-slate-900/30" onClick={onClose}>
+    <div className="af-backdrop fixed inset-0 z-40 flex justify-end bg-slate-900/40" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-title"
-        className="h-full w-full max-w-xl overflow-y-auto bg-white shadow-2xl"
+        className="af-drawer h-full w-full max-w-xl overflow-y-auto bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
@@ -158,6 +271,11 @@ function ReviewPanel({
               </Link>
             </div>
           </div>
+
+          <section aria-label="Safety gate">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Safety gate</h3>
+            <SafetyGate rec={rec} compact />
+          </section>
 
           <Evidence title={`Why this recipient? — ${rec.destination_agent}`}>
             <Row k="Liquidity risk (after full plan)">
@@ -252,7 +370,7 @@ function ReviewPanel({
 
 function SimulationCard({ sim, onClose }: { sim: SimulationResult; onClose: () => void }) {
   return (
-    <Card className="mb-4 border-emerald-300">
+    <Card className="af-confirm mb-4 border-emerald-300">
       <CardHeader
         title={`Simulation approved — no money moved (${sim.simulation_id})`}
         subtitle={`Human-approved simulation of ${sim.recommendation_ids.join(", ")} · ${bdt(sim.total_amount)} · ${dateTime(sim.created_at)} · recorded in the audit log`}
@@ -361,7 +479,7 @@ function RebalancingInner() {
             aria-pressed={activePolicy === p}
             className={cx(
               "rounded-md px-3 py-1.5 ring-1 ring-inset focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600",
-              activePolicy === p ? "bg-slate-900 text-white ring-slate-900" : "bg-white text-slate-700 ring-slate-300 hover:bg-slate-50",
+              activePolicy === p ? "bg-blue-600 text-white ring-blue-600" : "bg-white text-slate-700 ring-slate-300 hover:bg-slate-50",
             )}
           >
             {p === "v2" ? "V2 — benefit · safety · cost" : "V1 — nearest donor"}
@@ -374,6 +492,7 @@ function RebalancingInner() {
             : "V1 picks the nearest eligible donors (kept for comparison)."}
         </span>
       </div>
+      {recs[0] && <FocusCard rec={recs[0]} policy={activePolicy} approved={approved.has(recs[0].id)} onReview={() => setReviewing(recs[0])} />}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Kpi label="Recommended transfers" value={s.n_recommendations} sub={`${s.recipients_supported} at-risk agents supported`} />
         <Kpi label="Recommended value" value={bdtCompact(s.total_recommended_amount)} tone="good" sub="peer-to-peer, cash-neutral" />
@@ -407,6 +526,7 @@ function RebalancingInner() {
                 <th className="px-2.5 py-2 text-right font-medium">Amount</th>
                 <th className="px-2.5 py-2 text-right font-medium">Cash before → after (recipient / donor)</th>
                 <th className="px-2.5 py-2 font-medium">Risk before → est. after</th>
+                <th className="px-2.5 py-2 font-medium">Safety gate</th>
                 <th className="px-2.5 py-2 font-medium" />
               </tr>
             </thead>
@@ -445,6 +565,24 @@ function RebalancingInner() {
                       <RiskBadge level={r.destination_risk_after.risk_level} score={r.destination_risk_after.risk_score} />
                     </span>
                   </td>
+                  <td className="px-2.5 py-2.5">
+                    {(() => {
+                      const auto = gateChecks(r, approved.has(r.id)).slice(0, 4);
+                      const ok = auto.filter((c) => c.state === "pass").length;
+                      return (
+                        <span
+                          className={cx(
+                            "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold ring-1 ring-inset",
+                            ok === auto.length ? "bg-emerald-50 text-emerald-800 ring-emerald-600/20" : "bg-amber-50 text-amber-900 ring-amber-600/25",
+                          )}
+                          title={auto.map((c) => `${c.label}: ${c.detail}`).join(" · ")}
+                        >
+                          {ok === auto.length ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> : <XCircle className="h-3.5 w-3.5" aria-hidden />}
+                          {ok}/{auto.length}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td className="px-2.5 py-2.5 text-right">
                     {approved.has(r.id) ? (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
@@ -454,9 +592,9 @@ function RebalancingInner() {
                       <button
                         onClick={() => setReviewing(r)}
                         aria-label={`Review Recommendation ${r.id}: ${r.source_agent} to ${r.destination_agent}`}
-                        className="rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
                       >
-                        Review Recommendation
+                        Review <ArrowRight className="h-3 w-3" aria-hidden />
                       </button>
                     )}
                   </td>
@@ -543,6 +681,7 @@ export default function RebalancingPage() {
   return (
     <>
       <PageHeader
+        eyebrow="Intraday · reactive physical-cash recovery (V2)"
         title="Rebalancing Center"
         subtitle="Explainable, safety-constrained peer liquidity rebalancing. Review each recommendation's evidence, then approve a simulation — AgentFlow never moves real money."
       />

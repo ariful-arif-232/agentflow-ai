@@ -1,4 +1,4 @@
-import { Card, CardHeader, PageHeader, SourceTag } from "@/components/ui";
+import { Card, CardHeader, PageHeader, SourceTag, TrustChips } from "@/components/ui";
 
 const PRINCIPLES = [
   {
@@ -54,7 +54,7 @@ const NOT_TRUST = [
 export default function ResponsibleAiPage() {
   return (
     <>
-      <PageHeader title="Responsible AI" subtitle="How AgentFlow keeps humans in control and makes every recommendation explainable, safe and honest." />
+      <PageHeader eyebrow="Trust & safeguards" title="Responsible AI" subtitle="How AgentFlow keeps humans in control and makes every recommendation explainable, safe and honest." right={<TrustChips />} />
       <div className="mb-4 flex flex-wrap gap-2">
         <SourceTag kind="model" />
         <SourceTag kind="calc" />
@@ -64,8 +64,8 @@ export default function ResponsibleAiPage() {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {PRINCIPLES.map((p) => (
-          <Card key={p.title} className="p-5">
-            <h3 className="text-sm font-semibold text-slate-900">{p.title}</h3>
+          <Card key={p.title} className="af-lift p-5">
+            <h3 className="text-[15px] font-semibold text-slate-900">{p.title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">{p.body}</p>
           </Card>
         ))}

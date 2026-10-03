@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, Languages, Truck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Eye, Languages, ShieldCheck, Truck, UserCheck } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useAsOf } from "@/lib/asof";
 import { bdt, dateTime, num, ratioPct, titleCase } from "@/lib/format";
 import type { AgentDetail } from "@/lib/types";
 import { AgentHistoryChart } from "@/components/charts";
-import { AnomalyBadge, Card, CardHeader, ErrorState, Loading, RISK_STYLE, RiskBadge, ScoreBar, SourceTag, cx } from "@/components/ui";
+import { AnomalyBadge, Card, CardHeader, ErrorState, Eyebrow, Loading, RISK_STYLE, RiskBadge, ScoreBar, SourceTag, cx } from "@/components/ui";
 
 const COMPONENT_LABEL: Record<string, string> = {
   coverage: "Reserve coverage vs. forecast",
@@ -28,16 +28,27 @@ const ACTION_ICON: Record<string, React.ReactNode> = {
   NONE: <CheckCircle2 className="h-5 w-5 text-emerald-600" />,
 };
 
-function Tile({ label, value, sub, tag, tone }: { label: string; value: string; sub?: string; tag?: React.ReactNode; tone?: string }) {
+function Segment({ step, label, value, sub, tag, tone, children }: { step: string; label: string; value: string; sub?: React.ReactNode; tag?: React.ReactNode; tone?: string; children?: React.ReactNode }) {
   return (
-    <Card className="px-4 py-3.5">
-      <div className="flex items-center justify-between gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-        {label}
+    <div className="min-w-0 px-5 py-4">
+      <div className="flex items-center justify-between gap-2">
+        <Eyebrow className="text-slate-800">{step}</Eyebrow>
         {tag}
       </div>
-      <div className={cx("num mt-1.5 text-xl font-semibold", tone || "text-slate-900")}>{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
-    </Card>
+      <div className="mt-0.5 text-[13px] text-slate-500">{label}</div>
+      <div className={cx("num mt-1 text-[26px] font-semibold leading-tight tracking-tight", tone || "text-slate-900")}>{value}</div>
+      {sub && <div className="mt-0.5 text-[13px] leading-snug text-slate-500">{sub}</div>}
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ title, note }: { title: string; note: string }) {
+  return (
+    <div className="mb-2 flex items-baseline gap-2">
+      <Eyebrow className="text-slate-900">{title}</Eyebrow>
+      <span className="text-xs text-slate-500">{note}</span>
+    </div>
   );
 }
 
@@ -61,10 +72,11 @@ export default function AgentDetailPage() {
       <Link href="/agents" className="mb-3 inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800">
         <ArrowLeft className="h-3 w-3" /> All agents
       </Link>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">Agent {data.agent.agent_id}</h1>
+          <Eyebrow className="mb-1 text-blue-700">Intraday · operator decision card</Eyebrow>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-[26px] font-semibold tracking-tight">Agent {data.agent.agent_id}</h1>
             <RiskBadge level={r.risk_level} score={r.risk_score} />
             <AnomalyBadge status={data.anomaly.status} />
           </div>
@@ -74,50 +86,70 @@ export default function AgentDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Current cash" value={bdt(data.liquidity.cash_balance)} sub={`Morning drawer target ${bdt(data.liquidity.morning_target_cash)}`} tag={<SourceTag kind="data" />} />
-        <Tile label="Next-6h cash-out demand" value={bdt(f.pred_cash_demand_6h)} sub={`Same window, 7-day avg: ${bdt(f.seasonal_same_window_avg7)}`} tag={<SourceTag kind="model" />} />
-        <Tile label="Next-6h peak cash requirement" value={bdt(f.pred_net_requirement_6h)} sub={`P90 scenario: ${bdt(f.pred_net_requirement_p90_6h)}`} tag={<SourceTag kind="model" />} />
-        <Tile
-          label={shortfall ? "Expected shortfall" : "Surplus above P90"}
-          value={shortfall ? bdt(f.expected_shortfall) : bdt(f.expected_surplus)}
-          sub={`Coverage ${ratioPct(r.coverage_ratio)} of forecast requirement`}
-          tone={shortfall ? "text-red-600" : "text-emerald-700"}
-          tag={<SourceTag kind="calc" />}
-        />
-      </div>
-
-      <div
-        className={cx(
-          "mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border px-5 py-3 text-sm",
-          shortfall ? "border-red-200 bg-red-50/60" : "border-emerald-200 bg-emerald-50/60",
-        )}
-      >
-        <div>
-          <span className="font-semibold text-slate-900">Without action: </span>
-          {shortfall ? (
-            <span className="text-slate-800">
-              about <b className="num">{bdt(f.expected_shortfall)}</b> of cash-out requests may go unserved in the next 6 hours
-              {f.pred_net_requirement_p90_6h > data.liquidity.cash_balance && (
-                <>
-                  {" "}
-                  (cautious P90 scenario: <span className="num">{bdt(f.pred_net_requirement_p90_6h - data.liquidity.cash_balance)}</span> short)
-                </>
-              )}
-              .
-            </span>
-          ) : (
-            <span className="text-slate-800">current cash covers the forecast 6-hour requirement.</span>
+      <Card className="af-rise overflow-hidden">
+        <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+          <Segment step="Now" label="Current cash" value={bdt(data.liquidity.cash_balance)} sub={`Morning drawer target ${bdt(data.liquidity.morning_target_cash)}`} tag={<SourceTag kind="data" />} />
+          <Segment
+            step="Expected"
+            label="Next-6h peak cash requirement"
+            value={bdt(f.pred_net_requirement_6h)}
+            sub={
+              <>
+                P90 scenario: <span className="num">{bdt(f.pred_net_requirement_p90_6h)}</span>
+                <br />
+                Next-6h cash-out demand <span className="num">{bdt(f.pred_cash_demand_6h)}</span> (same window, 7-day avg: <span className="num">{bdt(f.seasonal_same_window_avg7)}</span>)
+              </>
+            }
+            tag={<SourceTag kind="model" />}
+          />
+          <Segment
+            step="Gap"
+            label={shortfall ? "Expected shortfall" : "Surplus above P90"}
+            value={shortfall ? bdt(f.expected_shortfall) : bdt(f.expected_surplus)}
+            sub={`Coverage ${ratioPct(r.coverage_ratio)} of forecast requirement`}
+            tone={shortfall ? "text-red-600" : "text-emerald-700"}
+            tag={<SourceTag kind="calc" />}
+          />
+          <Segment step="Risk" label="Liquidity risk (deterministic 0–100)" value={`${r.risk_level} · ${r.risk_score.toFixed(0)}`} tone={{ LOW: "text-emerald-700", MEDIUM: "text-amber-700", HIGH: "text-orange-600", CRITICAL: "text-red-600" }[r.risk_level]} tag={<SourceTag kind="calc" />}>
+            <div className="mt-2">
+              <ScoreBar value={r.risk_score} color={RISK_STYLE[r.risk_level].fill} />
+            </div>
+          </Segment>
+        </div>
+        <div
+          className={cx(
+            "flex flex-wrap items-center gap-x-6 gap-y-2 border-t px-5 py-3 text-sm",
+            shortfall ? "border-red-100 bg-red-50/70" : "border-emerald-100 bg-emerald-50/60",
           )}
+        >
+          <div>
+            <span className="font-semibold text-slate-900">Without action: </span>
+            {shortfall ? (
+              <span className="text-slate-800">
+                about <b className="num">{bdt(f.expected_shortfall)}</b> of cash-out requests may go unserved in the next 6 hours
+                {f.pred_net_requirement_p90_6h > data.liquidity.cash_balance && (
+                  <>
+                    {" "}
+                    (cautious P90 scenario: <span className="num">{bdt(f.pred_net_requirement_p90_6h - data.liquidity.cash_balance)}</span> short)
+                  </>
+                )}
+                .
+              </span>
+            ) : (
+              <span className="text-slate-800">current cash covers the forecast 6-hour requirement.</span>
+            )}
+          </div>
+          <div className="text-slate-700">
+            <span className="font-semibold text-slate-900">Recommended: </span>
+            {data.recommended_action.summary}
+          </div>
         </div>
-        <div className="text-slate-700">
-          <span className="font-semibold text-slate-900">Recommended: </span>
-          {data.recommended_action.summary}
-        </div>
-      </div>
+      </Card>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-5">
-        <Card className="xl:col-span-3">
+      <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-5">
+        <div className="xl:col-span-3">
+        <SectionLabel title="Why" note="deterministic explanation from computed evidence" />
+        <Card>
           <span id="why" className="block scroll-mt-24" />
           <CardHeader
             title={bangla ? "কেন এই ঝুঁকি?" : "Why this risk?"}
@@ -183,8 +215,11 @@ export default function AgentDetailPage() {
             </div>
           </div>
         </Card>
+        </div>
 
         <div className="space-y-4 xl:col-span-2">
+          <div>
+          <SectionLabel title="Action" note="recommended response" />
           <Card>
             <CardHeader title="Recommended action" subtitle="Decision support — requires human review" right={<SourceTag kind="rec" />} />
             <div className="p-5">
@@ -220,6 +255,42 @@ export default function AgentDetailPage() {
               )}
             </div>
           </Card>
+          </div>
+          <div>
+            <SectionLabel title="Safety" note="what stays true whatever you decide" />
+            <Card className="border-emerald-200">
+              <ul className="space-y-2.5 p-5 text-sm text-slate-700">
+                <li className="flex gap-2.5">
+                  <UserCheck className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                  <span>
+                    <b className="text-slate-900">Human review required.</b> This is decision support; a person reviews the evidence and acknowledges it.
+                  </span>
+                </li>
+                <li className="flex gap-2.5">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                  <span>
+                    <b className="text-slate-900">Simulation only — no money moves.</b> Approval runs a what-if simulation and writes an audit entry.
+                  </span>
+                </li>
+                {recs[0] && (
+                  <li className="flex gap-2.5">
+                    <CheckCircle2 className={cx("mt-0.5 h-4 w-4 shrink-0", recs[0].source_cash_after >= recs[0].source_protected_level ? "text-emerald-600" : "text-red-600")} aria-hidden />
+                    <span>
+                      <b className="text-slate-900">Donor protected.</b> {recs[0].source_agent} keeps <span className="num">{bdt(recs[0].source_cash_after)}</span>
+                      {recs[0].source_cash_after >= recs[0].source_protected_level ? " — at or above" : " — below"} its protected level of{" "}
+                      <span className="num">{bdt(recs[0].source_protected_level)}</span>.
+                    </span>
+                  </li>
+                )}
+                <li className="flex gap-2.5">
+                  <Eye className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                  <span>
+                    <b className="text-slate-900">Unusual activity ≠ fraud.</b> Behavioural flags route an agent to manual review; they never change the risk score.
+                  </span>
+                </li>
+              </ul>
+            </Card>
+          </div>
           <Card>
             <CardHeader title="Behavioural activity" subtitle="Unusual activity vs. this agent's own history (last 6h)" />
             <div className="p-5 text-sm">

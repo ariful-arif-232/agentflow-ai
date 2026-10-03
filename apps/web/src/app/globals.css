@@ -74,7 +74,7 @@ body {
   border-radius: 6px;
 }
 
-/* Navy surface: reserved for the navigation sidebar. Main-content panels use light surfaces. */
+/* Navy surface utility (currently unused: the sidebar and main content use light surfaces). */
 .surface-navy {
   background: linear-gradient(180deg, #08162f 0%, #071329 100%);
   color: #e2e8f0;

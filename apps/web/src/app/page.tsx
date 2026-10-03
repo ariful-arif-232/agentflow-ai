@@ -23,7 +23,7 @@ function Step({ children, strong = false }: { children: React.ReactNode; strong?
     <span
       className={cx(
         "inline-flex items-center whitespace-nowrap rounded-md px-2.5 py-1 text-[13px] font-medium",
-        strong ? "bg-blue-500/90 text-white" : "bg-white/[0.08] text-slate-100 ring-1 ring-inset ring-white/10",
+        strong ? "bg-white font-semibold text-blue-700 ring-1 ring-inset ring-blue-300" : "bg-white text-slate-700 ring-1 ring-inset ring-slate-200",
       )}
     >
       {children}
@@ -33,23 +33,23 @@ function Step({ children, strong = false }: { children: React.ReactNode; strong?
 
 function Proof({ icon, value, label, note }: { icon: React.ReactNode; value: string; label: string; note: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] text-blue-200">{icon}</div>
+    <div className="flex items-center gap-3 rounded-lg border border-slate-200 border-l-[3px] border-l-blue-600 bg-white px-3.5 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sun-100 text-navy-900 ring-1 ring-inset ring-sun-400/70">{icon}</div>
       <div className="min-w-0 leading-tight">
-        <div className="text-[13px] text-slate-300">
-          <span className="num mr-1.5 text-base font-semibold text-white">{value}</span>
+        <div className="text-[13px] text-slate-600">
+          <span className="num mr-1.5 text-base font-semibold text-navy-900">{value}</span>
           {label}
         </div>
-        <div className="mt-0.5 text-xs text-slate-400">{note}</div>
+        <div className="mt-0.5 text-xs text-slate-500">{note}</div>
       </div>
     </div>
   );
 }
 
-function Lane({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function Lane({ icon, title, children, accent = false }: { icon: React.ReactNode; title: string; children: React.ReactNode; accent?: boolean }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white/[0.04] px-4 py-2.5 ring-1 ring-inset ring-white/10">
-      <span className="flex w-[88px] shrink-0 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-blue-200">
+    <div className={cx("flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-4 py-2.5 ring-1 ring-inset", accent ? "bg-sun-50 ring-sun-400/50" : "bg-blue-50/70 ring-blue-200/80")}>
+      <span className={cx("flex w-[88px] shrink-0 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em]", accent ? "text-sun-800" : "text-blue-700")}>
         {icon} {title}
       </span>
       {children}
@@ -59,14 +59,14 @@ function Lane({ icon, title, children }: { icon: React.ReactNode; title: string;
 
 function Hero({ snapshot }: { snapshot?: string }) {
   return (
-    <section aria-labelledby="hero-title" className="surface-navy af-rise mb-5 overflow-hidden rounded-2xl border border-navy-700 px-6 py-5 shadow-[0_10px_30px_-18px_rgba(7,16,31,0.7)]">
+    <section aria-labelledby="hero-title" className="af-rise mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-blue-50 px-6 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_32px_-24px_rgba(23,105,232,0.45)]">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-center">
         <div className="min-w-0">
-          <Eyebrow className="text-blue-300">Liquidity operations console{snapshot ? ` · Snapshot ${snapshot}` : ""}</Eyebrow>
-          <h1 id="hero-title" className="mt-1.5 text-[26px] font-semibold leading-[1.15] tracking-tight text-white 2xl:text-[32px]">
+          <Eyebrow className="text-blue-700">Liquidity operations console{snapshot ? ` · Snapshot ${snapshot}` : ""}</Eyebrow>
+          <h1 id="hero-title" className="mt-1.5 text-[26px] font-semibold leading-[1.15] tracking-tight text-navy-900 2xl:text-[32px]">
             {PRODUCT_TAGLINE}
           </h1>
-          <p className="mt-2 max-w-2xl text-[15px] leading-snug text-slate-300">
+          <p className="mt-2 max-w-2xl text-[15px] leading-snug text-slate-600">
             Plan where each agent&apos;s physical cash and e-float should sit before the day starts, then watch intraday cash pressure and
             recommend safe recovery. A person reviews every consequential action.
           </p>
@@ -79,19 +79,19 @@ function Hero({ snapshot }: { snapshot?: string }) {
       </div>
 
       <div className="mt-4 space-y-2">
-        <Lane icon={<Sunrise className="h-4 w-4" aria-hidden />} title="Morning">
+        <Lane icon={<Sunrise className="h-4 w-4" aria-hidden />} title="Morning" accent>
           <div className="flex flex-wrap items-center gap-1.5" aria-label="Morning time scale">
             <Step strong>07:00 Predict</Step>
-            <ChevronRight className="h-4 w-4 text-slate-500" aria-hidden />
+            <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />
             <Step strong>08:00 Position cash + e-float</Step>
           </div>
-          <span className="text-xs text-slate-400">
-            <span className="font-semibold text-slate-200">Before the day starts:</span>
+          <span className="text-xs text-slate-600">
+            <span className="font-semibold text-navy-900">Before the day starts:</span>
             <span className="hidden 2xl:inline"> full-day positioning,</span> same working capital.
           </span>
           <Link
             href="/morning-plan"
-            className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-white px-3 py-1.5 text-[13px] font-semibold text-navy-900 transition-colors hover:bg-blue-50"
+            className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-blue-600 px-3 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
           >
             Open Morning Plan <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
@@ -103,13 +103,13 @@ function Hero({ snapshot }: { snapshot?: string }) {
                 <Link href={s.href} className="rounded-md transition-opacity hover:opacity-80">
                   <Step>{s.label}</Step>
                 </Link>
-                {i < INTRADAY.length - 1 && <ChevronRight className="h-4 w-4 text-slate-500" aria-hidden />}
+                {i < INTRADAY.length - 1 && <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden />}
               </span>
             ))}
           </nav>
         </Lane>
       </div>
-      <p className="mt-2.5 text-xs text-slate-400">
+      <p className="mt-2.5 text-xs text-slate-500">
         Intraday loop: <i>Predict. Explain. Rebalance.</i> (physical cash only). Morning and intraday are evaluated in two separate synthetic
         environments; their results are never combined.
       </p>
@@ -128,7 +128,7 @@ function DecisionColumn({ n, title, question, icon, children, tone = "default" }
       )}
     >
       <div className="flex items-center gap-2">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">{n}</span>
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-navy-900 text-xs font-semibold text-white">{n}</span>
         <Eyebrow className="text-slate-700">{title}</Eyebrow>
         <span className="ml-auto text-slate-400">{icon}</span>
       </div>
@@ -208,7 +208,7 @@ export default function CommandCenter() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   href="/rebalancing"
-                  className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                 >
                   Review recommendations <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>

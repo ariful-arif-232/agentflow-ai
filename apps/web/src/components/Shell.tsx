@@ -35,11 +35,11 @@ const NAV = NAV_GROUPS.flatMap((g) => g.items);
 export function BrandMark({ className = "h-9 w-9" }: { className?: string }) {
   return (
     <svg viewBox="0 0 36 36" className={className} aria-hidden>
-      <rect width="36" height="36" rx="9" fill="#1d4ed8" />
+      <rect width="36" height="36" rx="9" fill="#1769e8" />
       <rect x="8.5" y="15" width="5.5" height="13" rx="1.6" fill="#c7d2fe" />
       <rect x="16" y="10" width="5.5" height="18" rx="1.6" fill="#a5f3fc" />
-      <path d="M24.5 13.5h4.2m0 0-2-2m2 2-2 2" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <rect x="24.5" y="19" width="4.2" height="9" rx="1.4" fill="#ffffff" opacity="0.9" />
+      <path d="M24.5 13.5h4.2m0 0-2-2m2 2-2 2" stroke="#f6c51b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <rect x="24.5" y="19" width="4.2" height="9" rx="1.4" fill="#f6c51b" />
     </svg>
   );
 }
@@ -105,7 +105,7 @@ function DemoControls() {
         aria-pressed={guideOpen}
         className={cx(
           "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ring-1 ring-inset transition-colors",
-          guideOpen ? "bg-blue-700 text-white ring-blue-700" : "bg-white text-blue-800 ring-blue-200 hover:bg-blue-50",
+          guideOpen ? "bg-sun-400 text-navy-900 ring-sun-500" : "bg-sun-100 text-navy-900 ring-sun-400/70 hover:bg-sun-200",
         )}
       >
         <PlayCircle className="h-4 w-4" aria-hidden /> Judge demo
@@ -163,7 +163,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                         active ? "bg-white/[0.09] font-medium text-white" : "text-slate-300 hover:bg-white/[0.05] hover:text-white",
                       )}
                     >
-                      {active && <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-blue-400" aria-hidden />}
+                      {active && <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r bg-sun-400" aria-hidden />}
                       <Icon className={cx("h-[18px] w-[18px]", active ? "text-blue-300" : "text-slate-400")} aria-hidden />
                       {label}
                     </Link>
@@ -210,7 +210,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 aria-current={isActive(path, n.href) ? "page" : undefined}
                 className={cx(
                   "whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium",
-                  isActive(path, n.href) ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100",
+                  isActive(path, n.href) ? "bg-navy-900 text-white" : "text-slate-600 hover:bg-slate-100",
                 )}
               >
                 {n.label}

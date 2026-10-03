@@ -65,7 +65,7 @@ function ResearchJourney({ ev }: { ev: MorningPlanEvidence }) {
           return (
             <li key={j.title} className={cx("relative rounded-xl border bg-white p-4", passed ? "border-emerald-200" : "border-slate-300")}>
               <div className="flex items-center justify-between gap-2">
-                <span className="num flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">{i + 1}</span>
+                <span className={cx("num flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold", i === JOURNEY.length - 1 ? "bg-sun-400 text-navy-900" : "bg-navy-900 text-white")}>{i + 1}</span>
                 <span
                   className={cx(
                     "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold uppercase tracking-wide ring-1 ring-inset",
@@ -80,7 +80,7 @@ function ResearchJourney({ ev }: { ev: MorningPlanEvidence }) {
               <p className="text-[13px] font-medium text-slate-600">{j.why}</p>
               {ev.research_path.length === JOURNEY.length && <p className="mt-2 text-xs leading-snug text-slate-500">{ev.research_path[i]}</p>}
               {i < JOURNEY.length - 1 && (
-                <ArrowRight className="absolute -right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 rounded-full bg-[#f4f6f9] text-slate-400 xl:block" aria-hidden />
+                <ArrowRight className="absolute -right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 rounded-full bg-[#f8f9fb] text-slate-400 xl:block" aria-hidden />
               )}
             </li>
           );
@@ -186,7 +186,7 @@ export default function ImpactPage() {
       />
 
       <div className="grid gap-4 xl:grid-cols-2" aria-label="Evidence summary">
-        <section aria-labelledby="ev-intraday" className="af-rise rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <section aria-labelledby="ev-intraday" className="af-rise rounded-2xl border border-slate-200 border-t-[3px] border-t-blue-600 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <Eyebrow className="text-blue-700">
@@ -196,7 +196,7 @@ export default function ImpactPage() {
                 Legacy intraday environment · 14 held-out days · {imp.data.period.agents} agents · same demand, same total cash · default policy {dflt.toUpperCase()}
               </p>
             </div>
-            <span className="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-900 ring-1 ring-inset ring-amber-600/25">Synthetic held-out evaluation</span>
+            <span className="rounded-md bg-sun-100 px-2 py-0.5 text-xs font-semibold text-navy-900 ring-1 ring-inset ring-sun-400">Synthetic held-out evaluation</span>
           </div>
           <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
             <BeforeAfter label="Shortage events (agent-hours)" before={num(sq.shortage_events)} after={num(af.shortage_events)} change={`−${vs.shortage_events_reduction_pct.toFixed(1)}%`} />
@@ -221,18 +221,18 @@ export default function ImpactPage() {
           </div>
         </section>
 
-        <section aria-labelledby="ev-morning" className="surface-navy af-rise rounded-2xl border border-navy-700 p-5">
+        <section aria-labelledby="ev-morning" className="af-rise rounded-2xl border border-slate-200 border-t-[3px] border-t-sun-400 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
-              <Eyebrow className="text-blue-300">
+              <Eyebrow className="text-blue-700">
                 <span id="ev-morning">Morning Plan evidence</span>
               </Eyebrow>
-              <p className="mt-0.5 text-[13px] text-slate-400">
+              <p className="mt-0.5 text-[13px] text-slate-500">
                 Dual-Liquidity World v2 · fresh audit worlds {mpEv.data ? `${mpEv.data.audit_seeds[0]}–${mpEv.data.audit_seeds[mpEv.data.audit_seeds.length - 1]}` : ""} · frozen full-day ML vs
                 the best cautious rule (7-day q90)
               </p>
             </div>
-            <span className="rounded-md bg-amber-400/15 px-2 py-0.5 text-xs font-semibold text-amber-200 ring-1 ring-inset ring-amber-300/30">
+            <span className="rounded-md bg-sun-100 px-2 py-0.5 text-xs font-semibold text-navy-900 ring-1 ring-inset ring-sun-400">
               Synthetic held-out evaluation · not measured upay performance
             </span>
           </div>
@@ -240,37 +240,37 @@ export default function ImpactPage() {
             <>
               <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-2">
                 <div>
-                  <div className="num text-[44px] font-semibold leading-none tracking-tight text-white">{mpEv.data.combined_unmet_reduction_pct.median.toFixed(1)}%</div>
-                  <div className="mt-1 text-[13px] text-slate-300">median lower combined cash + e-float unmet demand</div>
+                  <div className="num text-[44px] font-semibold leading-none tracking-tight text-blue-600">{mpEv.data.combined_unmet_reduction_pct.median.toFixed(1)}%</div>
+                  <div className="mt-1 text-[13px] text-slate-600">median lower combined cash + e-float unmet demand</div>
                 </div>
                 <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-[13px]">
-                  <dt className="text-slate-400">Worlds improved</dt>
-                  <dd className="num font-semibold text-white">
+                  <dt className="text-slate-500">Worlds improved</dt>
+                  <dd className="num font-semibold text-navy-900">
                     {mpEv.data.worlds_improved}/{mpEv.data.worlds_total}
                   </dd>
-                  <dt className="text-slate-400">Range across worlds</dt>
-                  <dd className="num font-semibold text-white">
+                  <dt className="text-slate-500">Range across worlds</dt>
+                  <dd className="num font-semibold text-navy-900">
                     {mpEv.data.combined_unmet_reduction_pct.min.toFixed(1)}–{mpEv.data.combined_unmet_reduction_pct.max.toFixed(1)}%
                   </dd>
-                  <dt className="text-slate-400">Cash / e-float unmet</dt>
-                  <dd className="num font-semibold text-white">
+                  <dt className="text-slate-500">Cash / e-float unmet</dt>
+                  <dd className="num font-semibold text-navy-900">
                     −{mpEv.data.cash_unmet_reduction_pct_median.toFixed(1)}% / −{mpEv.data.efloat_unmet_reduction_pct_median.toFixed(1)}%
                   </dd>
-                  <dt className="text-slate-400">Extra working capital</dt>
-                  <dd className="num font-semibold text-white">BDT {mpEv.data.extra_working_capital_bdt}</dd>
+                  <dt className="text-slate-500">Extra working capital</dt>
+                  <dd className="num font-semibold text-navy-900">BDT {mpEv.data.extra_working_capital_bdt}</dd>
                 </dl>
               </div>
-              <p className="mt-3 text-xs text-slate-400">
+              <p className="mt-3 text-xs text-slate-500">
                 Historical synthetic research — not an expected saving for any demo date. Caveats and the research path are below.{" "}
-                <a href="#morning-evidence" className="font-medium text-blue-300 hover:underline">
+                <a href="#morning-evidence" className="font-medium text-blue-700 hover:underline">
                   See details
                 </a>
               </p>
             </>
           ) : mpEv.error ? (
-            <p className="mt-3 text-sm text-slate-300">Morning Plan evidence is unavailable right now.</p>
+            <p className="mt-3 text-sm text-slate-600">Morning Plan evidence is unavailable right now.</p>
           ) : (
-            <p className="mt-3 text-sm text-slate-400">Loading…</p>
+            <p className="mt-3 text-sm text-slate-500">Loading…</p>
           )}
         </section>
       </div>
@@ -361,7 +361,7 @@ export default function ImpactPage() {
               }))}
               bars={[
                 { key: "without", name: "Without AgentFlow", color: "#cbd5e1" },
-                { key: "with", name: `With AgentFlow (${dflt.toUpperCase()})`, color: "#1d4ed8" },
+                { key: "with", name: `With AgentFlow (${dflt.toUpperCase()})`, color: "#1769e8" },
               ]}
             />
           </div>
@@ -421,7 +421,7 @@ export default function ImpactPage() {
               layout="vertical"
               height={300}
               data={fc.feature_importance_cash_demand.slice(0, 10).map((f) => ({ name: f.feature, value: f.mae_increase }))}
-              bars={[{ key: "value", name: "MAE increase (BDT)", color: "#1d4ed8" }]}
+              bars={[{ key: "value", name: "MAE increase (BDT)", color: "#1769e8" }]}
             />
           </div>
         </Card>

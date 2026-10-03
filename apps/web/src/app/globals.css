@@ -3,17 +3,41 @@
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #dbe6ff;
-  --color-brand-500: #2563eb;
-  --color-brand-600: #1d4ed8;
-  --color-brand-700: #1e40af;
-  --color-ink-900: #0b1220;
+  /* AgentFlow palette: a restrained blue + yellow accent system that aligns with the event
+     ecosystem. These are AgentFlow design approximations, not any partner's official brand values.
+     Blue carries operations and primary actions; yellow is an accent only (markers, selected
+     details, key labels) and is always paired with navy text when it is a background. */
+  --color-brand-50: #eef4fe;
+  --color-brand-100: #dbe7fd;
+  --color-brand-500: #2f7cf6;
+  --color-brand-600: #1769e8;
+  --color-brand-700: #1256c2;
+  --color-ink-900: #111827;
+  /* Blue scale re-tuned around primary #1769e8 and action #2f7cf6 (every blue-* utility uses it). */
+  --color-blue-50: #eaf2ff;
+  --color-blue-100: #dbe7fd;
+  --color-blue-200: #bcd3fb;
+  --color-blue-300: #8eb7f9;
+  --color-blue-400: #5c99f8;
+  --color-blue-500: #2f7cf6;
+  --color-blue-600: #1769e8;
+  --color-blue-700: #1256c2;
+  --color-blue-800: #134a9e;
+  --color-blue-900: #143d7c;
+  --color-blue-950: #0e2a55;
   /* Deep fintech surface used only for decision areas. */
-  --color-navy-950: #07101f;
-  --color-navy-900: #0b1730;
-  --color-navy-800: #12213f;
-  --color-navy-700: #1b2d52;
+  --color-navy-950: #050f22;
+  --color-navy-900: #08162f;
+  --color-navy-800: #0e2142;
+  --color-navy-700: #1a2e55;
+  /* Yellow accent. Never a large background, never a status colour (amber stays "review"). */
+  --color-sun-50: #fffcee;
+  --color-sun-100: #fff8d8;
+  --color-sun-200: #fdeba0;
+  --color-sun-300: #fada62;
+  --color-sun-400: #f6c51b;
+  --color-sun-500: #dda90b;
+  --color-sun-800: #5c4500;
   /* Resource identities (Morning Plan): physical cash vs e-float. Never emerald/amber/red,
      which are reserved for safe / review / critical states. */
   --color-cash-50: #eef0ff;
@@ -21,7 +45,7 @@
   --color-cash-300: #a5adfb;
   --color-cash-600: #4f46e5;
   --color-cash-700: #4338ca;
-  --color-efloat-50: #ecfbff;
+  --color-efloat-50: #ecfeff;
   --color-efloat-100: #cff4fc;
   --color-efloat-300: #67d4ec;
   --color-efloat-600: #0891b2;
@@ -30,8 +54,8 @@
 
 html,
 body {
-  background: #f4f6f9;
-  color: #0f172a;
+  background: #f8f9fb;
+  color: #111827;
 }
 
 body {
@@ -45,14 +69,14 @@ body {
 
 /* Visible, consistent keyboard focus everywhere (mouse clicks do not show it). */
 :where(a, button, select, input, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #1769e8;
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* Navy decision surface: restrained, no glow. */
+/* Navy surface: reserved for the navigation sidebar. Main-content panels use light surfaces. */
 .surface-navy {
-  background: linear-gradient(180deg, #0b1730 0%, #0a1428 100%);
+  background: linear-gradient(180deg, #08162f 0%, #071329 100%);
   color: #e2e8f0;
 }
 

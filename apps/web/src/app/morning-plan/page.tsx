@@ -103,10 +103,12 @@ function DateControls({ dates, current, onPick }: { dates: string[]; current: st
               aria-pressed={current === p.date}
               className={cx(
                 "rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors",
-                current === p.date ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-600 hover:text-slate-900",
+                current === p.date
+                  ? cx("text-navy-900 shadow-sm ring-1", p.label === "Stress day" ? "bg-sun-100 ring-sun-400" : "bg-blue-50 ring-blue-300")
+                  : "text-slate-600 hover:text-slate-900",
               )}
             >
-              {p.label} <span className="font-normal text-slate-500">· {shortDay(p.date)}</span>
+              {p.label} <span className={cx("font-normal", current === p.date ? "text-slate-600" : "text-slate-500")}>· {shortDay(p.date)}</span>
             </button>
           ))}
         </div>
@@ -131,58 +133,63 @@ function PlacementRow({ plan, res }: { plan: MorningPlan; res: MorningResource }
   const st = RESOURCE_STYLE[res];
   const Icon = st.icon;
   return (
-    <div className="grid items-center gap-x-6 gap-y-3 border-t border-white/10 py-4 first:border-t-0 md:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_auto_minmax(0,1fr)]">
+    <div
+      className={cx(
+        "grid items-center gap-x-6 gap-y-3 rounded-xl border-l-4 px-5 py-3 ring-1 ring-inset md:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_auto_minmax(0,1fr)]",
+        res === "cash" ? "border-l-cash-600 bg-blue-50 ring-blue-200/70" : "border-l-efloat-600 bg-efloat-50 ring-efloat-300/50",
+      )}
+    >
       <div className="flex items-center gap-3">
-        <span className={cx("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", res === "cash" ? "bg-cash-600/25 text-cash-300" : "bg-efloat-600/25 text-efloat-300")}>
+        <span className={cx("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", res === "cash" ? "bg-white text-cash-700 ring-1 ring-cash-600/20" : "bg-white text-efloat-700 ring-1 ring-efloat-600/20")}>
           <Icon className="h-5 w-5" aria-hidden />
         </span>
         <div>
-          <div className="text-base font-semibold text-white">{st.label}</div>
-          <div className={cx("text-[13px]", st.darkText)}>{st.serves}</div>
+          <div className="text-base font-semibold text-navy-900">{st.label}</div>
+          <div className={cx("text-[13px] font-medium", st.text)}>{st.serves}</div>
         </div>
       </div>
       <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">Current</div>
-          <div className="num text-[28px] font-semibold leading-none tracking-tight text-slate-100">{bdtCompact(s.status_quo_total_bdt)}</div>
-          <div className="num mt-1 text-xs text-slate-400">{bdt(s.status_quo_total_bdt)}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-600">Current</div>
+          <div className="num text-[28px] font-semibold leading-none tracking-tight text-slate-700">{bdtCompact(s.status_quo_total_bdt)}</div>
+          <div className="num mt-1 text-xs text-slate-600">{bdt(s.status_quo_total_bdt)}</div>
         </div>
-        <ArrowRight className="mb-5 h-6 w-6 shrink-0 text-slate-500" aria-label="becomes" />
+        <ArrowRight className="mb-5 h-6 w-6 shrink-0 text-slate-400" aria-label="becomes" />
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-blue-300">AgentFlow plan</div>
-          <div className="num text-[28px] font-semibold leading-none tracking-tight text-white">{bdtCompact(s.recommended_total_bdt)}</div>
-          <div className="mt-1 flex items-center gap-1 text-xs text-emerald-300">
+          <div className="inline-block rounded bg-sun-400 px-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-900">AgentFlow plan</div>
+          <div className="num text-[28px] font-semibold leading-none tracking-tight text-navy-900">{bdtCompact(s.recommended_total_bdt)}</div>
+          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-700">
             {s.difference_bdt === 0 ? (
               <>
                 <Equal className="h-3.5 w-3.5" aria-hidden /> matches budget exactly
               </>
             ) : (
-              <span className="text-red-300">MISMATCH</span>
+              <span className="text-red-700">MISMATCH</span>
             )}
           </div>
         </div>
       </div>
-      <dl className="grid max-w-[340px] grid-cols-2 gap-x-4 gap-y-2 text-[13px] md:col-span-2 xl:col-span-1 xl:border-l xl:border-white/10 xl:pl-6">
+      <dl className="grid max-w-[340px] grid-cols-2 gap-x-4 gap-y-2 text-[13px] md:col-span-2 xl:col-span-1 xl:border-l xl:border-slate-300/70 xl:pl-6">
         <div>
-          <dt className="text-slate-400">Repositioned</dt>
-          <dd className="num font-semibold text-slate-100">{bdtCompact(s.repositioned_bdt)}</dd>
+          <dt className="text-slate-600">Repositioned</dt>
+          <dd className="num font-semibold text-navy-900">{bdtCompact(s.repositioned_bdt)}</dd>
         </div>
         <div>
-          <dt className="text-slate-400">Agents up / down</dt>
+          <dt className="text-slate-600">Agents up / down</dt>
           <dd className="num font-semibold">
-            <span className="text-emerald-300">↑{s.agents_increased}</span> <span className="text-slate-500">/</span>{" "}
-            <span className="text-orange-300">↓{s.agents_decreased}</span>
+            <span className="text-emerald-700">↑{s.agents_increased}</span> <span className="text-slate-400">/</span>{" "}
+            <span className="text-orange-700">↓{s.agents_decreased}</span>
           </dd>
         </div>
         <div>
-          <dt className="text-slate-400">Full-day P90 need</dt>
-          <dd className="num font-semibold text-slate-100">{bdtCompact(s.p90_need_total_bdt)}</dd>
+          <dt className="text-slate-600">Full-day P90 need</dt>
+          <dd className="num font-semibold text-navy-900">{bdtCompact(s.p90_need_total_bdt)}</dd>
         </div>
         <div>
-          <dt className="text-slate-400">P90 need covered</dt>
-          <dd className="num font-semibold text-slate-100">
-            {s.agents_p90_covered_before} → <span className="text-white">{s.agents_p90_covered_after}</span>
-            <span className="font-normal text-slate-400"> of {plan.network.agents}</span>
+          <dt className="text-slate-600">P90 need covered</dt>
+          <dd className="num font-semibold text-navy-900">
+            {s.agents_p90_covered_before} → <span className="text-navy-900">{s.agents_p90_covered_after}</span>
+            <span className="font-normal text-slate-600"> of {plan.network.agents}</span>
           </dd>
         </div>
       </dl>
@@ -193,38 +200,38 @@ function PlacementRow({ plan, res }: { plan: MorningPlan; res: MorningResource }
 function PlacementBoard({ plan, stress }: { plan: MorningPlan; stress: boolean }) {
   const n = plan.network;
   return (
-    <section aria-labelledby="placement-title" className="surface-navy af-rise mb-5 overflow-hidden rounded-2xl border border-navy-700 shadow-[0_10px_30px_-18px_rgba(7,16,31,0.7)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-6 py-3.5">
+    <section aria-labelledby="placement-title" className="af-rise mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_32px_-24px_rgba(23,105,232,0.45)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-6 py-3.5">
         <div>
-          <Eyebrow className="text-blue-300">
+          <Eyebrow className="text-blue-700">
             <span id="placement-title">Liquidity placement board</span>
           </Eyebrow>
-          <p className="mt-0.5 text-[13px] text-slate-300">
-            Plan for <b className="text-white">{dayLabel(plan.date)}</b> · horizon {plan.meta.horizon} · {n.agents} agents · frozen full-day P90 forecast
-            {stress && <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-[11px] font-semibold text-amber-200">Stress-day example — not an average day</span>}
+          <p className="mt-0.5 text-[13px] text-slate-600">
+            Plan for <b className="text-navy-900">{dayLabel(plan.date)}</b> · horizon {plan.meta.horizon} · {n.agents} agents · frozen full-day P90 forecast
+            {stress && <span className="ml-2 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-900 ring-1 ring-inset ring-amber-600/25">Stress-day example — not an average day</span>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-semibold" aria-label="Morning plan timeline">
-          <span className="rounded-md bg-blue-500/90 px-2.5 py-1 text-white">07:00 Predict</span>
-          <ArrowRight className="h-4 w-4 text-slate-500" aria-hidden />
-          <span className="rounded-md bg-blue-500/90 px-2.5 py-1 text-white">08:00 Position</span>
-          <ArrowRight className="h-4 w-4 text-slate-500" aria-hidden />
-          <span className="rounded-md bg-white/[0.08] px-2.5 py-1 text-slate-200 ring-1 ring-inset ring-white/10">Intraday monitor (6-hour risk + V2)</span>
+          <span className="rounded-md bg-blue-600 px-2.5 py-1 text-white">07:00 Predict</span>
+          <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+          <span className="rounded-md bg-blue-600 px-2.5 py-1 text-white shadow-[inset_0_-3px_0_#f6c51b]">08:00 Position</span>
+          <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
+          <span className="rounded-md bg-slate-100 px-2.5 py-1 text-slate-700 ring-1 ring-inset ring-slate-200">Intraday monitor (6-hour risk + V2)</span>
         </div>
       </div>
-      <div className="px-6 py-1">
+      <div className="space-y-2 px-6 py-3">
         <PlacementRow plan={plan} res="cash" />
         <PlacementRow plan={plan} res="efloat" />
       </div>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 bg-white/[0.03] px-6 py-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-sun-400/60 bg-sun-100 px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className="num text-[40px] font-semibold leading-none tracking-tight text-white">BDT {n.extra_working_capital_bdt}</div>
+          <div className="num text-[40px] font-semibold leading-none tracking-tight text-navy-900">BDT {n.extra_working_capital_bdt}</div>
           <div>
-            <div className="text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-300">extra working capital</div>
+            <div className="text-[13px] font-semibold uppercase tracking-[0.12em] text-navy-900">extra working capital</div>
             <div
               className={cx(
                 "mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                n.conserved ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30" : "bg-red-500/20 text-red-200",
+                n.conserved ? "bg-white text-emerald-800 ring-1 ring-inset ring-emerald-600/30" : "bg-red-50 text-red-800 ring-1 ring-inset ring-red-600/30",
               )}
             >
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
@@ -233,9 +240,9 @@ function PlacementBoard({ plan, stress }: { plan: MorningPlan; stress: boolean }
           </div>
         </div>
         <div className="ml-auto max-w-xl text-right">
-          <p className="text-xl font-semibold tracking-tight text-white">Same amount. Different placement.</p>
-          <p className="text-[13px] text-slate-400">
-            Cash and e-float budgets are conserved <b className="text-slate-200">separately</b> in every district — the plan never converts one into the other.
+          <p className="text-xl font-semibold tracking-tight text-navy-900">Same amount. Different placement.</p>
+          <p className="text-[13px] text-slate-700">
+            Cash and e-float budgets are conserved <b className="text-navy-900">separately</b> in every district — the plan never converts one into the other.
           </p>
         </div>
       </div>
@@ -251,7 +258,7 @@ function PressureBar({ ratio, res }: { ratio: number; res: MorningResource }) {
   return (
     <div className="relative h-2 rounded-full bg-slate-100" aria-hidden>
       <div className={cx("af-bar absolute h-2 rounded-full", RESOURCE_STYLE[res].bar)} style={{ width: `${w}%` }} />
-      <div className="absolute -top-1 h-4 w-px bg-slate-500" style={{ left: `${budgetAt}%` }} />
+      <div className="absolute -top-1 h-4 w-px bg-navy-900" style={{ left: `${budgetAt}%` }} />
     </div>
   );
 }
@@ -360,13 +367,13 @@ function ReviewFocus({ plan, onOpen }: { plan: MorningPlan; onOpen: (id: string)
     );
   };
   return (
-    <Card className="mb-5 border-amber-200">
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-t-xl border-b border-amber-100 bg-amber-50/60 px-5 py-3.5">
+    <Card className="mb-5 border-sun-300">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-t-xl border-b border-sun-200 bg-sun-50 px-5 py-3.5">
         <div className="flex items-start gap-2.5">
           <ShieldAlert className="mt-0.5 h-5 w-5 text-amber-700" aria-hidden />
           <div>
-            <h3 className="text-[15px] font-semibold text-amber-950">Human attention required</h3>
-            <p className="text-[13px] text-amber-900/80">Review focus · difficult recommendations a person should check first, largest cuts first.</p>
+            <h3 className="text-[15px] font-semibold text-navy-900">Human attention required</h3>
+            <p className="text-[13px] text-slate-700">Review focus · difficult recommendations a person should check first, largest cuts first.</p>
           </div>
         </div>
         <ul className="flex flex-wrap gap-1.5" aria-label="Review flags on this date">
@@ -726,7 +733,7 @@ export default function MorningPlanPage() {
       />
       <div className="mb-4 flex flex-wrap items-center gap-1.5" aria-label="Trust labels">
         {TRUST.map((t) => (
-          <span key={t} className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-medium text-white">
+          <span key={t} className="rounded-full bg-navy-900 px-2.5 py-1 text-xs font-medium text-white">
             {t}
           </span>
         ))}

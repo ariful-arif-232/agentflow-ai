@@ -127,11 +127,11 @@ function SafetyGate({ rec, approved = false, compact = false }: { rec: Recommend
             key={c.label}
             className={cx(
               "flex items-start gap-2 rounded-lg border px-3 py-2",
-              c.state === "pass" ? "border-emerald-200 bg-emerald-50/60" : c.state === "fail" ? "border-amber-300 bg-amber-50" : "border-slate-300 border-dashed bg-white",
+              c.state === "pass" ? "border-emerald-200 bg-emerald-50/60" : c.state === "fail" ? "border-amber-300 bg-amber-50" : "border-sun-400 border-dashed bg-sun-50",
             )}
           >
             <Icon
-              className={cx("mt-0.5 h-4 w-4 shrink-0", c.state === "pass" ? "text-emerald-600" : c.state === "fail" ? "text-amber-700" : "text-slate-400")}
+              className={cx("mt-0.5 h-4 w-4 shrink-0", c.state === "pass" ? "text-emerald-600" : c.state === "fail" ? "text-amber-700" : "text-slate-600")}
               aria-hidden
             />
             <span className="min-w-0">
@@ -150,7 +150,7 @@ function SafetyGate({ rec, approved = false, compact = false }: { rec: Recommend
 
 function FocusCard({ rec, policy, approved, onReview }: { rec: Recommendation; policy: PolicyName; approved: boolean; onReview: () => void }) {
   return (
-    <Card className="af-rise mb-4 border-blue-200">
+    <Card className="af-rise mb-4 border-blue-200 border-t-[3px] border-t-sun-400">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
         <div className="min-w-0">
           <Eyebrow className="text-blue-700">Next recommendation to review · policy {policy.toUpperCase()}</Eyebrow>
@@ -171,7 +171,7 @@ function FocusCard({ rec, policy, approved, onReview }: { rec: Recommendation; p
             <CheckCircle2 className="h-4 w-4" aria-hidden /> Simulation approved
           </span>
         ) : (
-          <button onClick={onReview} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700">
+          <button onClick={onReview} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
             Review Recommendation
           </button>
         )}
@@ -479,7 +479,7 @@ function RebalancingInner() {
             aria-pressed={activePolicy === p}
             className={cx(
               "rounded-md px-3 py-1.5 ring-1 ring-inset focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600",
-              activePolicy === p ? "bg-slate-900 text-white ring-slate-900" : "bg-white text-slate-700 ring-slate-300 hover:bg-slate-50",
+              activePolicy === p ? "bg-blue-600 text-white ring-blue-600" : "bg-white text-slate-700 ring-slate-300 hover:bg-slate-50",
             )}
           >
             {p === "v2" ? "V2 — benefit · safety · cost" : "V1 — nearest donor"}
@@ -592,7 +592,7 @@ function RebalancingInner() {
                       <button
                         onClick={() => setReviewing(r)}
                         aria-label={`Review Recommendation ${r.id}: ${r.source_agent} to ${r.destination_agent}`}
-                        className="inline-flex items-center gap-1 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-slate-700"
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
                       >
                         Review <ArrowRight className="h-3 w-3" aria-hidden />
                       </button>

@@ -106,7 +106,7 @@ export function DemoGuide() {
                 )}
               >
                 <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
-                  <span className={cx("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] text-white", current ? "bg-blue-700" : "bg-slate-800")}>{s.n}</span>
+                  <span className={cx("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px]", current ? "bg-sun-400 text-navy-900" : "bg-slate-800 text-white")}>{s.n}</span>
                   {s.title}
                 </div>
                 <div className="mt-1 text-xs leading-snug text-slate-600">{s.detail}</div>

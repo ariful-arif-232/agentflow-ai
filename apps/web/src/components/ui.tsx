@@ -244,7 +244,7 @@ export function PageHeader({ title, subtitle, right, eyebrow }: { title: string;
   );
 }
 
-export function ScoreBar({ value, max = 100, color = "#2563eb" }: { value: number; max?: number; color?: string }) {
+export function ScoreBar({ value, max = 100, color = "#1769e8" }: { value: number; max?: number; color?: string }) {
   const w = Math.max(0, Math.min(100, (100 * value) / max));
   return (
     <div className="h-1.5 w-full rounded-full bg-slate-100">

@@ -49,10 +49,12 @@ STAGES = ("contract_validate_hour", "feature_build_window", "engine_inference_wi
 
 
 def snapshot_digest(snap: pd.DataFrame) -> str:
-    cols = ["agent_id", *integration.SNAPSHOT_EXACT_COLUMNS, *integration.SNAPSHOT_COMPARE_COLUMNS]
-    s = snap[cols].sort_values("agent_id").copy()
-    for c in integration.SNAPSHOT_COMPARE_COLUMNS:
-        s[c] = s[c].astype(float).round(6)
+    """SHA-256 of every agent's decisions (risk level, anomaly status, review priority).
+
+    Numeric fields are deliberately excluded: models retrained on another CPU (e.g. CI) differ in the last float
+    bits, so a hash of BDT-scale forecasts is not portable. Numeric agreement is checked with a tolerance instead
+    (integration.compare_snapshots, replay vs batch in the same environment)."""
+    s = snap[["agent_id", *integration.SNAPSHOT_EXACT_COLUMNS]].sort_values("agent_id").astype(str)
     return hashlib.sha256(s.to_csv(index=False).encode()).hexdigest()
 
 

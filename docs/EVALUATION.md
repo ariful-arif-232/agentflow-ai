@@ -483,7 +483,8 @@ the batch pipeline (`Engine.load(serving=True)`) for all 200 agents:
 * numeric fields agree within 1e-6, with an observed maximum difference of 0.0;
 * the streamed training-period shortage rate equals the batch statistic.
 
-The snapshot digests are re-checked by the tests (determinism).
+Per-agent decision digests (risk level, anomaly status, review priority) are re-checked by the tests
+(determinism); numeric fields are compared within tolerance.
 
 **Benchmark.** Synthetic populations with a fixed seed, N agents × 216 hours; median of 3; 4 vCPUs; one
 process per scale.
@@ -531,7 +532,7 @@ from the model.
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 236 tests
+python -m pytest -q                 # 237 tests
 python ml/scripts/ml_experiment.py  # optional: pre-registered ML experiment (~6 min)
 python ml/scripts/integration_scale.py   # optional: replay equivalence + scale benchmark (~3 min)
 ```

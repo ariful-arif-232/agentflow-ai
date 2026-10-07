@@ -175,6 +175,20 @@ def test_replay_snapshots_are_reproducible_across_runs(replay, artifact):
         assert integration_scale.snapshot_digest(snap) == recorded[str(ts)]
 
 
+def test_decision_digest_is_portable_but_detects_changed_decisions(replay):
+    """Last-bit float differences (another CPU retraining the models) must not change the digest; decisions must."""
+    sys.path.insert(0, str(ROOT / "ml" / "scripts"))
+    import integration_scale
+    snap = replay[1][max(TARGETS)]
+    noisy = snap.copy()
+    for c in ("pred_net_requirement_6h", "pred_net_requirement_p90_6h", "anomaly_score"):
+        noisy[c] = noisy[c] * (1 + 1e-9)
+    assert integration_scale.snapshot_digest(noisy) == integration_scale.snapshot_digest(snap)
+    changed = snap.copy()
+    changed.loc[0, "review_priority"] = "URGENT_REVIEW" if changed.loc[0, "review_priority"] != "URGENT_REVIEW" else "NONE"
+    assert integration_scale.snapshot_digest(changed) != integration_scale.snapshot_digest(snap)
+
+
 def test_a_window_only_replay_gives_the_same_decision(data, models, replay):
     """Starting 216 h before the decision time with the training statistic supplied gives identical decisions."""
     ts = max(TARGETS)

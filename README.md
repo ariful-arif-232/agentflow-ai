@@ -332,7 +332,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (236 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (237 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -412,7 +412,7 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 236 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, feed contract + replay equivalence + benchmark artifact, ML experiment leakage + decision, policy selection, impact, API, contract, Morning Plan)
+python -m pytest -q                       # from repo root: 237 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, feed contract + replay equivalence + benchmark artifact, ML experiment leakage + decision, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 

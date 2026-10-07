@@ -15,7 +15,7 @@ and no new models. Metrics, serving policy, security guardrails and Morning Plan
 | Versioned evidence artifact | `ml/artifacts/integration_scale.json` (`phase2-integration-1`) |
 | API (read-only) | `GET /api/integration-scale`, `GET /api/integration/feed-schema` |
 | UI | Impact & Model Health page → **Integration & Scale — Synthetic Benchmark** |
-| Tests | `tests/test_integration_scale.py` (33 tests) |
+| Tests | `tests/test_integration_scale.py` (34 tests) |
 
 ## 1. Provider-neutral feed contract — `agentflow.feed.v1`
 
@@ -84,7 +84,9 @@ per-agent shortage counts for the training period. On request it builds the deci
   * risk level, anomaly status and review priority are identical;
   * the maximum numeric difference is 0.0, within a tolerance of 1e-6.
 * The streamed historical shortage rate equals the batch training statistic.
-* Snapshot digests are stored and re-checked by the tests, which proves determinism across runs.
+* Decision digests (every agent's risk level, anomaly status and review priority) are stored and re-checked by
+  the tests, which proves determinism across runs. Numeric fields are compared with a tolerance instead,
+  because models retrained on another CPU (for example in CI) differ in the last float bits.
 * A replay that starts only 216 hours before the decision, with the training statistic supplied, gives
   the same decision. This shows that the window is sufficient.
 

@@ -17,6 +17,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .audit import get_audit_chain
 from .morning_plan import get_morning_plan
+from .model_monitoring import router as model_monitoring_router
 from .security import LABEL as SECURITY_LABEL
 from .security import get_rate_limiter
 from .schemas import (AgentsResponse, ErrorResponse, HealthResponse, MorningPlanSimulateRequest, ScenarioRequest,
@@ -43,6 +44,8 @@ app = FastAPI(
     lifespan=lifespan,
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
 )
+
+app.include_router(model_monitoring_router)
 
 origins = [o.strip() for o in os.getenv("AGENTFLOW_CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False,

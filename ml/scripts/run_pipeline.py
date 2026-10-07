@@ -10,6 +10,6 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 if __name__ == "__main__":
-    for step in ("generate_data.py", "train.py", "select_policy.py", "evaluate.py"):
+    for step in ("generate_data.py", "train.py", "select_policy.py", "evaluate.py", "model_monitoring.py"):
         print(f"\n=== {step} ===")
         runpy.run_path(str(HERE / step), run_name="__main__")

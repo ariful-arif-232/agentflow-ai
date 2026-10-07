@@ -9,7 +9,8 @@
 >
 > Sections 1–7 cover the **legacy intraday environment**, where e-float is tracked but is not a
 > binding constraint. Section 8 covers the separate Morning Plan environment. Section 9 adds the
-> Phase-2 logistics-cost proxy without changing any Phase-1 result.
+> Phase-2 logistics-cost proxy without changing any Phase-1 result. Section 10 adds the Phase-2
+> business-impact layer (synthetic simulated estimate) as a separate artifact.
 
 ## 1. Dataset and split
 
@@ -383,10 +384,90 @@ type); real distributor and branch locations and road distances; cash-in-transit
 rates and limits; field-officer capacity and service windows; then re-selection of V2 parameters on real
 validation data. Governed rates replace the defaults through configuration, with no code change.
 
+## 10. Phase-2 business impact (synthetic simulated estimate)
+
+> **Synthetic simulated estimate — not measured upay performance.** This layer translates the held-out
+> simulation into customer, agent and distributor terms. It is additive and versioned separately
+> (`ml/artifacts/business_impact.json`, `phase2-business-1`, `GET /api/business-impact`). `impact.json`,
+> including §1–§9, is byte-for-byte unchanged, and a reconciliation block proves the layer reuses the same
+> simulations (status-quo and V1 unmet demand, V2's 1,223 events and 345 transfers, and the Phase-2 V2
+> peer logistics cost all match).
+
+**Direct vs estimated.**
+
+| Kind | KPIs |
+|---|---|
+| Measured directly in the simulation | requested / served / unmet cash-out value, fill rate, shortage agent-hours, requested cash-out transaction counts, peer transfers, escalation events and escalated agent-days |
+| **Estimated** | failed and protected cash-out transactions (transaction-equivalents) |
+| **Assumption-based** | illustrative agent commission protected, net illustrative value, benefit-cost ratio, distributor margin (only if a fee is supplied) |
+| Cost proxy | peer and distributor logistics cost (Phase-2 synthetic operational-cost proxy, §9) |
+
+**Why transactions are estimated.** The simulator removes BDT, not individual transactions, and the
+dataset has no transaction-level failures (`cash_out_count` is generated from amount ÷ ticket size). So:
+
+* Method A (headline): estimated failed transactions = Σ unmet BDT ÷ that agent-hour's average synthetic
+  cash-out ticket (`cash_out_amount ÷ cash_out_count`), or the location-cluster ticket where the hour has no
+  counted transaction (1.3% of status-quo unmet value).
+* Method B (cross-check): Σ unmet BDT ÷ location-cluster ticket.
+* Protected = status quo − policy; reported with the A/B range.
+
+**Formulas (illustrative economics).** The only financial rate is the agent commission on served cash-out
+value, which is not in the dataset. It is an explicit assumption: **50 bps**, a round illustrative number,
+not upay's or any provider's rate.
+
+```
+commission protected      = cash-out value protected × commission bps ÷ 10,000
+net illustrative value    = commission protected − peer logistics cost proxy
+benefit-cost ratio        = commission protected ÷ peer logistics cost proxy          (not an ROI)
+break-even commission bps = peer logistics cost proxy ÷ cash-out value protected × 10,000
+distributor break-even fee per trip = distributor cost proxy ÷ escalated agent-days (one trip each)
+```
+
+No customer-retention, lifetime-value or provider-revenue assumption is used, so **no ROI is reported**.
+No distributor profit is computed unless a fee is supplied (`AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT`).
+
+**Results (14 held-out days, 200 synthetic agents; V2 = current default, logistics-cost ranking).**
+
+| KPI vs status quo | AgentFlow V1 | **AgentFlow V2** |
+|---|---:|---:|
+| Shortage agent-hours avoided (direct) | 762 | **788** |
+| Cash-out value protected (direct) | BDT 37,09,340 | **BDT 38,37,640** |
+| Est. cash-out transactions protected (range A–B) | ≈ 2,408 (2,371–2,408) | **≈ 2,459 (2,433–2,459)** |
+| Illustrative agent commission protected at 50 bps | BDT 18,547 | BDT 19,188 |
+| Peer transfers · logistics cost proxy · per transfer | 501 · BDT 2,79,996 · BDT 559 | 345 · BDT 2,08,612 · BDT 605 |
+| Peer logistics cost per est. transaction protected | BDT 116 | **BDT 85** |
+| Distributor workload: escalation events · agent-days | 305 · 161 | 297 · 153 |
+| Distributor cost proxy (one trip per agent-day) · break-even fee per trip | BDT 2,36,353 · BDT 1,468 | BDT 2,34,216 · BDT 1,531 |
+| Net illustrative value (commission − peer cost) | −BDT 2,61,449 | −BDT 1,89,424 |
+| Benefit-cost ratio · break-even commission | 0.07 · 755 bps | 0.09 · 544 bps |
+
+Status quo: BDT 95.4 lakh unmet of BDT 38.71 crore requested (97.54% filled), ≈ 6,680 estimated failed
+transactions (Method B 6,335) of 2,36,319 requested.
+
+**Sensitivity of V2 net illustrative value (BDT; transfer plan held fixed, rates re-priced).**
+
+| Logistics cost | 25 bps | 50 bps | 100 bps | 200 bps | Break-even |
+|---|---:|---:|---:|---:|---:|
+| ×0.5 | −94,712 | −85,118 | −65,930 | −27,553 | 272 bps |
+| ×1.0 | −1,99,018 | −1,89,424 | −1,70,236 | −1,31,859 | 544 bps |
+| ×1.5 | −3,03,324 | −2,93,730 | −2,74,541 | −2,36,165 | 815 bps |
+
+**Honest reading.** Under these illustrative rates, agent commission on the protected cash-out does not
+pay for dedicated field-officer transfers anywhere on the grid: even at half the cost proxy, commission would
+need about 2.7% to break even. The business case therefore rests on customers served (≈ 2,460 estimated
+transactions and BDT 38.4 lakh of cash-out completed over 14 days) and on cheaper delivery: V2 uses 27% less
+logistics cost per protected transaction than V1. Whether that service is worth its logistics cost depends on
+real operator economics (fee split, retention, cheaper agent-run transfers) that a synthetic prototype cannot
+measure.
+
+**Limitations.** Synthetic data only; transaction counts are estimates; the commission rate is illustrative;
+customers do not retry or switch agents; escalations are costed but their benefit is not simulated; the
+sensitivity re-prices a fixed plan; no ROI, retention or lifetime-value claim.
+
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 148 tests
+python -m pytest -q                 # 164 tests
 ```

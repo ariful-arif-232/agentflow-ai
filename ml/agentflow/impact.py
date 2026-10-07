@@ -128,6 +128,7 @@ def simulate_policy(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFra
     log = []
     escalated_need = 0.0
     escalation_cost = {"events": 0, "unavailable": 0, "cost_bdt": 0.0, "cash_in_transit_bdt": 0.0}
+    escalation_log = []  # per escalation, for the Phase-2 business-impact layer (not written to impact.json)
     for t in range(n_h):
         if hod[t] == data_gen.OPENING_HOUR:
             cash = target.copy()
@@ -160,6 +161,10 @@ def simulate_policy(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFra
             escalation_cost["unavailable"] += lg["escalations_cost_unavailable"]
             escalation_cost["cost_bdt"] += lg["escalation_replenishment_cost_bdt"]
             escalation_cost["cash_in_transit_bdt"] += lg["escalation_cash_in_transit_cost_bdt"]
+            for e in plan["escalations"]:
+                rc = e.get("replenishment_cost", {})
+                escalation_log.append({"t": t, "agent_id": e["agent_id"], "unresolved_need": e["unresolved_need"],
+                                       "cost_bdt": rc.get("total_estimated_cost_bdt") if rc.get("available") else None})
             idx = {a: i for i, a in enumerate(agent_ids)}
             for rec in plan["recommendations"]:
                 # Transfer leaves the donor and reaches the recipient at the start of the next hour.
@@ -170,6 +175,7 @@ def simulate_policy(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFra
     # but demand in the decision hour has already been served, so cash >= amount holds.
     return {"hours": hours, "agent_ids": agent_ids, "unmet": unmet, "cash_end": cash_end,
             "out_req": out_req, "log": log, "escalated_need_bdt": escalated_need, "escalation_cost": escalation_cost,
+            "escalation_log": escalation_log,
             "policy": policy if forecast_source != "none" else None}
 
 

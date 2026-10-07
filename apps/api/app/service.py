@@ -22,7 +22,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "ml"))
 
-from agentflow import config, engine, logistics, rebalance, rebalance_v2, risk  # noqa: E402
+from agentflow import business_impact, config, engine, logistics, rebalance, rebalance_v2, risk  # noqa: E402
 from agentflow.engine import DEFAULT_AS_OF  # noqa: E402
 
 DATA_LABEL = "Synthetic data for hackathon prototyping — not production upay data"
@@ -84,6 +84,9 @@ class AgentFlowService:
         self._plan_cache: dict = {}
         self.metrics = self._read_json("metrics.json")
         self.impact = self._read_json("impact.json")
+        # Phase-2 business layer (synthetic simulated estimate); re-priced with any env rate overrides.
+        biz = self._read_json("business_impact.json")
+        self.business_impact = business_impact.reprice(biz, business_impact.assumptions_from_env()) if biz else {}
         # Default rebalancing policy comes from the pre-registered held-out deployment rule.
         self.default_policy = self.impact.get("deployment_decision", {}).get("default_policy", "v1")
         self.v2_cfg = rebalance_v2.selected_config()

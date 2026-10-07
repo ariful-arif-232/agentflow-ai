@@ -206,6 +206,24 @@ no real distributor location is implied).
 
 *Simulated operational-cost proxy — replace assumptions with governed operator rates for deployment.*
 
+## 11b. Phase-2 business impact (synthetic simulated estimate)
+
+*Synthetic simulated estimate — not measured upay performance.* A separate, versioned layer
+(`business_impact.json`, `GET /api/business-impact`) translates the same held-out simulation into
+business terms without changing any earlier number. Over 14 held-out days, V2 against the status quo:
+
+* **Customers:** BDT 38.4 lakh of requested cash-out served that was unmet (direct); ≈ 2,459 cash-out
+  transactions protected (**estimate**: unmet BDT ÷ average synthetic ticket; range 2,433–2,459); 788 fewer
+  shortage agent-hours.
+* **Agents:** illustrative commission protected BDT 19,188 at an **assumed 50 bps** (not upay's or any
+  provider's rate; configurable).
+* **Distributor and logistics:** 345 peer transfers (cost proxy BDT 2.09 lakh, BDT 605 each); 153
+  escalated agent-days (distributor trip proxy BDT 2.34 lakh, break-even fee BDT 1,531 per trip).
+* **Economics:** commission does not cover the peer logistics proxy (net −BDT 1.89 lakh; break-even
+  ≈ 544 bps), and a 25–200 bps × 0.5–1.5× cost sensitivity grid stays negative. The value lies in customers
+  served and in cheaper delivery: BDT 85 of logistics per protected transaction for V2 against BDT 116 for
+  V1. No ROI is claimed. Details: `EVALUATION.md` §10.
+
 ## 12. Responsible AI
 
 Synthetic data and tested absence of PII; deterministic, evidence-based explanations; source tags

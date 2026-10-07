@@ -168,6 +168,15 @@ def logistics_assumptions():
     return get_service().logistics_assumptions()
 
 
+@app.get("/api/business-impact")
+def business_impact():
+    """Phase-2 business KPIs from the held-out simulation. Synthetic simulated estimate — read-only."""
+    biz = get_service().business_impact
+    if not biz:
+        raise HTTPException(status_code=404, detail="Business-impact artifact missing - run python ml/scripts/evaluate.py")
+    return biz
+
+
 @app.get("/api/impact")
 def impact():
     imp = get_service().impact

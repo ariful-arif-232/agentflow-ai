@@ -322,6 +322,21 @@ These are **peer-to-peer** moves, so the total cash in the network does not chan
 - *Service availability* = share of operating agent-hours (08:00–21:59) with demand where every
   cash-out request was served.
 
+### 13b. Business impact (Phase 2, synthetic simulated estimate)
+
+Say: *"synthetic simulated estimate, not measured upay performance."*
+- **Measured in the simulation:** V2 served BDT 38.4 lakh of cash-out that was unmet without AgentFlow,
+  and had 788 fewer shortage agent-hours.
+- **Estimated:** about 2,459 transactions protected (unmet BDT ÷ average synthetic ticket size). The
+  simulator works in BDT, not individual transactions, so this is an estimate, never an exact count.
+- **Assumed:** the agent commission (50 bps) is an illustrative round number, not upay's rate. At that
+  rate, commission protected (BDT 19,188) is far below the peer logistics cost proxy (BDT 2.09 lakh);
+  break-even is about 544 bps. We say this openly.
+- **Distributor:** 153 escalated agent-days (trips); break-even fee about BDT 1,531 per trip. We do not
+  compute distributor profit because we have no real fee.
+- **The honest pitch:** customers served, at lower logistics cost per protected transaction with V2
+  (BDT 85) than V1 (BDT 116). **No ROI is claimed.**
+
 ## 14. Why the dataset is synthetic
 
 - We have **no access to upay data**, and real customer data should not be used in a hackathon
@@ -556,6 +571,10 @@ click **Retry**; nothing was changed or approved.
   gains are fewer transfers, lower cost and fewer donor shortages.
 - ❌ Do **not** claim donors are now risk-free. There were still 14 donor shortage events with V2.
 - ❌ Do **not** claim AgentFlow is in production or used by upay.
+- ❌ Do **not** claim real upay revenue, commission, savings or ROI. Business-impact figures are synthetic
+  simulated estimates; the 50 bps commission is illustrative, and "2,459 transactions" is an estimate.
+- ❌ Do **not** claim AgentFlow pays for itself. Under the illustrative rates, commission protected does not
+  cover the logistics cost proxy.
 - ❌ Do **not** present 20.6% as the saving for the date shown on the Morning Plan page. It is
   historical synthetic research evidence.
 - ❌ Do **not** say the Morning Plan "adds liquidity" or that V2 optimises e-float. The plan

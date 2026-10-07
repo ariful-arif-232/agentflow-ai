@@ -4,7 +4,8 @@ import { Fragment } from "react";
 import { ArrowRight, CheckCircle2, FlaskConical, XCircle } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { bdt, bdtCompact, num, pct, titleCase } from "@/lib/format";
-import type { ImpactResponse, MetricsResponse, MorningPlanEvidence, Phase2Logistics, PolicyMetrics } from "@/lib/types";
+import type { BusinessImpact, ImpactResponse, MetricsResponse, MorningPlanEvidence, Phase2Logistics, PolicyMetrics } from "@/lib/types";
+import { BusinessImpactCard } from "@/components/BusinessImpact";
 import { CostEquation, CostProxyNote } from "@/components/LogisticsCost";
 import { MorningEvidencePanel } from "@/components/MorningEvidence";
 import { CompareBars, DailyImpactChart } from "@/components/charts";
@@ -199,6 +200,7 @@ export default function ImpactPage() {
   const imp = useApi<ImpactResponse>("/api/impact");
   const met = useApi<MetricsResponse>("/api/model/metrics");
   const mpEv = useApi<MorningPlanEvidence>("/api/morning-plan/evidence");
+  const biz = useApi<BusinessImpact>("/api/business-impact");
   if (imp.error || met.error) return <ErrorState message={(imp.error || met.error) as string} onRetry={() => { imp.reload(); met.reload(); }} />;
   if (!imp.data || !met.data) return <Loading />;
   const p = imp.data.policies;
@@ -339,6 +341,7 @@ export default function ImpactPage() {
       </p>
 
       <V1V2Glance v1={p.agentflow} v2={p.agentflow_v2} />
+      {biz.data && <BusinessImpactCard biz={biz.data} />}
       {imp.data.phase2_logistics && <Phase2LogisticsCard p2={imp.data.phase2_logistics} />}
 
       <Card className="mt-4">

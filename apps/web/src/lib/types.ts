@@ -613,3 +613,83 @@ export interface MorningPlanSimulation {
     network: Record<MorningResource, { status_quo_total_bdt: number; recommended_total_bdt: number; difference_bdt: number }>;
   };
 }
+
+/** Phase-2 business-impact layer. Synthetic simulated estimate — not measured upay performance. */
+export interface BizEconomics {
+  agent_commission_bps: number;
+  illustrative_commission_protected_bdt: number;
+  operational_logistics_cost_bdt: number;
+  net_illustrative_value_bdt: number;
+  benefit_cost_ratio: number | null;
+  break_even_commission_bps: number | null;
+}
+
+export interface BizPolicy {
+  customer: {
+    requested_cash_out_bdt: number;
+    served_cash_out_bdt: number;
+    unmet_cash_out_bdt: number;
+    demand_fill_rate_pct: number | null;
+    shortage_agent_hours: number;
+    requested_cash_out_transactions: number;
+    estimated_failed_transactions: number;
+    estimated_failed_transactions_method_b: number;
+  };
+  operations: {
+    peer_transfers: number;
+    cash_moved_by_peer_transfers_bdt: number;
+    peer_logistics_cost_bdt: number;
+    average_cost_per_peer_transfer_bdt: number | null;
+    escalation_events: number;
+    escalated_agent_days: number;
+    escalated_need_bdt: number;
+    distributor_cost_proxy_every_escalation_bdt: number;
+    distributor_cost_proxy_one_trip_per_agent_day_bdt: number;
+    distributor_trips_cost_unavailable: number;
+  };
+}
+
+export interface BizVsStatusQuo {
+  customer: {
+    cash_out_value_protected_bdt: number;
+    shortage_agent_hours_avoided: number;
+    estimated_transactions_protected: number;
+    estimated_transactions_protected_range: [number, number];
+    fill_rate_gain_pp: number;
+  };
+  agent: { cash_out_value_protected_bdt: number; agent_commission_bps: number; illustrative_commission_protected_bdt: number; label: string };
+  distributor: {
+    trips_one_per_escalated_agent_day: number;
+    logistics_cost_proxy_bdt: number;
+    break_even_fee_per_trip_bdt: number | null;
+    assumed_fee_per_trip_bdt: number | null;
+    illustrative_margin_bdt: number | null;
+    margin_note: string | null;
+  };
+  economics: {
+    peer_transfers_only: BizEconomics;
+    including_distributor_trips: BizEconomics;
+    peer_cost_per_estimated_transaction_protected_bdt: number | null;
+    peer_cost_per_bdt_1000_protected: number | null;
+    roi: null;
+    roi_note: string;
+    label: string;
+  };
+}
+
+export interface BusinessImpact {
+  label: string;
+  version: string;
+  synthetic_data: true;
+  simulated_estimate: true;
+  product_story: string;
+  assumptions: { agent_commission_bps: number; distributor_fee_per_trip_bdt: number | null; label: string; agent_commission_note: string };
+  methodology: { transaction_estimate: string; roi_note: string; fallback_ticket_share_of_status_quo_unmet_pct: number };
+  metric_definitions: Record<string, string>;
+  calculations: {
+    policies: Record<"status_quo" | "agentflow_v1" | "agentflow_v2_phase1_ranking" | "agentflow_v2", BizPolicy>;
+    vs_status_quo: Record<"agentflow_v1" | "agentflow_v2_phase1_ranking" | "agentflow_v2", BizVsStatusQuo>;
+  };
+  sensitivity: Record<"agentflow_v1" | "agentflow_v2", { grid: (BizEconomics & { cost_multiplier: number })[]; break_even_commission_bps_by_cost_multiplier: { cost_multiplier: number; break_even_commission_bps: number | null }[] }>;
+  limitations: string[];
+}

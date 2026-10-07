@@ -210,6 +210,33 @@ and vehicle type; real distributor and branch locations and road distances; cash
 or security rates and limits; field-officer capacity and service windows; then re-selection of V2
 parameters on real validation data.
 
+## Phase-2 business impact (synthetic simulated estimate)
+
+Judges asked us to translate technical gains into transaction completion, agent revenue, logistics cost,
+customer impact and ROI. `ml/agentflow/business_impact.py` does this as a separate, versioned layer
+(`ml/artifacts/business_impact.json`, `GET /api/business-impact`, and a *Business Impact — Synthetic
+Simulation* card on the Impact page). Every figure is labelled **Synthetic simulated estimate — not
+measured upay performance.** `impact.json` and all Phase-1 and Phase-2 logistics numbers are unchanged.
+
+* **Direct (measured in the simulation):** cash-out value requested / served / unmet, fill rate,
+  shortage agent-hours, requested transaction counts, peer transfers, distributor escalations.
+* **Estimated:** protected cash-out transactions. The simulator removes BDT, not individual
+  transactions, so failed transactions = unmet BDT ÷ the agent-hour's average synthetic ticket, with a
+  cluster-ticket cross-check.
+* **Assumption-based:** agent commission = protected cash-out value × an illustrative **50 bps** (not
+  upay's or any provider's rate; override with `AGENTFLOW_BUSINESS_AGENT_COMMISSION_BPS`). Distributor
+  profit is shown only if `AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT` is set; otherwise the
+  break-even fee per trip is reported.
+
+V2 over the 14 held-out days, against the status quo: **BDT 38.4 lakh** of cash-out served that was
+unmet, **≈ 2,459 estimated transactions** protected (range 2,433–2,459), 788 fewer shortage agent-hours,
+345 peer transfers and 153 distributor agent-day trips. At 50 bps the illustrative commission protected
+(BDT 19,188) does **not** cover the peer logistics cost proxy (BDT 2,08,612); break-even needs about
+544 bps. A small sensitivity grid (25–200 bps × 0.5–1.5× cost) stays negative throughout. The case rests on
+customers served and on cheaper delivery (V2: BDT 85 of logistics per protected transaction vs BDT 116
+for V1). **No ROI is claimed**, because one would need retention, lifetime-value or provider-revenue data
+that a synthetic prototype does not have. Details: [docs/EVALUATION.md §10](docs/EVALUATION.md#10-phase-2-business-impact-synthetic-simulated-estimate).
+
 ## Synthetic-data strategy
 
 200 agents × 76 days × hourly (364,800 rows) across 8 districts, 3 location clusters and 3 volume
@@ -236,7 +263,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (148 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (164 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -304,12 +331,13 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 | `AGENTFLOW_CORS_ORIGINS` | API | `http://localhost:3000` | comma-separated allowed browser origins |
 | `AGENTFLOW_AS_OF` | API | `2026-08-31T13:00` | default decision time |
 | `NEXT_PUBLIC_API_URL` | web | `http://localhost:8000` | API base URL seen by the browser |
+| `AGENTFLOW_BUSINESS_AGENT_COMMISSION_BPS` / `AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT` | API / ML | 50 / unset | illustrative business-impact rates (numbers only; synthetic simulated estimate) |
 | `AGENTFLOW_LOGISTICS_<FIELD>` | API / ML | synthetic demo values | override one logistics-cost assumption, e.g. `AGENTFLOW_LOGISTICS_CASH_IN_TRANSIT_BPS=10` (numbers only) |
 
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 148 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, policy selection, impact, API, contract, Morning Plan)
+python -m pytest -q                       # from repo root: 164 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 

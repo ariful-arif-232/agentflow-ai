@@ -90,6 +90,12 @@ Point at AG-0171 **HIGH 53 → LOW 5** and network at-risk **25 → 24**.
 > shortages instead of 25, and lower logistics cost. One honest caveat: a slightly larger share of V2's
 > transfers turn out unnecessary — 24.3% vs 21.4% — though fewer in number."
 
+*Optional (+20 s), Business Impact card on the same page:*
+> "In business terms, and all synthetic: V2 served about BDT 38 lakh of cash-out that would have failed,
+> roughly 2,460 transactions by our estimate. At an illustrative 50 basis-point commission that doesn't
+> pay for the field logistics on its own, and we show that openly. The value is customers served, and V2
+> does it for about BDT 85 of logistics per protected transaction against 116 for V1. We don't claim an ROI."
+
 **Close (10 s):**
 > "Synthetic data, explainable risk, human-approved simulations, and a held-out evaluation we can reproduce."
 

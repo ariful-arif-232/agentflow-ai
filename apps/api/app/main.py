@@ -228,6 +228,15 @@ def integration_scale():
     return ev
 
 
+@app.get("/api/ml-experiment")
+def ml_experiment():
+    """Phase-2 targeted ML experiment: current vs candidate, pre-registered criteria and the promotion decision."""
+    ex = get_service().ml_experiment
+    if not ex:
+        raise HTTPException(status_code=404, detail="ML experiment artifact missing - run python ml/scripts/ml_experiment.py")
+    return ex
+
+
 @app.get("/api/integration/feed-schema")
 def feed_schema():
     """JSON Schema of the provider-neutral agentflow.feed.v1 contract (aggregated agent-hours, no personal data)."""

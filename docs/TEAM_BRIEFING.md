@@ -363,6 +363,17 @@ Say: *"synthetic simulated estimate, not measured upay performance."*
 - **Weak spot (say it):** every refresh recomputes 9 days of history; a cache is not built yet. There is no
   live ledger connection, no streaming broker and no real upay integration.
 
+### 13e. Targeted ML experiment (Phase 2)
+
+- We tried to improve the peak-cash forecast with neighbour features, "today vs normal" features and an
+  ensemble. We chose the candidate on earlier validation weeks and set the pass marks before looking at
+  the test weeks.
+- The best candidate improved error by only about 2% and slightly increased shortage events in the
+  rebalancing simulation, so **we did not ship it**. The model is unchanged.
+- Neighbour features did not help, because our synthetic agents' demand is generated independently.
+- For alerts, we now treat **MEDIUM or above as the early warning**: it catches 63% of shortages instead
+  of 42%, and about 72% of its alerts are real (82% for HIGH+). Rebalancing still acts on HIGH+ only.
+
 ## 14. Why the dataset is synthetic
 
 - We have **no access to upay data**, and real customer data should not be used in a hackathon
@@ -569,6 +580,8 @@ Keep answers to one or two sentences. The same table is in `docs/DEMO_SCRIPT.md`
 | What if the forecast is wrong? | We plan for a cautious P90 scenario, donors keep a reserve, and a person reviews. It still happens: 14 donor shortage events in 345 simulated transfers. |
 | Why is unnecessary-transfer % higher in V2? | V2 makes fewer, larger transfers. The number of unnecessary ones fell (107 → 84) but their share rose (21.4% → 24.3%). |
 | How did you avoid tuning on the test set? | V2 settings were chosen on two earlier validation windows inside the training period. The 14-day test window was used once, with a decision rule written beforehand. |
+| Did you try to improve the forecast? | Yes, under a pre-registered test: neighbour features, temporal features and an ensemble. The best gained only about 2% and slightly worsened the rebalancing simulation, so we kept the current model. |
+| Why is alert recall only 42%? | That is the HIGH+ action tier. Our early-warning tier is MEDIUM+: 63% recall at 72% precision, chosen on validation data. It is a different operating point on the same scores, not a better model. |
 | Can it connect to a live ledger? | We defined a provider-neutral hourly feed contract (no personal data) and proved that replaying our synthetic data through it gives exactly the same decisions. It is not connected to any real ledger. |
 | Can it handle thousands of agents? | In a synthetic benchmark, a full hourly refresh took about 2.3 s for 1,000 agents and about 24 s for 10,000 on 4 cores. The bottleneck is recomputing 9 days of history each hour. Not upay production performance. |
 | What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot and re-tuning. |
@@ -580,6 +593,8 @@ click **Retry**; nothing was changed or approved.
 
 ## 20. Things teammates must NOT claim
 
+- ❌ Do **not** say the model was improved to reach 63% recall. The forecast model is unchanged; 63% comes from reading
+  the same risk scores at the MEDIUM+ operating point, with lower precision (72% vs 82%).
 - ❌ Do **not** claim AgentFlow is connected to upay's ledger or runs at 10,000 upay agents in production. The scale
   numbers are a synthetic benchmark on one container, and the replay is a file replay through our feed contract.
 - ❌ Do **not** claim we used real upay customer data, or any real data. It is all synthetic.

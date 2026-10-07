@@ -4,9 +4,10 @@ import { Fragment } from "react";
 import { ArrowRight, CheckCircle2, FlaskConical, XCircle } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { bdt, bdtCompact, num, pct, titleCase } from "@/lib/format";
-import type { BusinessImpact, ImpactResponse, IntegrationScale, MetricsResponse, MorningPlanEvidence, Phase2Logistics, PolicyMetrics } from "@/lib/types";
+import type { BusinessImpact, ImpactResponse, IntegrationScale, MetricsResponse, MlExperiment, MorningPlanEvidence, Phase2Logistics, PolicyMetrics } from "@/lib/types";
 import { BusinessImpactCard } from "@/components/BusinessImpact";
 import { IntegrationScaleCard } from "@/components/IntegrationScale";
+import { MlExperimentCard } from "@/components/MlExperiment";
 import { CostEquation, CostProxyNote } from "@/components/LogisticsCost";
 import { MorningEvidencePanel } from "@/components/MorningEvidence";
 import { CompareBars, DailyImpactChart } from "@/components/charts";
@@ -205,6 +206,7 @@ export default function ImpactPage() {
   const mpEv = useApi<MorningPlanEvidence>("/api/morning-plan/evidence");
   const biz = useApi<BusinessImpact>("/api/business-impact");
   const scale = useApi<IntegrationScale>("/api/integration-scale");
+  const mlx = useApi<MlExperiment>("/api/ml-experiment");
   if (imp.error || met.error) return <ErrorState message={(imp.error || met.error) as string} onRetry={() => { imp.reload(); met.reload(); }} />;
   if (!imp.data || !met.data) return <Loading />;
   const p = imp.data.policies;
@@ -607,6 +609,7 @@ export default function ImpactPage() {
           Forecast error is consistent across groups (WAPE within a few points). Alert recall is lower for urban-core agents, where shortages are rare (≈1.4% prevalence) — documented in docs/EVALUATION.md.
         </p>
       </Card>
+      {mlx.data && <MlExperimentCard ex={mlx.data} />}
       {mpEv.data && <ResearchJourney ev={mpEv.data} />}
       <MorningPlanResearch ev={mpEv.data} error={mpEv.error} reload={mpEv.reload} />
     </>

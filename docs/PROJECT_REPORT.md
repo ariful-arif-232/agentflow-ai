@@ -262,6 +262,22 @@ ranking) against the status quo:
 
 Details: `docs/INTEGRATION.md`.
 
+## 11e. Phase-2 targeted ML experiment (pre-registered)
+
+* **Question:** can the peak-requirement forecast (only −6.8% MAE vs seasonal) or HIGH+ recall (41.7%)
+  improve without tuning on the test period?
+* **Protocol:** candidates were selected on two purged training-period validation folds. The success
+  criteria were fixed and hashed first, and the held-out period was evaluated once.
+* **Forecast candidates:** lagged spatial/neighbour aggregates (worse on validation), temporal regime
+  features, and a temporal 3-seed ensemble. The best one reduced held-out peak MAE by only 1.99% (8.7% vs
+  seasonal; the bar was 10%) and raised V2 shortage events by 3.5%. **Rejected; the serving model is
+  unchanged.**
+* **Alert operating point:** MEDIUM+ (risk score ≥ 25) was adopted as the early-warning tier. Recall is
+  63.0% vs 41.7% and precision 72.4% vs 81.5%. HIGH+ remains the action tier, and risk levels and
+  rebalancing are unchanged.
+
+Details: `docs/ML_EXPERIMENT.md`.
+
 ## 12. Responsible AI
 
 Synthetic data and tested absence of PII; deterministic, evidence-based explanations; source tags

@@ -738,3 +738,53 @@ export interface IntegrationScale {
   environment: { python: string; cpu_model: string; logical_cpus: number; memory_gb: number | null; process: string };
   limitations: string[];
 }
+
+/** Phase-2 targeted ML experiment (GET /api/ml-experiment). Synthetic controlled experiment. */
+export interface MlForecastScores {
+  peak_requirement_mae: number;
+  cash_demand_mae: number;
+  seasonal_peak_mae: number;
+  seasonal_cash_mae: number;
+  p90_coverage: number;
+  n: number;
+}
+export interface MlAlertPoint {
+  alerts: number;
+  alert_rate: number;
+  true_positives: number;
+  false_positives: number;
+  precision: number;
+  recall: number;
+  false_alert_hours_per_100_agents_per_day: number;
+}
+export interface MlV2Scores {
+  shortage_events: number;
+  unmet_cash_demand_bdt: number;
+  interventions: number;
+  donor_shortage_events_after_transfer: number;
+}
+export interface MlExperimentArm {
+  name?: string;
+  forecast: MlForecastScores;
+  alerts: { n_decisions: number; shortages: number; thresholds: Record<string, MlAlertPoint> };
+  v2: MlV2Scores;
+}
+export interface MlExperiment {
+  version: string;
+  label: string;
+  command: string;
+  criteria_sha256: string;
+  candidates: Record<string, string>;
+  preregistration: {
+    validation_forecast: Record<string, { peak_requirement_mae: number; p90_coverage: number; blend_weight: number; validation_peak_mae_change_pct?: number; passes_validation_gate?: boolean }>;
+    selected_forecast_candidate: string | null;
+    selected_alert_threshold: number;
+    held_out_rows_used: number;
+  };
+  results: { current: MlExperimentArm; candidate?: MlExperimentArm };
+  decisions: {
+    forecast: { candidate: string | null; promoted: boolean; checks?: Record<string, boolean>; peak_mae_change_vs_current_pct?: number; peak_mae_improvement_vs_seasonal_pct?: number; current_peak_mae_improvement_vs_seasonal_pct?: number };
+    alert_operating_point: { threshold: number; equivalent_level: string; promoted: boolean; checks: Record<string, boolean>; recall_change_pp: number; precision_change_pp: number; scope: string };
+  };
+  serving_model_changed: boolean;
+}

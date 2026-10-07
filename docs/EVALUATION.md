@@ -503,11 +503,35 @@ donors).
 **Limitations.** One container, synthetic data, no network, queue or database; total refresh times differed
 by up to about 12% between runs (small stages by up to about 20%).
 
+## 12. Phase-2 targeted ML experiment (pre-registered)
+
+Full protocol and tables: [ML_EXPERIMENT.md](ML_EXPERIMENT.md); artifact `ml/artifacts/ml_experiment.json`
+(`phase2-ml-1`). Selection used validation folds A (07-21 → 08-03) and B (08-04 → 08-17) only, purged so
+that every scored target window ends inside its fold. The criteria were hashed before the single held-out run.
+
+| Held-out | Current | Candidate (temporal + ensemble) | Rule | Pass |
+|---|---:|---:|---|---|
+| Peak-requirement MAE | 5,147.1 | 5,044.8 (−1.99%) | ≤ −3% | no |
+| vs seasonal baseline | −6.82% | −8.67% | ≤ −10% | no |
+| P90 coverage | 89.5% | 89.4% | 87–93% | yes |
+| HIGH+ recall / precision | 41.7% / 81.5% | 41.1% / 80.9% | ≥ −1 / −5 pp | yes |
+| V2 shortage events | 1,223 | 1,266 | ≤ +2% | no |
+
+**Forecast: rejected; serving model unchanged.** Spatial neighbour features worsened validation error
+(+0.3%) because the synthetic world has no cross-agent correlation.
+
+**Early-warning operating point: MEDIUM+ (risk score ≥ 25) adopted.** It was selected on validation as the
+lowest threshold with precision ≥ 0.70. On held-out, recall is 63.0% (+21.4 pp) and precision 72.4%
+(−9.1 pp), with 1.7× the alerts and 30.1 false alert-hours per 100 agents per day (11.9 for HIGH+). Risk
+levels, the HIGH+ action tier and rebalancing are unchanged. The gain comes from the operating point, not
+from the model.
+
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 225 tests
+python -m pytest -q                 # 236 tests
+python ml/scripts/ml_experiment.py  # optional: pre-registered ML experiment (~6 min)
 python ml/scripts/integration_scale.py   # optional: replay equivalence + scale benchmark (~3 min)
 ```

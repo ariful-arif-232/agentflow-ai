@@ -263,6 +263,25 @@ infrastructure.** Details: [docs/SECURITY.md](docs/SECURITY.md).
 * **Authentication:** not implemented; no secret is exposed to the browser. Enterprise identity and
   role-based approval remain production requirements.
 
+## Phase-2 targeted ML experiment (pre-registered)
+
+Details: [docs/ML_EXPERIMENT.md](docs/ML_EXPERIMENT.md). Synthetic controlled experiment. Selection used
+training-period validation folds only; the held-out period was evaluated once against criteria fixed beforehand.
+
+* **Peak-requirement forecast:** four candidates were tested: lagged same-district / nearest-outlet
+  aggregates, temporal regime features, both, and a temporal 3-seed ensemble blended with the seasonal
+  baseline. Spatial features made validation error worse; the generator has no cross-agent correlation.
+  The selected ensemble cut held-out peak MAE by only **1.99%** (5,147 → 5,045). That is 8.7% better than
+  seasonal, against a bar of 10%, and V2 shortage events rose 3.5% (1,223 → 1,266). **Rejected: the
+  serving model and all published metrics are unchanged.**
+* **Early-warning recall:** the pre-registered operating-point rule selected risk score ≥ 25 (**MEDIUM+**).
+  On held-out, recall rose from **41.7% to 63.0%** while precision fell from 81.5% to **72.4%**, with 1.7×
+  the alerts. It was **adopted as the early-warning definition**. HIGH+ remains the action tier, and risk
+  levels and rebalancing are unchanged. The gain comes from the operating point, not from a better model.
+* Evidence: `ml/artifacts/ml_experiment.json` (`phase2-ml-1`) plus the hashed pre-registration file,
+  `GET /api/ml-experiment`, and the **Targeted ML experiment** card under Model health.
+  Reproduce with `python ml/scripts/ml_experiment.py`.
+
 ## Phase-2 integration & scale (synthetic benchmark evidence)
 
 **Synthetic benchmark evidence — not real upay production performance, and not a real upay integration.**
@@ -313,7 +332,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (225 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (236 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -323,12 +342,12 @@ agentflow-ai/
     api/app/          FastAPI service (main.py routes, schemas.py, service.py, morning_plan.py)
     web/src/          Next.js dashboard (app/ pages, components/, lib/)
   ml/
-    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation, integration
-    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py, integration_scale.py; research/ (Morning Plan fixture builder)
+    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation, integration, ml_experiment
+    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py, integration_scale.py, ml_experiment.py; research/ (Morning Plan fixture builder)
     artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json,
-                      morning_plan_demo.json, morning_plan_evidence.json, integration_scale.json (committed)
+                      morning_plan_demo.json, morning_plan_evidence.json, integration_scale.json, ml_experiment*.json (committed)
     data/ models/     generated data and model binaries (git-ignored, reproducible)
-  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY, MORNING_PLAN, INTEGRATION
+  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY, MORNING_PLAN, INTEGRATION, ML_EXPERIMENT
   tests/              data, forecast, risk/anomaly, rebalancing, impact, API, contract tests
   .github/workflows/  CI
 ```
@@ -354,6 +373,7 @@ python ml/scripts/select_policy.py   # V2 parameters on training-period validati
 python ml/scripts/evaluate.py        # metrics.json + impact.json -> ml/artifacts/
 # optional, separate (wall-clock timings vary run to run):
 python ml/scripts/integration_scale.py   # feed-contract replay equivalence + scale benchmark -> integration_scale.json (~3 min)
+python ml/scripts/ml_experiment.py       # pre-registered ML experiment (validation selection, one held-out run) (~6 min)
 ```
 
 (The API also runs generation + training automatically on first start if artifacts are missing.)
@@ -392,7 +412,7 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 225 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, feed contract + replay equivalence + benchmark artifact, policy selection, impact, API, contract, Morning Plan)
+python -m pytest -q                       # from repo root: 236 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, feed contract + replay equivalence + benchmark artifact, ML experiment leakage + decision, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 
@@ -436,7 +456,7 @@ Security & prototype threat model: [docs/SECURITY.md](docs/SECURITY.md)
 
 * Synthetic data; results demonstrate the method, not real-world upay performance.
 * Peak-requirement forecast improves on a strong seasonal baseline only modestly (−6.8% MAE).
-* HIGH+ alerts catch ~42% of shortage windows; sudden spikes remain hard to anticipate.
+* HIGH+ alerts catch ~42% of shortage windows; sudden spikes remain hard to anticipate. The adopted MEDIUM+ early-warning tier catches 63.0% at 72.4% precision (more false alarms). A pre-registered attempt to improve the forecast itself gained only ~2% and was rejected.
 * Policy V2: 24.3% of its 345 simulated transfers were not strictly needed (V1: 21.4% of 501), and there
   were still 14 donor shortage events (V1: 25). V2 is slightly worse than V1 for rural agents.
 * The intraday simulator assumes exogenous demand, 1-hour transfers and simple costs. In this legacy

@@ -52,6 +52,17 @@ def main() -> None:
     print("deployment decision:", dec["default_policy"], dec["checks"])
     print("impact ->", config.ARTIFACTS_DIR / "impact.json")
 
+    # Phase-2 business-impact layer: separate, versioned artifact; impact.json is not modified.
+    from agentflow import business_impact
+    biz = business_impact.run(feats, eng.agents, eng.preds, eng.hist_rate, eng.anomaly_status_matrix())
+    biz["reconciliation_with_impact_json"] = business_impact.reconcile(biz, imp)
+    forecast.write_json(config.ARTIFACTS_DIR / "business_impact.json", biz)
+    v2 = biz["calculations"]["vs_status_quo"]["agentflow_v2"]
+    print(f"[business] V2 value protected=BDT {v2['customer']['cash_out_value_protected_bdt']:,.0f}, "
+          f"est. transactions protected={v2['customer']['estimated_transactions_protected']:,.0f}, "
+          f"break-even commission={v2['economics']['peer_transfers_only']['break_even_commission_bps']:.0f} bps")
+    print("business impact ->", config.ARTIFACTS_DIR / "business_impact.json", "(synthetic simulated estimate)")
+
 
 if __name__ == "__main__":
     main()

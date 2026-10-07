@@ -51,6 +51,8 @@ GRID = {
     "require_p50_shortfall": (False, True),
 }
 RETENTION_MIN = 0.95
+# The pre-registered Phase-1 selection protocol ranked donors by the Phase-1 cost; keep it reproducible.
+SELECTION_BASE = RebalanceV2Config(ranking_cost_model="phase1_simple")  # explicit, independent of the default
 
 
 def assert_folds_before_test(folds=FOLDS) -> None:
@@ -61,7 +63,7 @@ def assert_folds_before_test(folds=FOLDS) -> None:
 
 def grid_configs() -> list[RebalanceV2Config]:
     keys = list(GRID)
-    return [replace(RebalanceV2Config(), **dict(zip(keys, vals))) for vals in itertools.product(*(GRID[k] for k in keys))]
+    return [replace(SELECTION_BASE, **dict(zip(keys, vals))) for vals in itertools.product(*(GRID[k] for k in keys))]
 
 
 def _fold_inputs(feats: pd.DataFrame, fold: dict, max_iter: int = 400):
@@ -122,10 +124,10 @@ def select(feats: pd.DataFrame, agents: pd.DataFrame, anomaly_status: pd.DataFra
     feasible = [r for r in rows if r["feasible"]]
     if feasible:
         best = max(feasible, key=lambda r: (r["unmet_avoided_per_1000_cost_bdt"], -r["interventions"], -r["grid_index"]))
-        chosen = replace(RebalanceV2Config(), **best["params"])
+        chosen = replace(SELECTION_BASE, **best["params"])
         outcome = "feasible configuration selected"
     else:
-        best, chosen, outcome = None, RebalanceV2Config(), "no feasible configuration — default kept, V2 not better on validation"
+        best, chosen, outcome = None, SELECTION_BASE, "no feasible configuration — default kept, V2 not better on validation"
     return {
         "label": "Policy selection on training-period validation folds (held-out test period not used)",
         "protocol": {"folds": [{k: str(v) for k, v in f.items()} for f in folds], "test_start": str(config.TEST_START),

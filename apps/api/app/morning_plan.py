@@ -22,6 +22,8 @@ from pathlib import Path
 
 import numpy as np
 
+from .audit import fingerprint, get_audit_chain
+
 ARTIFACTS = Path(__file__).resolve().parents[3] / "ml" / "artifacts"
 FIXTURE_PATH = ARTIFACTS / "morning_plan_demo.json"
 EVIDENCE_PATH = ARTIFACTS / "morning_plan_evidence.json"
@@ -113,7 +115,7 @@ class MorningPlanService:
         self.agents = agents
         self.dates = sorted(self.fixture["dates"])
         self._lock = threading.Lock()
-        self.audit_log: list[dict] = []
+        self.audit = get_audit_chain()  # shared, hash-chained (tamper-evident) simulation audit
         self._cache: dict[str, dict] = {}
 
     @property
@@ -291,24 +293,29 @@ class MorningPlanService:
         return {**self.evidence_doc, "synthetic_data": True,
                 "display_note": "Historical synthetic research evidence. It is not an expected saving for the selected date."}
 
+    @property
+    def audit_log(self) -> list[dict]:
+        return self.audit.entries("morning_plan")
+
     def simulate(self, date: str, note: str | None) -> dict:
         plan = self.plan(date)
         net = plan["network"]
-        entry = {"simulation_id": f"MLP-{uuid.uuid4().hex[:8].upper()}",
-                 "created_at": datetime.now(timezone.utc).isoformat(), "date": date, "reviewer_note": note,
-                 "status": SIMULATION_STATUS, "cash_repositioned_bdt": net["cash"]["repositioned_bdt"],
-                 "efloat_repositioned_bdt": net["efloat"]["repositioned_bdt"]}
-        with self._lock:
-            self.audit_log.insert(0, entry)
-            del self.audit_log[200:]
-        return {**entry, "simulation_only": True, "money_moved": False,
+        fields = {"simulation_id": f"MLP-{uuid.uuid4().hex[:8].upper()}",
+                  "created_at": datetime.now(timezone.utc).isoformat(), "date": date, "reviewer_note": note,
+                  "reviewer_acknowledged": True,
+                  "status": SIMULATION_STATUS, "cash_repositioned_bdt": net["cash"]["repositioned_bdt"],
+                  "efloat_repositioned_bdt": net["efloat"]["repositioned_bdt"]}
+        # Replay guard: one simulated approval per Morning Plan date.
+        entry, created = self.audit.append("morning_plan", fields, fingerprint({"kind": "morning_plan", "date": date}))
+        return {**entry, "simulation_only": True, "money_moved": False, "replayed": not created,
                 "conservation": {"conserved": net["conserved"], "extra_working_capital_bdt": 0,
                                  "network": {r: {k: net[r][k] for k in ("status_quo_total_bdt", "recommended_total_bdt", "difference_bdt")}
                                              for r in ("cash", "efloat")},
                                  "districts": [{k: d[k] for k in ("district", "cash_budget_bdt", "cash_recommended_bdt",
                                                                   "efloat_budget_bdt", "efloat_recommended_bdt", "conserved")}
                                                for d in plan["districts"]]},
-                "audit_note": "Recorded in the in-memory Morning Plan audit log (resets when the API restarts)."}
+                "audit_note": ("Recorded in the tamper-evident simulation audit log." if created else
+                               "Duplicate approval: the original audit record is returned and no new record was written.")}
 
 
 def _assert_no_future_fields(obj, path: str = "") -> None:

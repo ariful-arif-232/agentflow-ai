@@ -36,6 +36,46 @@ export interface RiskSnapshot {
   coverage_ratio: number | null;
 }
 
+/** Phase-2 synthetic operational cost proxy (not a measured upay cost). */
+export interface LogisticsCost {
+  travel_distance_km: number;
+  distance_multiplier: number;
+  billable_distance_km: number;
+  travel_time_minutes: number;
+  handling_time_minutes: number;
+  base_handling_bdt: number;
+  distance_cost_bdt: number;
+  time_cost_bdt: number;
+  cash_in_transit_cost_bdt: number;
+  total_estimated_cost_bdt: number;
+  assumption_label: string;
+}
+
+export type ReplenishmentCost =
+  | ({ available: true; hub: string; hub_assumption: string; replenishment_amount_bdt: number } & LogisticsCost)
+  | { available: false; unavailable_reason: string; hub_assumption: string; assumption_label: string };
+
+export interface LogisticsAssumptions {
+  assumption_label: string;
+  deployment_note: string;
+  hub_assumption: string;
+  formula: string;
+  phase1_formula: string;
+  override: string;
+  assumptions: Record<string, number>;
+}
+
+export interface PlanLogistics extends LogisticsAssumptions {
+  peer_transfer_cost_bdt: number;
+  peer_cash_in_transit_cost_bdt: number;
+  average_cost_per_transfer_bdt: number | null;
+  escalation_replenishment_cost_bdt: number;
+  escalation_cash_in_transit_cost_bdt: number;
+  escalations_costed: number;
+  escalations_cost_unavailable: number;
+  total_operational_cost_bdt: number;
+}
+
 export interface Recommendation {
   id: string;
   source_agent: string;
@@ -43,7 +83,9 @@ export interface Recommendation {
   recommended_amount: number;
   district: string;
   distance_km: number;
+  /** Phase-1 estimate (BDT 150 + BDT 25/km), kept for auditability. */
   estimated_cost_bdt: number;
+  logistics_cost: LogisticsCost;
   donor_rank: number;
   source_cash_before: number;
   source_cash_after: number;
@@ -75,6 +117,8 @@ export interface Recommendation {
     risk_points_per_bdt100_cost: number;
     donor_margin_ratio_after: number;
     distance_km: number;
+    ranking_cost_bdt?: number;
+    ranking_cost_model?: "logistics_proxy" | "phase1_simple";
   };
 }
 
@@ -83,6 +127,7 @@ export interface Escalation {
   district: string;
   risk_score: number;
   unresolved_need: number;
+  replenishment_cost?: ReplenishmentCost;
   reason: string;
 }
 
@@ -101,6 +146,7 @@ export interface PlanSummary {
   escalated_amount: number;
   n_held_for_review: number;
   estimated_cost_bdt: number;
+  logistics?: PlanLogistics;
 }
 
 export type PolicyName = "v1" | "v2";
@@ -236,6 +282,10 @@ export interface AgentDetail extends Meta {
 
 export interface SimulationResult extends Meta {
   simulation_id: string;
+  /** true when the same approval was submitted before: the original audit record is returned. */
+  replayed?: boolean;
+  record_hash?: string;
+  audit_note?: string;
   created_at: string;
   recommendation_ids: string[];
   total_amount: number;
@@ -307,6 +357,48 @@ export interface ImpactResponse {
   };
   daily: Record<string, number | string>[];
   groups: Record<string, Record<string, Record<string, { unmet_cash_demand_bdt: number; shortage_events: number }>>>;
+  phase2_logistics?: Phase2Logistics;
+}
+
+export interface Phase2PolicyLogistics {
+  interventions: number;
+  peer_transfer_logistics_cost_bdt: number;
+  average_cost_per_transfer_bdt: number | null;
+  peer_cost_components_bdt: { base_handling_bdt: number; distance_cost_bdt: number; time_cost_bdt: number; cash_in_transit_cost_bdt: number };
+  peer_cash_in_transit_cost_bdt: number;
+  distributor_escalation_cost_proxy_bdt: number;
+  distributor_escalation_events_costed: number;
+  distributor_escalation_events_unavailable: number;
+  total_operational_logistics_cost_proxy_bdt: number;
+  unmet_avoided_bdt: number;
+  unmet_avoided_per_1000_peer_logistics_cost_bdt: number | null;
+  unmet_avoided_per_1000_total_logistics_cost_bdt: number | null;
+}
+
+export interface Phase2Logistics {
+  label: string;
+  version: string;
+  assumptions: LogisticsAssumptions;
+  metric_definitions: Record<string, string>;
+  serving_v2_ranking_cost_model: "phase1_simple";
+  experiment_ranking_cost_model: "logistics_proxy";
+  experiment_status: string;
+  v2_parameters_note: string;
+  policies: {
+    naive_rebalancing: Phase2PolicyLogistics;
+    agentflow: Phase2PolicyLogistics;
+    /** Serving V2 (proven Phase-1 ranking), costed with the Phase-2 proxy. */
+    agentflow_v2: Phase2PolicyLogistics;
+    /** Experiment, not adopted: V2 ranked by the logistics-cost proxy. */
+    agentflow_v2_logistics_ranking_experiment: Phase2PolicyLogistics & PolicyMetrics;
+  };
+  v2_ranking_change: {
+    phase1_ranking: Partial<PolicyMetrics>;
+    logistics_proxy_ranking: Partial<PolicyMetrics>;
+    transfer_legs_changed: number;
+    v2_vs_status_quo: Record<"phase1_ranking" | "logistics_proxy_ranking", { shortage_events_reduction_pct: number; unmet_demand_reduction_pct: number }>;
+  };
+  deployment_rule_recheck: { default_policy: PolicyName; checks: Record<string, boolean>; note: string };
 }
 
 export interface RegressionMetrics {
@@ -528,4 +620,171 @@ export interface MorningPlanSimulation {
     extra_working_capital_bdt: number;
     network: Record<MorningResource, { status_quo_total_bdt: number; recommended_total_bdt: number; difference_bdt: number }>;
   };
+}
+
+/** Phase-2 business-impact layer. Synthetic simulated estimate — not measured upay performance. */
+export interface BizEconomics {
+  agent_commission_bps: number;
+  illustrative_commission_protected_bdt: number;
+  operational_logistics_cost_bdt: number;
+  net_illustrative_value_bdt: number;
+  benefit_cost_ratio: number | null;
+  break_even_commission_bps: number | null;
+}
+
+export interface BizPolicy {
+  customer: {
+    requested_cash_out_bdt: number;
+    served_cash_out_bdt: number;
+    unmet_cash_out_bdt: number;
+    demand_fill_rate_pct: number | null;
+    shortage_agent_hours: number;
+    requested_cash_out_transactions: number;
+    estimated_failed_transactions: number;
+    estimated_failed_transactions_method_b: number;
+  };
+  operations: {
+    peer_transfers: number;
+    cash_moved_by_peer_transfers_bdt: number;
+    peer_logistics_cost_bdt: number;
+    average_cost_per_peer_transfer_bdt: number | null;
+    escalation_events: number;
+    escalated_agent_days: number;
+    escalated_need_bdt: number;
+    distributor_cost_proxy_every_escalation_bdt: number;
+    distributor_cost_proxy_one_trip_per_agent_day_bdt: number;
+    distributor_trips_cost_unavailable: number;
+  };
+}
+
+export interface BizVsStatusQuo {
+  customer: {
+    cash_out_value_protected_bdt: number;
+    shortage_agent_hours_avoided: number;
+    estimated_transactions_protected: number;
+    estimated_transactions_protected_range: [number, number];
+    fill_rate_gain_pp: number;
+  };
+  agent: { cash_out_value_protected_bdt: number; agent_commission_bps: number; illustrative_commission_protected_bdt: number; label: string };
+  distributor: {
+    trips_one_per_escalated_agent_day: number;
+    logistics_cost_proxy_bdt: number;
+    break_even_fee_per_trip_bdt: number | null;
+    assumed_fee_per_trip_bdt: number | null;
+    illustrative_margin_bdt: number | null;
+    margin_note: string | null;
+  };
+  economics: {
+    peer_transfers_only: BizEconomics;
+    including_distributor_trips: BizEconomics;
+    peer_cost_per_estimated_transaction_protected_bdt: number | null;
+    peer_cost_per_bdt_1000_protected: number | null;
+    roi: null;
+    roi_note: string;
+    label: string;
+  };
+}
+
+export interface BusinessImpact {
+  label: string;
+  version: string;
+  synthetic_data: true;
+  simulated_estimate: true;
+  product_story: string;
+  assumptions: { agent_commission_bps: number; distributor_fee_per_trip_bdt: number | null; label: string; agent_commission_note: string };
+  methodology: { transaction_estimate: string; roi_note: string; fallback_ticket_share_of_status_quo_unmet_pct: number };
+  metric_definitions: Record<string, string>;
+  calculations: {
+    policies: Record<"status_quo" | "agentflow_v1" | "agentflow_v2" | "agentflow_v2_logistics_ranking_experiment", BizPolicy>;
+    vs_status_quo: Record<"agentflow_v1" | "agentflow_v2" | "agentflow_v2_logistics_ranking_experiment", BizVsStatusQuo>;
+  };
+  sensitivity: Record<"agentflow_v1" | "agentflow_v2", { grid: (BizEconomics & { cost_multiplier: number })[]; break_even_commission_bps_by_cost_multiplier: { cost_multiplier: number; break_even_commission_bps: number | null }[] }>;
+  limitations: string[];
+}
+
+/** Phase-2 integration & scale evidence (GET /api/integration-scale). Synthetic benchmark evidence. */
+export interface IntegrationScaleRun {
+  agents: number;
+  window_hours: number;
+  rows_in_window: number;
+  repeats: number;
+  median_seconds: Record<string, number>;
+  hourly_refresh_seconds: number;
+  agents_per_second_refresh: number;
+  events_per_second_validation: number;
+  peak_rss_mb: number;
+  rss_after_model_load_mb: number;
+  decisions: { v1_transfers: number; v2_transfers: number; v2_held_for_review: number; snapshot_digest: string };
+}
+
+export interface IntegrationScale {
+  version: string;
+  label: string;
+  generated_at: string;
+  command: string;
+  contract: { schema_version: string; granularity: string; personal_data: string; validation_rules: string[]; mapping: { feed: string; agentflow: string }[] };
+  replay: {
+    hours_replayed: number;
+    events_validated: number;
+    events_rejected: number;
+    agents: number;
+    window_hours: number;
+    all_match: boolean;
+    hist_shortage_rate_matches_batch: boolean;
+    comparison: string;
+    targets: { timestamp: string; match: boolean; max_abs_numeric_diff: number; high_or_critical_agents: number }[];
+  };
+  benchmark: { label: string; method: string; scales: IntegrationScaleRun[]; bottlenecks: string[] };
+  environment: { python: string; cpu_model: string; logical_cpus: number; memory_gb: number | null; process: string };
+  limitations: string[];
+}
+
+/** Phase-2 targeted ML experiment (GET /api/ml-experiment). Synthetic controlled experiment. */
+export interface MlForecastScores {
+  peak_requirement_mae: number;
+  cash_demand_mae: number;
+  seasonal_peak_mae: number;
+  seasonal_cash_mae: number;
+  p90_coverage: number;
+  n: number;
+}
+export interface MlAlertPoint {
+  alerts: number;
+  alert_rate: number;
+  true_positives: number;
+  false_positives: number;
+  precision: number;
+  recall: number;
+  false_alert_hours_per_100_agents_per_day: number;
+}
+export interface MlV2Scores {
+  shortage_events: number;
+  unmet_cash_demand_bdt: number;
+  interventions: number;
+  donor_shortage_events_after_transfer: number;
+}
+export interface MlExperimentArm {
+  name?: string;
+  forecast: MlForecastScores;
+  alerts: { n_decisions: number; shortages: number; thresholds: Record<string, MlAlertPoint> };
+  v2: MlV2Scores;
+}
+export interface MlExperiment {
+  version: string;
+  label: string;
+  command: string;
+  criteria_sha256: string;
+  candidates: Record<string, string>;
+  preregistration: {
+    validation_forecast: Record<string, { peak_requirement_mae: number; p90_coverage: number; blend_weight: number; validation_peak_mae_change_pct?: number; passes_validation_gate?: boolean }>;
+    selected_forecast_candidate: string | null;
+    selected_alert_threshold: number;
+    held_out_rows_used: number;
+  };
+  results: { current: MlExperimentArm; candidate?: MlExperimentArm };
+  decisions: {
+    forecast: { candidate: string | null; promoted: boolean; checks?: Record<string, boolean>; peak_mae_change_vs_current_pct?: number; peak_mae_improvement_vs_seasonal_pct?: number; current_peak_mae_improvement_vs_seasonal_pct?: number };
+    alert_operating_point: { threshold: number; equivalent_level: string; promoted: boolean; checks: Record<string, boolean>; recall_change_pp: number; precision_change_pp: number; scope: string };
+  };
+  serving_model_changed: boolean;
 }

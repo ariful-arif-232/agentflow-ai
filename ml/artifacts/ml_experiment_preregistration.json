@@ -1,0 +1,272 @@
+{
+  "version": "phase2-ml-1",
+  "written_at": "2026-10-07T05:28:14+00:00",
+  "criteria": {
+    "selection_rule_forecast": "On the two validation folds combined, the candidate with the lowest peak-requirement MAE goes to the held-out evaluation only if it beats the current configuration's validation MAE by at least 1%, keeps validation P90 coverage within [0.87, 0.93] and does not worsen validation cash-demand MAE by more than 1%.",
+    "selection_rule_alert": "The lowest risk-score threshold in {50, 45, 40, 35, 30, 25} whose combined validation precision is at least 0.70 (computed with fold-trained current models).",
+    "promotion_forecast": {
+      "peak_mae_vs_current_max_ratio": 0.97,
+      "peak_mae_vs_seasonal_min_improvement_pct": 10.0,
+      "cash_demand_mae_vs_current_max_ratio": 1.01,
+      "p90_coverage_range": [
+        0.87,
+        0.93
+      ],
+      "high_plus_recall_min_change_pp": -1.0,
+      "high_plus_precision_min_change_pp": -5.0,
+      "v2_unmet_max_ratio": 1.02,
+      "v2_shortage_events_max_ratio": 1.02,
+      "v2_donor_shortage_events_max_increase": 2,
+      "leakage_tests_must_pass": true
+    },
+    "promotion_alert_operating_point": {
+      "recall_min_gain_pp": 10.0,
+      "precision_min": 0.7,
+      "alert_rate_max_multiple": 3.0,
+      "scope": "early-warning alert definition only; risk levels and rebalancing recipients are unchanged"
+    }
+  },
+  "criteria_sha256": "4f8829b18b823356e8c727e469876fcc760652897048bbe8a0a41e4ec0aa0c60",
+  "folds": [
+    {
+      "fold": "A",
+      "dev_rows": 128400,
+      "dev_end": "2026-07-20 17:00:00",
+      "val_rows": 66000,
+      "val_start": "2026-07-21 00:00:00",
+      "val_last_row": "2026-08-03 17:00:00",
+      "val_last_target_hour": "2026-08-03 23:00:00"
+    },
+    {
+      "fold": "B",
+      "dev_rows": 195600,
+      "dev_end": "2026-08-03 17:00:00",
+      "val_rows": 66000,
+      "val_start": "2026-08-04 00:00:00",
+      "val_last_row": "2026-08-17 17:00:00",
+      "val_last_target_hour": "2026-08-17 23:00:00"
+    }
+  ],
+  "held_out_rows_used": 0,
+  "validation_forecast": {
+    "current": {
+      "blend_weight": 0.0,
+      "peak_requirement_mae": 5171.2358,
+      "cash_demand_mae": 6195.2942,
+      "seasonal_peak_mae": 5883.226,
+      "seasonal_cash_mae": 8495.6434,
+      "p90_coverage": 0.8886,
+      "n": 132000,
+      "per_fold": [
+        {
+          "peak_requirement_mae": 5882.8903,
+          "cash_demand_mae": 6882.1987,
+          "seasonal_peak_mae": 6195.0966,
+          "seasonal_cash_mae": 8817.3191,
+          "p90_coverage": 0.8801,
+          "n": 66000
+        },
+        {
+          "peak_requirement_mae": 4459.5814,
+          "cash_demand_mae": 5508.3897,
+          "seasonal_peak_mae": 5571.3553,
+          "seasonal_cash_mae": 8173.9677,
+          "p90_coverage": 0.8972,
+          "n": 66000
+        }
+      ],
+      "blend_grid": {
+        "0": 5171.24
+      }
+    },
+    "spatial": {
+      "blend_weight": 0.0,
+      "peak_requirement_mae": 5186.5414,
+      "cash_demand_mae": 6261.9493,
+      "seasonal_peak_mae": 5883.226,
+      "seasonal_cash_mae": 8495.6434,
+      "p90_coverage": 0.8856,
+      "n": 132000,
+      "per_fold": [
+        {
+          "peak_requirement_mae": 5883.3203,
+          "cash_demand_mae": 6938.9984,
+          "seasonal_peak_mae": 6195.0966,
+          "seasonal_cash_mae": 8817.3191,
+          "p90_coverage": 0.8723,
+          "n": 66000
+        },
+        {
+          "peak_requirement_mae": 4489.7625,
+          "cash_demand_mae": 5584.9002,
+          "seasonal_peak_mae": 5571.3553,
+          "seasonal_cash_mae": 8173.9677,
+          "p90_coverage": 0.8989,
+          "n": 66000
+        }
+      ],
+      "blend_grid": {
+        "0": 5186.54
+      },
+      "passes_validation_gate": false,
+      "validation_peak_mae_change_pct": 0.3
+    },
+    "temporal": {
+      "blend_weight": 0.0,
+      "peak_requirement_mae": 5123.9391,
+      "cash_demand_mae": 6097.8878,
+      "seasonal_peak_mae": 5883.226,
+      "seasonal_cash_mae": 8495.6434,
+      "p90_coverage": 0.888,
+      "n": 132000,
+      "per_fold": [
+        {
+          "peak_requirement_mae": 5806.9613,
+          "cash_demand_mae": 6740.9586,
+          "seasonal_peak_mae": 6195.0966,
+          "seasonal_cash_mae": 8817.3191,
+          "p90_coverage": 0.8797,
+          "n": 66000
+        },
+        {
+          "peak_requirement_mae": 4440.917,
+          "cash_demand_mae": 5454.8171,
+          "seasonal_peak_mae": 5571.3553,
+          "seasonal_cash_mae": 8173.9677,
+          "p90_coverage": 0.8963,
+          "n": 66000
+        }
+      ],
+      "blend_grid": {
+        "0": 5123.94
+      },
+      "passes_validation_gate": false,
+      "validation_peak_mae_change_pct": -0.91
+    },
+    "spatial_temporal": {
+      "blend_weight": 0.0,
+      "peak_requirement_mae": 5154.1606,
+      "cash_demand_mae": 6132.7028,
+      "seasonal_peak_mae": 5883.226,
+      "seasonal_cash_mae": 8495.6434,
+      "p90_coverage": 0.8853,
+      "n": 132000,
+      "per_fold": [
+        {
+          "peak_requirement_mae": 5830.9221,
+          "cash_demand_mae": 6754.7437,
+          "seasonal_peak_mae": 6195.0966,
+          "seasonal_cash_mae": 8817.3191,
+          "p90_coverage": 0.8743,
+          "n": 66000
+        },
+        {
+          "peak_requirement_mae": 4477.3991,
+          "cash_demand_mae": 5510.662,
+          "seasonal_peak_mae": 5571.3553,
+          "seasonal_cash_mae": 8173.9677,
+          "p90_coverage": 0.8962,
+          "n": 66000
+        }
+      ],
+      "blend_grid": {
+        "0": 5154.16
+      },
+      "passes_validation_gate": false,
+      "validation_peak_mae_change_pct": -0.33
+    },
+    "temporal_ensemble": {
+      "blend_weight": 0.1,
+      "peak_requirement_mae": 5084.3856,
+      "cash_demand_mae": 6075.8743,
+      "seasonal_peak_mae": 5883.226,
+      "seasonal_cash_mae": 8495.6434,
+      "p90_coverage": 0.8885,
+      "n": 132000,
+      "per_fold": [
+        {
+          "peak_requirement_mae": 5774.044,
+          "cash_demand_mae": 6672.1511,
+          "seasonal_peak_mae": 6195.0966,
+          "seasonal_cash_mae": 8817.3191,
+          "p90_coverage": 0.8802,
+          "n": 66000
+        },
+        {
+          "peak_requirement_mae": 4411.6255,
+          "cash_demand_mae": 5410.8771,
+          "seasonal_peak_mae": 5571.3553,
+          "seasonal_cash_mae": 8173.9677,
+          "p90_coverage": 0.8977,
+          "n": 66000
+        }
+      ],
+      "blend_grid": {
+        "0": 5092.83,
+        "0.1": 5084.39,
+        "0.2": 5096.66,
+        "0.3": 5130.63
+      },
+      "passes_validation_gate": true,
+      "validation_peak_mae_change_pct": -1.68
+    }
+  },
+  "selected_forecast_candidate": "temporal_ensemble",
+  "selected_blend_weight": 0.1,
+  "validation_alerts_current_model": {
+    "n_decisions": 76800,
+    "shortages": 6364,
+    "thresholds": {
+      "50": {
+        "alerts": 3286,
+        "alert_rate": 0.0428,
+        "true_positives": 2631,
+        "false_positives": 655,
+        "precision": 0.8007,
+        "recall": 0.4134
+      },
+      "45": {
+        "alerts": 3659,
+        "alert_rate": 0.0476,
+        "true_positives": 2906,
+        "false_positives": 753,
+        "precision": 0.7942,
+        "recall": 0.4566
+      },
+      "40": {
+        "alerts": 4085,
+        "alert_rate": 0.0532,
+        "true_positives": 3192,
+        "false_positives": 893,
+        "precision": 0.7814,
+        "recall": 0.5016
+      },
+      "35": {
+        "alerts": 4530,
+        "alert_rate": 0.059,
+        "true_positives": 3475,
+        "false_positives": 1055,
+        "precision": 0.7671,
+        "recall": 0.546
+      },
+      "30": {
+        "alerts": 5051,
+        "alert_rate": 0.0658,
+        "true_positives": 3774,
+        "false_positives": 1277,
+        "precision": 0.7472,
+        "recall": 0.593
+      },
+      "25": {
+        "alerts": 5649,
+        "alert_rate": 0.0736,
+        "true_positives": 4074,
+        "false_positives": 1575,
+        "precision": 0.7212,
+        "recall": 0.6402
+      }
+    }
+  },
+  "selected_alert_threshold": 25.0,
+  "selection_seconds": 263.5
+}

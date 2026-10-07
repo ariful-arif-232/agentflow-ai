@@ -72,6 +72,14 @@ simultaneous in/out surge (churn); night-time activity; 3-h velocity deviation.
 | Risk alerts (HIGH+) precision / recall / AUC | 81.5% / 41.7% / 0.935 | 84.5% / 31.3% / 0.911 (naive-fed) | +10.4 pp recall |
 | Anomaly ROC-AUC / AP | 0.981 / 0.671 | rule-only 0.982 / 0.671 | on par |
 
+**Phase-2 targeted experiment** (pre-registered; [ML_EXPERIMENT.md](ML_EXPERIMENT.md)):
+
+* The best forecast candidate (temporal regime features plus a 3-seed ensemble) reduced held-out peak MAE
+  by only 1.99%, and V2 shortage events rose 3.5%. It was rejected, so the metrics above are those of the
+  unchanged serving model.
+* **Early-warning tier = MEDIUM+** (risk score ≥ 25), selected on validation: held-out recall 63.0%,
+  precision 72.4%. HIGH+ remains the action tier used by rebalancing.
+
 Full details, impact simulation and group analysis: `docs/EVALUATION.md`.
 
 ## 7. Risk logic

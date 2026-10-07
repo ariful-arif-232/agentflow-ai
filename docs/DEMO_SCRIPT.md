@@ -89,6 +89,17 @@ Point at AG-0171 **HIGH 53 → LOW 5** and network at-risk **25 → 24**.
 > shortages instead of 25, and lower logistics cost. One honest caveat: a slightly larger share of V2's
 > transfers turn out unnecessary — 24.3% vs 21.4% — though fewer in number."
 
+*Optional (+20 s), Business Impact card on the same page:*
+> "In business terms, and all synthetic: V2 served about BDT 38 lakh of cash-out that would have failed,
+> roughly 2,470 transactions by our estimate. At an illustrative 50 basis-point commission that doesn't
+> pay for the field logistics on its own, and we show that openly. The value is customers served, and V2
+> does it for about BDT 85 of logistics per protected transaction against 116 for V1. We don't claim an ROI."
+
+*If asked about safety:* "Approval is enforced by the server, not just the checkbox: without an explicit
+acknowledgement the API refuses. Every simulated approval goes into a hash-chained, tamper-evident log, and
+an agent with manufactured activity is held for review instead of being sent cash. These are prototype
+controls; real identity and a governed audit store come before production."
+
 **Close (10 s):**
 > "Synthetic data, explainable risk, human-approved simulations, and a held-out evaluation we can reproduce."
 
@@ -146,6 +157,10 @@ There is deliberately no fake "offline mode": the app never presents cached numb
 | What is the Morning Plan? | A proactive 08:00 plan: a full-day forecast of cash and e-float needs, and the same district budgets repositioned (BDT 0 extra). A person reviews it; approval only simulates. |
 | Does the ML really matter there? | In fresh synthetic audit worlds it beat strong cautious historical rules (7-day q90 and max) in 5 of 5, with a median 20.6% lower unmet demand. That is synthetic evidence, not upay results, and low-volume agents did worse than q90 in 4 of 5. |
 | Why not peer cash/e-float swaps? | We tested it: safe, nearby, same-time complementary agents were too rare, so we rejected it. |
+| Did you try to improve the forecast? | Yes, under a pre-registered test: neighbour features, temporal features and an ensemble. The best gained only about 2% and slightly worsened the rebalancing simulation, so we kept the current model. |
+| Why is alert recall only 42%? | That is the HIGH+ action tier. Our early-warning tier is MEDIUM+: 63% recall at 72% precision, chosen on validation data. It is a different operating point on the same scores, not a better model. |
+| Can it connect to a live ledger? | We defined a provider-neutral hourly feed contract (no personal data) and proved that replaying our synthetic data through it gives exactly the same decisions. It is not connected to any real ledger. |
+| Can it handle thousands of agents? | In a synthetic benchmark, a full hourly refresh took about 2.3 s for 1,000 agents and about 24 s for 10,000 on 4 cores. The bottleneck is recomputing 9 days of history each hour. Not upay production performance. |
 | What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot with operations staff, and re-tuning. |
 
 ---
@@ -157,4 +172,5 @@ There is deliberately no fake "offline mode": the app never presents cached numb
 - "Fraud detected".
 - "V2 is better on every metric".
 - "Proven in the real world".
+- "It handles 10,000 upay agents in production" / "it is integrated with upay's ledger" (the scale numbers are a synthetic benchmark; the replay is a file replay).
 - "The Morning Plan will save 20.6% today" (it is historical synthetic evidence, not a per-date saving).

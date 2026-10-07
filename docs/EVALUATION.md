@@ -8,7 +8,9 @@
 > occur in internal anomaly thresholds.
 >
 > Sections 1–7 cover the **legacy intraday environment**, where e-float is tracked but is not a
-> binding constraint. Section 8 covers the separate Morning Plan environment.
+> binding constraint. Section 8 covers the separate Morning Plan environment. Section 9 adds the
+> Phase-2 logistics-cost proxy without changing any Phase-1 result. Section 10 adds the Phase-2
+> business-impact layer (synthetic simulated estimate) as a separate artifact.
 
 ## 1. Dataset and split
 
@@ -306,10 +308,231 @@ Pooled P90 coverage is 85.2% for cash and 88.0% for e-float. Low-volume agents d
 4 of 5 audit worlds. **This is synthetic held-out evidence, not measured upay performance, and not an
 expected saving for any demo date.** Details: [MORNING_PLAN.md](MORNING_PLAN.md).
 
+## 9. Phase-2 logistics economics (synthetic operational-cost proxy)
+
+> **Simulated operational-cost proxy — replace assumptions with governed operator rates for deployment.**
+> No governed upay logistics rates were available. Every rate below is a synthetic, illustrative demo
+> assumption, not a measured upay or distributor cost. Sections 1–8 are unchanged: the Phase-1 `policies`
+> block of `impact.json` still uses the Phase-1 V2 ranking cost (BDT 150 + BDT 25/km), and every Phase-1
+> number reproduces exactly.
+
+**Cost proxy** (`ml/agentflow/logistics.py`, shared by V1, V2 and the simulator). For a peer transfer of
+amount *A* over a one-way distance *d*:
+
+| Component | Formula | Default demo assumption |
+|---|---|---|
+| Handling | fixed per trip | BDT 100 |
+| Billable distance | *d* × distance multiplier | ×2 (round trip) |
+| Distance cost | billable km × per-km operating cost | BDT 12/km |
+| Travel time | billable km ÷ average field speed | 15 km/h |
+| Field time cost | (travel time + handling time) × hourly field-officer cost | 15 min; BDT 250/h |
+| Cash-in-transit exposure | *A* × bps ÷ 10,000 | 10 bps |
+| **Total** | sum of the four rounded cost parts (adds up exactly) | |
+
+Distributor replenishment for an escalation uses the same formula from a **synthetic distributor hub**:
+the district centroid of the synthetic data generator, with BDT 150 handling and a ×2 round trip. It is
+not the location of any real upay distributor. If an input is missing the cost is reported as
+unavailable (none were missing in this evaluation). All assumptions live in one `LogisticsCostConfig`
+and can be overridden with `AGENTFLOW_LOGISTICS_<FIELD>` environment variables.
+
+Example (RB-013 at the default demo time, 12.25 km, BDT 38,500): handling 100.00 + distance 294.06
+(24.5 km) + field time 470.91 (113 min) + cash-in-transit 38.50 = **BDT 903.47**. The Phase-1 estimate was
+BDT 456.
+
+**Derived held-out metrics** (same 14 days and simulations as §5; `impact.json` → `phase2_logistics`):
+
+| Synthetic cost proxy | Naive forecast | AgentFlow V1 | **V2 (serving, Phase-1 ranking)** | V2, logistics ranking (experiment) |
+|---|---:|---:|---:|---:|
+| Transfers | 384 | 501 | 345 | 345 |
+| Peer-transfer logistics cost | BDT 2,16,239 | BDT 2,79,996 | BDT 2,09,482 | **BDT 2,08,612** |
+| Average cost per transfer | BDT 563 | BDT 559 | BDT 607 | BDT 605 |
+| … of which cash-in-transit | BDT 5,710 | BDT 7,560 | BDT 7,512 | BDT 7,525 |
+| Distributor escalation proxy (upper bound) | BDT 3,26,341 | BDT 4,68,464 | BDT 4,68,887 | BDT 4,69,137 |
+| Total operational logistics cost proxy | BDT 5,42,580 | BDT 7,48,460 | BDT 6,78,368 | BDT 6,77,749 |
+| Unmet demand avoided per BDT 1,000 of peer cost | BDT 12,832 | BDT 13,248 | BDT 18,360 | **BDT 18,396** |
+| Unmet demand avoided per BDT 1,000 of total cost | BDT 5,114 | BDT 4,956 | BDT 5,669 | BDT 5,662 |
+
+* Field time is the largest component (about half of the peer-transfer cost); cash-in-transit exposure
+  is small at 10 bps (about 3.6%).
+* The escalation proxy counts one distributor trip per escalation at every decision point (the same
+  agent can be escalated several times a day), so it is an upper bound. Escalations are not delivered in
+  the simulation, so the "per BDT 1,000 of total cost" ratio is deliberately conservative.
+* The daily 08:00 drawer reset is common to every policy and is not costed.
+
+**Ranking experiment (not adopted).** As an experiment, V2's donor ranking divided risk points removed by
+the total cost proxy instead of BDT 150 + BDT 25/km. Cost ranks only candidates that already passed every
+safety check, so no safety rule changed. On the held-out period this changed 13 of 345 transfers:
+
+| V2 held-out metric | Phase-1 ranking | Logistics-proxy ranking |
+|---|---:|---:|
+| Shortage events | 1,223 (−39.4%) | 1,229 (−39.1%) |
+| Unmet cash demand | BDT 56,90,940 (−40.3%) | BDT 56,99,290 (−40.2%) |
+| Donor shortage events within 6 h | 14 | 15 |
+| Unnecessary-transfer share | 24.3% | 24.1% |
+| Transfers / total rebalanced | 345 / BDT 75.1 lakh | 345 / BDT 75.3 lakh |
+| Escalated need (summed over decisions) | BDT 69.9 lakh | BDT 70.1 lakh |
+
+The richer ranking was slightly cheaper per unit of benefit on the peer-transfer cost but slightly less
+effective overall (more shortage events, more unmet demand, one more donor shortage). **The serving V2
+therefore keeps the proven Phase-1 ranking** (`ranking_cost_model="phase1_simple"`, the default); the
+proxy is used only to *cost* its transfers. The logistics ranking is available only when requested
+explicitly and is stored as `phase2_logistics.policies.agentflow_v2_logistics_ranking_experiment`
+(artifact version `phase2-logistics-2`; the keys were renamed from version 1 to make this unambiguous,
+and the values are unchanged). These differences are small and from one synthetic world. V2's tunable
+parameters were not re-selected.
+
+**Before any production use:** governed per-trip, per-km and staff-time rates (per district and vehicle
+type); real distributor and branch locations and road distances; cash-in-transit insurance or security
+rates and limits; field-officer capacity and service windows; then re-selection of V2 parameters on real
+validation data. Governed rates replace the defaults through configuration, with no code change.
+
+## 10. Phase-2 business impact (synthetic simulated estimate)
+
+> **Synthetic simulated estimate — not measured upay performance.** This layer translates the held-out
+> simulation into customer, agent and distributor terms. It is additive and versioned separately
+> (`ml/artifacts/business_impact.json`, `phase2-business-2`, `GET /api/business-impact`). The Phase-1
+> results in `impact.json` are unchanged, and a reconciliation block proves the layer reuses the same
+> simulations (status-quo, V1 and V2 unmet demand, V2's 1,223 events and 345 transfers, the serving V2's
+> peer logistics cost, and the separate logistics-ranking experiment all match).
+
+**Direct vs estimated.**
+
+| Kind | KPIs |
+|---|---|
+| Measured directly in the simulation | requested / served / unmet cash-out value, fill rate, shortage agent-hours, requested cash-out transaction counts, peer transfers, escalation events and escalated agent-days |
+| **Estimated** | failed and protected cash-out transactions (transaction-equivalents) |
+| **Assumption-based** | illustrative agent commission protected, net illustrative value, benefit-cost ratio, distributor margin (only if a fee is supplied) |
+| Cost proxy | peer and distributor logistics cost (Phase-2 synthetic operational-cost proxy, §9) |
+
+**Why transactions are estimated.** The simulator removes BDT, not individual transactions, and the
+dataset has no transaction-level failures (`cash_out_count` is generated from amount ÷ ticket size). So:
+
+* Method A (headline): estimated failed transactions = Σ unmet BDT ÷ that agent-hour's average synthetic
+  cash-out ticket (`cash_out_amount ÷ cash_out_count`), or the location-cluster ticket where the hour has no
+  counted transaction (1.3% of status-quo unmet value).
+* Method B (cross-check): Σ unmet BDT ÷ location-cluster ticket.
+* Protected = status quo − policy; reported with the A/B range.
+
+**Formulas (illustrative economics).** The only financial rate is the agent commission on served cash-out
+value, which is not in the dataset. It is an explicit assumption: **50 bps**, a round illustrative number,
+not upay's or any provider's rate.
+
+```
+commission protected      = cash-out value protected × commission bps ÷ 10,000
+net illustrative value    = commission protected − peer logistics cost proxy
+benefit-cost ratio        = commission protected ÷ peer logistics cost proxy          (not an ROI)
+break-even commission bps = peer logistics cost proxy ÷ cash-out value protected × 10,000
+distributor break-even fee per trip = distributor cost proxy ÷ escalated agent-days (one trip each)
+```
+
+No customer-retention, lifetime-value or provider-revenue assumption is used, so **no ROI is reported**.
+No distributor profit is computed unless a fee is supplied (`AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT`).
+
+**Results (14 held-out days, 200 synthetic agents; V2 = the serving Phase-1-ranked plan, costed with the
+Phase-2 proxy).** The logistics-ranked experiment is kept separately in the artifact
+(`agentflow_v2_logistics_ranking_experiment`) and is never mixed into these figures.
+
+| KPI vs status quo | AgentFlow V1 | **AgentFlow V2** |
+|---|---:|---:|
+| Shortage agent-hours avoided (direct) | 762 | **794** |
+| Cash-out value protected (direct) | BDT 37,09,340 | **BDT 38,45,990** |
+| Est. cash-out transactions protected (range A–B) | ≈ 2,408 (2,371–2,408) | **≈ 2,466 (2,438–2,466)** |
+| Illustrative agent commission protected at 50 bps | BDT 18,547 | BDT 19,230 |
+| Peer transfers · logistics cost proxy · per transfer | 501 · BDT 2,79,996 · BDT 559 | 345 · BDT 2,09,482 · BDT 607 |
+| Peer logistics cost per est. transaction protected | BDT 116 | **BDT 85** |
+| Distributor workload: escalation events · agent-days | 305 · 161 | 297 · 154 |
+| Distributor cost proxy (one trip per agent-day) · break-even fee per trip | BDT 2,36,353 · BDT 1,468 | BDT 2,34,703 · BDT 1,524 |
+| Net illustrative value (commission − peer cost) | −BDT 2,61,449 | −BDT 1,90,252 |
+| Benefit-cost ratio · break-even commission | 0.07 · 755 bps | 0.09 · 545 bps |
+
+Status quo: BDT 95.4 lakh unmet of BDT 38.71 crore requested (97.54% filled), ≈ 6,680 estimated failed
+transactions (Method B 6,335) of 2,36,319 requested.
+
+**Sensitivity of V2 net illustrative value (BDT; transfer plan held fixed, rates re-priced).**
+
+| Logistics cost | 25 bps | 50 bps | 100 bps | 200 bps | Break-even |
+|---|---:|---:|---:|---:|---:|
+| ×0.5 | −95,126 | −85,511 | −66,281 | −27,821 | 272 bps |
+| ×1.0 | −1,99,867 | −1,90,252 | −1,71,022 | −1,32,562 | 545 bps |
+| ×1.5 | −3,04,608 | −2,94,993 | −2,75,763 | −2,37,303 | 817 bps |
+
+**Honest reading.** Under these illustrative rates, agent commission on the protected cash-out does not
+pay for dedicated field-officer transfers anywhere on the grid: even at half the cost proxy, commission would
+need about 2.7% to break even. The business case therefore rests on customers served (≈ 2,466 estimated
+transactions and BDT 38.5 lakh of cash-out completed over 14 days) and on cheaper delivery: V2 uses 27% less
+logistics cost per protected transaction than V1. Whether that service is worth its logistics cost depends on
+real operator economics (fee split, retention, cheaper agent-run transfers) that a synthetic prototype cannot
+measure.
+
+**Limitations.** Synthetic data only; transaction counts are estimates; the commission rate is illustrative;
+customers do not retry or switch agents; escalations are costed but their benefit is not simulated; the
+sensitivity re-prices a fixed plan; no ROI, retention or lifetime-value claim.
+
+## 11. Phase-2 integration & scale (synthetic benchmark evidence)
+
+**Synthetic benchmark evidence — not real upay production performance, and not a real upay integration.**
+Full method and tables: [INTEGRATION.md](INTEGRATION.md); artifact `ml/artifacts/integration_scale.json`
+(`phase2-integration-1`).
+
+**Replay equivalence.** The stored synthetic dataset was replayed chronologically through the
+`agentflow.feed.v1` contract from its first hour (1,814 hours, 362,800 events, all validated). At
+2026-08-18 09:00, 2026-08-22 17:00, 2026-08-27 03:00 and 2026-08-31 13:00, the streamed snapshot equals
+the batch pipeline (`Engine.load(serving=True)`) for all 200 agents:
+
+* risk level, anomaly status and review priority are identical;
+* numeric fields agree within 1e-6, with an observed maximum difference of 0.0;
+* the streamed training-period shortage rate equals the batch statistic.
+
+Per-agent decision digests (risk level, anomaly status, review priority) are re-checked by the tests
+(determinism); numeric fields are compared within tolerance.
+
+**Benchmark.** Synthetic populations with a fixed seed, N agents × 216 hours; median of 3; 4 vCPUs; one
+process per scale.
+
+| Agents | Hourly refresh | Model inference (window) | Features | V2 plan | Peak memory |
+|---:|---:|---:|---:|---:|---:|
+| 200 | 0.61 s | 0.32 s | 0.16 s | 0.03 s | 295 MB |
+| 1,000 | 2.30 s | 1.42 s | 0.57 s | 0.10 s | 437 MB |
+| 5,000 | 12.0 s | 6.46 s | 3.26 s | 0.94 s | 1.1 GB |
+| 10,000 | 23.6 s | 12.1 s | 7.12 s | 1.79 s | 1.9 GB |
+
+**Bottleneck.** Full-window recomputation of features and model scores takes about 80% of the refresh at
+10,000 agents, because only the newest hour changes but all 216 hours are recomputed. An incremental cache
+is not implemented. The V2 search grows roughly linearly or slightly faster (recipients × same-district
+donors).
+
+**Limitations.** One container, synthetic data, no network, queue or database; total refresh times differed
+by up to about 12% between runs (small stages by up to about 20%).
+
+## 12. Phase-2 targeted ML experiment (pre-registered)
+
+Full protocol and tables: [ML_EXPERIMENT.md](ML_EXPERIMENT.md); artifact `ml/artifacts/ml_experiment.json`
+(`phase2-ml-1`). Selection used validation folds A (07-21 → 08-03) and B (08-04 → 08-17) only, purged so
+that every scored target window ends inside its fold. The criteria were hashed before the single held-out run.
+
+| Held-out | Current | Candidate (temporal + ensemble) | Rule | Pass |
+|---|---:|---:|---|---|
+| Peak-requirement MAE | 5,147.1 | 5,044.8 (−1.99%) | ≤ −3% | no |
+| vs seasonal baseline | −6.82% | −8.67% | ≤ −10% | no |
+| P90 coverage | 89.5% | 89.4% | 87–93% | yes |
+| HIGH+ recall / precision | 41.7% / 81.5% | 41.1% / 80.9% | ≥ −1 / −5 pp | yes |
+| V2 shortage events | 1,223 | 1,266 | ≤ +2% | no |
+
+**Forecast: rejected; serving model unchanged.** Spatial neighbour features worsened validation error
+(+0.3%) because the synthetic world has no cross-agent correlation.
+
+**Early-warning operating point: MEDIUM+ (risk score ≥ 25) adopted.** It was selected on validation as the
+lowest threshold with precision ≥ 0.70. On held-out, recall is 63.0% (+21.4 pp) and precision 72.4%
+(−9.1 pp), with 1.7× the alerts and 30.1 false alert-hours per 100 agents per day (11.9 for HIGH+). Risk
+levels, the HIGH+ action tier and rebalancing are unchanged. The gain comes from the operating point, not
+from the model.
+
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 103 tests
+python -m pytest -q                 # 237 tests
+python ml/scripts/ml_experiment.py  # optional: pre-registered ML experiment (~6 min)
+python ml/scripts/integration_scale.py   # optional: replay equivalence + scale benchmark (~3 min)
 ```

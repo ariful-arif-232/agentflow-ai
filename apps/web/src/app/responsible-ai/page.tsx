@@ -1,4 +1,5 @@
 import { Card, CardHeader, PageHeader, SourceTag, TrustChips } from "@/components/ui";
+import { SecurityPosture } from "@/components/SecurityPosture";
 
 const PRINCIPLES = [
   {
@@ -11,7 +12,7 @@ const PRINCIPLES = [
   },
   {
     title: "Human oversight",
-    body: "Rebalancing is a recommendation. A reviewer must open the evidence, acknowledge it, and click 'Approve Simulation'. Approval only runs a what-if simulation and writes an audit-log entry. AgentFlow never sends a payment instruction and never moves money.",
+    body: "Rebalancing is a recommendation. A reviewer must open the evidence, acknowledge it, and click 'Approve Simulation'. The API itself rejects any approval without that acknowledgement. Approval only runs a what-if simulation and writes a tamper-evident audit entry. AgentFlow never sends a payment instruction and never moves money.",
   },
   {
     title: "Safety constraints",
@@ -19,7 +20,7 @@ const PRINCIPLES = [
   },
   {
     title: "Anomaly ≠ fraud",
-    body: "Behavioural anomaly detection flags unusual activity relative to an agent's own history. It never labels an agent fraudulent and does not change the liquidity risk score. At-risk agents with unusual activity are held for manual review instead of receiving automated support recommendations.",
+    body: "Behavioural anomaly detection flags unusual activity relative to an agent's own history. It never labels an agent fraudulent and does not change the liquidity risk score. At-risk agents with anomalous activity are held for manual review instead of receiving automated support recommendations, so manufactured activity is not rewarded with liquidity.",
   },
   {
     title: "Transparency of sources",
@@ -39,7 +40,7 @@ const PRINCIPLES = [
   },
   {
     title: "Security",
-    body: "Secrets only via environment variables (.env is git-ignored; .env.example has placeholders). Strict request validation (Pydantic, ID patterns, bounded inputs), configurable CORS, structured errors without stack traces, no user-supplied code execution, and basic security headers on the web app.",
+    body: "Secrets only via environment variables (.env is git-ignored; .env.example has placeholders). Strict request validation (Pydantic, ID patterns, bounded inputs), configurable CORS, structured errors without stack traces, no user-supplied code execution, and basic security headers on the web app. Simulation endpoints add server-side acknowledgement, prototype rate limiting and a hash-chained audit (see below).",
   },
 ];
 
@@ -70,6 +71,7 @@ export default function ResponsibleAiPage() {
           </Card>
         ))}
       </div>
+      <SecurityPosture />
       <Card className="mt-4">
         <CardHeader title="When not to trust AgentFlow blindly" />
         <ul className="list-disc space-y-1.5 py-4 pl-10 pr-5 text-sm text-slate-700">

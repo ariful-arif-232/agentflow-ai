@@ -62,6 +62,6 @@ def test_impact_and_scenario_contract(client):
 
 def test_simulation_contract(client):
     rid = client.get("/api/rebalancing/recommendations").json()["recommendations"][0]["id"]
-    s = client.post("/api/rebalancing/simulate", json={"recommendation_ids": [rid]}).json()
+    s = client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": [rid]}).json()
     assert ts_fields("SimulationResult") <= set(s)
     assert ts_fields("Portfolio") <= set(s["portfolio_after"])

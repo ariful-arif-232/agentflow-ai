@@ -14,8 +14,20 @@ from test_rebalance import make_snapshot
 CFG = rebalance_v2.RebalanceV2Config()
 
 
+PHASE2_ADDITIVE_KEYS = ("logistics_cost", "replenishment_cost", "logistics")
+
+
+def _strip_phase2(obj):
+    """Drop the additive Phase-2 logistics fields so Phase-1 golden digests still apply."""
+    if isinstance(obj, dict):
+        return {k: _strip_phase2(v) for k, v in obj.items() if k not in PHASE2_ADDITIVE_KEYS}
+    if isinstance(obj, list):
+        return [_strip_phase2(v) for v in obj]
+    return obj
+
+
 def _digest(plan: dict) -> str:
-    return hashlib.sha256(json.dumps(plan, sort_keys=True, default=str).encode()).hexdigest()[:16]
+    return hashlib.sha256(json.dumps(_strip_phase2(plan), sort_keys=True, default=str).encode()).hexdigest()[:16]
 
 
 # ------------------------------------------------------------------ V1 regression
@@ -235,6 +247,6 @@ def test_api_policy_selection(client):
     assert all("expected_benefit" not in r for r in v1["recommendations"])
     assert client.get("/api/rebalancing/recommendations", params={"policy": "v9"}).status_code == 422
     rid = v1["recommendations"][0]["id"]
-    sim = client.post("/api/rebalancing/simulate", json={"recommendation_ids": [rid], "policy": "v1"}).json()
+    sim = client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": [rid], "policy": "v1"}).json()
     assert sim["policy"] == "v1" and sim["simulation_only"] is True
-    assert client.post("/api/rebalancing/simulate", json={"recommendation_ids": [rid], "policy": "x"}).status_code == 422
+    assert client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": [rid], "policy": "x"}).status_code == 422

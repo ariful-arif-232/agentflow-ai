@@ -180,6 +180,104 @@ is slightly worse than V1 for rural agents. It became the default under a fixed 
 selected on training-period validation folds only. Rebalancing fed by a naive forecast achieves −26.5% events, isolating the ML
 contribution.
 
+## 11a. Phase-2 logistics economics (synthetic operational-cost proxy)
+
+Phase-1 judges asked for distributor transport and cash-in-transit costs in the rebalancing loss
+function. Without governed upay rates, Phase 2 adds a transparent, configurable **synthetic
+operational-cost proxy** (`ml/agentflow/logistics.py`), shared by V1, V2 and the simulator:
+
+`total = handling + round-trip km × per-km cost + (round-trip km ÷ field speed + handling time) ×
+hourly field-officer cost + amount × cash-in-transit bps`
+
+The demo defaults (BDT 100 handling, ×2 round trip, BDT 12/km, 15 km/h, 15 min handling, BDT 250/h,
+10 bps) are illustrative, not upay or distributor rates. They can be overridden with
+`AGENTFLOW_LOGISTICS_<FIELD>` environment variables, so governed operator rates can replace them without
+code changes. Escalations get a distributor-trip proxy from a synthetic district hub (district centroid;
+no real distributor location is implied).
+
+* **The serving V2 keeps the proven Phase-1 ranking**; the proxy costs its transfers. As an experiment,
+  ranking donors by the proxy changed 13 of 345 held-out transfers and was slightly worse (shortage events
+  1,223 → 1,229, unmet demand −40.3% → −40.2% vs status quo, donor shortage events 14 → 15), so it was not
+  adopted. It is kept as labelled experimental evidence and runs only when requested explicitly.
+* Derived held-out metrics for the serving V2: peer-transfer cost proxy BDT 2.09 lakh (BDT 607 per
+  transfer, cash-in-transit BDT 7,512), distributor escalation proxy BDT 4.69 lakh (upper bound), total
+  BDT 6.78 lakh, BDT 18,360 of unmet demand avoided per BDT 1,000 of peer-transfer cost.
+* The Phase-1 table above is unchanged and remains reproducible. Details: `EVALUATION.md` §9.
+
+*Simulated operational-cost proxy — replace assumptions with governed operator rates for deployment.*
+
+## 11b. Phase-2 business impact (synthetic simulated estimate)
+
+*Synthetic simulated estimate — not measured upay performance.* A separate, versioned layer
+(`business_impact.json`, `GET /api/business-impact`) translates the same held-out simulation into
+business terms without changing any earlier number. Over 14 held-out days, the serving V2 (Phase-1
+ranking) against the status quo:
+
+* **Customers:** BDT 38.5 lakh of requested cash-out served that was unmet (direct); ≈ 2,466 cash-out
+  transactions protected (**estimate**: unmet BDT ÷ average synthetic ticket; range 2,438–2,466); 794 fewer
+  shortage agent-hours.
+* **Agents:** illustrative commission protected BDT 19,230 at an **assumed 50 bps** (not upay's or any
+  provider's rate; configurable).
+* **Distributor and logistics:** 345 peer transfers (cost proxy BDT 2.09 lakh, BDT 607 each); 154
+  escalated agent-days (distributor trip proxy BDT 2.35 lakh, break-even fee BDT 1,524 per trip).
+* **Economics:** commission does not cover the peer logistics proxy (net −BDT 1.90 lakh; break-even
+  ≈ 545 bps), and a 25–200 bps × 0.5–1.5× cost sensitivity grid stays negative. The value lies in customers
+  served and in cheaper delivery: BDT 85 of logistics per protected transaction for V2 against BDT 116 for
+  V1. No ROI is claimed. Details: `EVALUATION.md` §10.
+
+## 11c. Phase-2 security, approval and manipulation guardrails (prototype controls)
+
+* **Server-enforced approval:** `POST /api/rebalancing/simulate` now requires `reviewer_acknowledged: true`
+  (strict boolean); the Morning Plan endpoint already did. A direct API call cannot bypass it.
+* **Replay guard:** a deterministic fingerprint of what is approved (decision time, policy, recommendations;
+  or the Morning Plan date) means a repeated approval returns the original audit record.
+* **Rate limiting:** process-local sliding window on the two simulation endpoints only (default 20 per 60 s
+  per client; HTTP 429 with `Retry-After`). Not an enterprise WAF.
+* **Tamper-evident audit:** each simulated approval is SHA-256 hash-chained (`previous_hash`,
+  `record_hash`) and verified; edits break the chain and new approvals are refused (fail closed). Optional
+  append-only JSONL file (`AGENTFLOW_AUDIT_LOG_PATH`), re-verified at start-up. Not production-grade
+  immutable storage; durability needs a persistent volume or an external governed audit store.
+* **Manipulation guardrail evidence:** with the unchanged Phase-1 detector and thresholds, a manufactured
+  4-hour transaction surge on an at-risk agent raises it to ANOMALOUS, and both policies then hold it for
+  manual review with no peer-liquidity recommendation. Milder manipulation can stay below the thresholds,
+  and WATCH-level at-risk agents are not held; both are documented limitations.
+* **Authentication:** not implemented (no secret is placed in the browser). Enterprise identity and
+  role-based approval remain production requirements.
+
+## 11d. Phase-2 integration & scale (synthetic benchmark evidence)
+
+*Synthetic benchmark evidence — not real upay production performance, and not a real upay integration.*
+
+* **Feed contract `agentflow.feed.v1`:** aggregated agent-hours plus an agent registry, with no personal
+  data. Validation is strict (unknown and personal-data-like fields rejected, hour-aligned timestamps,
+  finite non-negative amounts, integer counts, served ≤ requested, whole-batch rejection), and the
+  contract maps one-to-one onto the existing pipeline inputs.
+* **Replay equivalence:** a chronological replay of the stored dataset through the contract (362,800
+  events) reproduces the batch pipeline's decision snapshot exactly at four held-out timestamps, for all
+  200 agents. The replay is deterministic.
+* **Benchmark** (median hourly refresh, 4 vCPUs): 0.61 s for 200 agents, 2.3 s for 1,000, 12.0 s for
+  5,000 and 23.6 s for 10,000, with peak memory 1.9 GB at 10,000.
+* **Bottleneck:** the whole 216-hour window is recomputed on every refresh (about 80% of the time at
+  10,000 agents). Incremental caching is not implemented.
+
+Details: `docs/INTEGRATION.md`.
+
+## 11e. Phase-2 targeted ML experiment (pre-registered)
+
+* **Question:** can the peak-requirement forecast (only −6.8% MAE vs seasonal) or HIGH+ recall (41.7%)
+  improve without tuning on the test period?
+* **Protocol:** candidates were selected on two purged training-period validation folds. The success
+  criteria were fixed and hashed first, and the held-out period was evaluated once.
+* **Forecast candidates:** lagged spatial/neighbour aggregates (worse on validation), temporal regime
+  features, and a temporal 3-seed ensemble. The best one reduced held-out peak MAE by only 1.99% (8.7% vs
+  seasonal; the bar was 10%) and raised V2 shortage events by 3.5%. **Rejected; the serving model is
+  unchanged.**
+* **Alert operating point:** MEDIUM+ (risk score ≥ 25) was adopted as the early-warning tier. Recall is
+  63.0% vs 41.7% and precision 72.4% vs 81.5%. HIGH+ remains the action tier, and risk levels and
+  rebalancing are unchanged.
+
+Details: `docs/ML_EXPERIMENT.md`.
+
 ## 12. Responsible AI
 
 Synthetic data and tested absence of PII; deterministic, evidence-based explanations; source tags
@@ -198,7 +296,9 @@ separate Morning Plan world treats it as binding); in-memory audit log; no authe
 ## 14. Scalability
 
 Vectorised feature pipeline and gradient boosting train in seconds on 260k rows and predict all
-agents in one batch; the API serves cached snapshots in tens of milliseconds. Path to scale: warehouse
+agents in one batch; the API serves cached snapshots in tens of milliseconds. A measured synthetic benchmark (§11d) runs a full
+hourly refresh in 2.3 s for 1,000 agents and 23.6 s for 10,000 agents on 4 vCPUs. That is synthetic
+benchmark evidence, not upay production performance. The main cost is recomputing the whole rolling window. Path to scale: warehouse
 feature jobs, nightly retraining behind the same time-based evaluation gate, database-backed audit and
 approvals with RBAC, webhook hand-off of *approved* actions to existing field workflows, and a
 min-cost-flow optimiser if routing constraints are added.

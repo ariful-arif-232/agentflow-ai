@@ -80,7 +80,7 @@ def test_recommendations_and_simulation(client):
         assert r["destination_cash_after"] >= 0 and r["source_cash_after"] >= 0
     before = client.get("/api/overview").json()["kpis"]
     ids = [recs[0]["id"]]
-    sim = client.post("/api/rebalancing/simulate", json={"recommendation_ids": ids, "reviewer_note": "test"})
+    sim = client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": ids, "reviewer_note": "test"})
     assert sim.status_code == 200
     s = sim.json()
     assert s["simulation_only"] is True and "no money moved" in s["status"]
@@ -94,10 +94,10 @@ def test_recommendations_and_simulation(client):
 
 
 def test_simulation_validation(client):
-    assert client.post("/api/rebalancing/simulate", json={"recommendation_ids": []}).status_code == 422
-    assert client.post("/api/rebalancing/simulate", json={"recommendation_ids": ["RB-999"]}).status_code == 404
-    assert client.post("/api/rebalancing/simulate", json={"recommendation_ids": ["DROP TABLE"]}).status_code == 400
-    assert client.post("/api/rebalancing/simulate", json={"recommendation_ids": ["RB-001"], "x": 1}).status_code == 422
+    assert client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": []}).status_code == 422
+    assert client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": ["RB-999"]}).status_code == 404
+    assert client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": ["DROP TABLE"]}).status_code == 400
+    assert client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": ["RB-001"], "x": 1}).status_code == 422
 
 
 def test_scenario_monotone(client):

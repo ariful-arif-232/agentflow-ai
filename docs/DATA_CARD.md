@@ -104,6 +104,12 @@ Six of these episodes are deliberately scheduled in the final 30 hours so the
 dashboard's demo window contains labelled anomalies. Anomalies are *behavioural*
 patterns for testing an unsupervised detector; they are **not** labels of fraud.
 
+## Synthetic distributor-hub proxy (Phase 2)
+
+The Phase-2 logistics-cost proxy measures distributor replenishment trips from the district centroids
+above (`data_gen.DISTRICTS`). These are synthetic hub proxies, not the location of any real upay
+distributor or branch, and synthetic agent coordinates are not real shop locations.
+
 ## Privacy statement
 
 * No personally identifiable information is generated: no names, phone numbers,

@@ -322,6 +322,58 @@ These are **peer-to-peer** moves, so the total cash in the network does not chan
 - *Service availability* = share of operating agent-hours (08:00–21:59) with demand where every
   cash-out request was served.
 
+### 13b. Business impact (Phase 2, synthetic simulated estimate)
+
+Say: *"synthetic simulated estimate, not measured upay performance."*
+- **Measured in the simulation:** V2 served BDT 38.5 lakh of cash-out that was unmet without AgentFlow,
+  and had 794 fewer shortage agent-hours.
+- **Estimated:** about 2,466 transactions protected (unmet BDT ÷ average synthetic ticket size). The
+  simulator works in BDT, not individual transactions, so this is an estimate, never an exact count.
+- **Assumed:** the agent commission (50 bps) is an illustrative round number, not upay's rate. At that
+  rate, commission protected (BDT 19,230) is far below the peer logistics cost proxy (BDT 2.09 lakh);
+  break-even is about 545 bps. We say this openly.
+- **Distributor:** 154 escalated agent-days (trips); break-even fee about BDT 1,524 per trip. We do not
+  compute distributor profit because we have no real fee.
+- **The honest pitch:** customers served, at lower logistics cost per protected transaction with V2
+  (BDT 85) than V1 (BDT 116). **No ROI is claimed.**
+
+### 13c. Logistics ranking and security safeguards (Phase 2)
+
+- **Ranking:** V2 still ranks donors exactly as in Phase 1. We tried ranking by the richer logistics cost; it
+  was slightly worse (1,229 vs 1,223 shortage events), so we did not adopt it. The richer cost is still used
+  to *cost* every transfer.
+- **Approval:** the server refuses a simulated approval unless the reviewer acknowledged the evidence. A
+  repeated approval does not create a second audit record.
+- **Audit:** every simulated approval is hash-chained, so editing a record is detectable. It is tamper-evident,
+  not tamper-proof, and it is not a production audit store.
+- **Rate limit:** simulation requests are limited per client (prototype, single process; not a WAF).
+- **Gaming:** an agent that manufactures a large burst of transactions is flagged ANOMALOUS by the existing
+  detector and held for review, so it is not sent cash. Smaller manipulation may not be flagged, and
+  WATCH-level agents are not held: say so if asked.
+- **Login:** there is none. Real identity and role-based approval are production requirements.
+
+### 13d. Integration & scale (Phase 2, synthetic benchmark evidence)
+
+- **Data contract:** a provider would send one total per agent per hour (balances, cash-in/out, requested
+  vs served cash-out, counts). There are no customer details, and the contract rejects any extra field.
+- **Replay proof:** we fed our stored synthetic data through that contract hour by hour. At four test-period
+  times the decisions were identical to the normal pipeline for all 200 agents.
+- **Scale:** one full hourly refresh took about 2.3 s for 1,000 synthetic agents and about 24 s for 10,000
+  on a 4-core container. This is a synthetic benchmark, not upay production performance.
+- **Weak spot (say it):** every refresh recomputes 9 days of history; a cache is not built yet. There is no
+  live ledger connection, no streaming broker and no real upay integration.
+
+### 13e. Targeted ML experiment (Phase 2)
+
+- We tried to improve the peak-cash forecast with neighbour features, "today vs normal" features and an
+  ensemble. We chose the candidate on earlier validation weeks and set the pass marks before looking at
+  the test weeks.
+- The best candidate improved error by only about 2% and slightly increased shortage events in the
+  rebalancing simulation, so **we did not ship it**. The model is unchanged.
+- Neighbour features did not help, because our synthetic agents' demand is generated independently.
+- For alerts, we now treat **MEDIUM or above as the early warning**: it catches 63% of shortages instead
+  of 42%, and about 72% of its alerts are real (82% for HIGH+). Rebalancing still acts on HIGH+ only.
+
 ## 14. Why the dataset is synthetic
 
 - We have **no access to upay data**, and real customer data should not be used in a hackathon
@@ -409,7 +461,8 @@ between them. An automated test confirms that no prediction uses future informat
 These are **future steps**, not done today:
 
 1. Receive **hourly per-agent totals** (amounts and counts only, no customer data), including
-   declined cash-out attempts.
+   declined cash-out attempts, in the `agentflow.feed.v1` format already defined and replay-tested
+   (see `docs/INTEGRATION.md`).
 2. Retrain and re-evaluate with the same pipeline and the same "past vs. future" testing.
 3. Check the simulator against historical rebalancing records and real distributor constraints.
 4. Run a **shadow pilot**: operations staff see recommendations, decide themselves, and outcomes are
@@ -527,6 +580,10 @@ Keep answers to one or two sentences. The same table is in `docs/DEMO_SCRIPT.md`
 | What if the forecast is wrong? | We plan for a cautious P90 scenario, donors keep a reserve, and a person reviews. It still happens: 14 donor shortage events in 345 simulated transfers. |
 | Why is unnecessary-transfer % higher in V2? | V2 makes fewer, larger transfers. The number of unnecessary ones fell (107 → 84) but their share rose (21.4% → 24.3%). |
 | How did you avoid tuning on the test set? | V2 settings were chosen on two earlier validation windows inside the training period. The 14-day test window was used once, with a decision rule written beforehand. |
+| Did you try to improve the forecast? | Yes, under a pre-registered test: neighbour features, temporal features and an ensemble. The best gained only about 2% and slightly worsened the rebalancing simulation, so we kept the current model. |
+| Why is alert recall only 42%? | That is the HIGH+ action tier. Our early-warning tier is MEDIUM+: 63% recall at 72% precision, chosen on validation data. It is a different operating point on the same scores, not a better model. |
+| Can it connect to a live ledger? | We defined a provider-neutral hourly feed contract (no personal data) and proved that replaying our synthetic data through it gives exactly the same decisions. It is not connected to any real ledger. |
+| Can it handle thousands of agents? | In a synthetic benchmark, a full hourly refresh took about 2.3 s for 1,000 agents and about 24 s for 10,000 on 4 cores. The bottleneck is recomputing 9 days of history each hour. Not upay production performance. |
 | What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot and re-tuning. |
 
 **Demo controls you may be asked to use:** **Reset demo** (top right) restores the default snapshot
@@ -536,6 +593,10 @@ click **Retry**; nothing was changed or approved.
 
 ## 20. Things teammates must NOT claim
 
+- ❌ Do **not** say the model was improved to reach 63% recall. The forecast model is unchanged; 63% comes from reading
+  the same risk scores at the MEDIUM+ operating point, with lower precision (72% vs 82%).
+- ❌ Do **not** claim AgentFlow is connected to upay's ledger or runs at 10,000 upay agents in production. The scale
+  numbers are a synthetic benchmark on one container, and the replay is a file replay through our feed contract.
 - ❌ Do **not** claim we used real upay customer data, or any real data. It is all synthetic.
 - ❌ Do **not** claim the synthetic simulation proves real-world performance. Say *"in a synthetic
   held-out simulation"*.
@@ -556,6 +617,12 @@ click **Retry**; nothing was changed or approved.
   gains are fewer transfers, lower cost and fewer donor shortages.
 - ❌ Do **not** claim donors are now risk-free. There were still 14 donor shortage events with V2.
 - ❌ Do **not** claim AgentFlow is in production or used by upay.
+- ❌ Do **not** claim real upay revenue, commission, savings or ROI. Business-impact figures are synthetic
+  simulated estimates; the 50 bps commission is illustrative, and "2,459 transactions" is an estimate.
+- ❌ Do **not** claim enterprise or bank-grade security, a login system, or immutable audit storage. The
+  safeguards are prototype controls.
+- ❌ Do **not** claim AgentFlow pays for itself. Under the illustrative rates, commission protected does not
+  cover the logistics cost proxy.
 - ❌ Do **not** present 20.6% as the saving for the date shown on the Morning Plan page. It is
   historical synthetic research evidence.
 - ❌ Do **not** say the Morning Plan "adds liquidity" or that V2 optimises e-float. The plan

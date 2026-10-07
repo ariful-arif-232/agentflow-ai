@@ -164,6 +164,148 @@ A decision-time selector (top bar) lets you replay any hour of the held-out peri
 
 No LLM is used in the decision path; the core system has no external API dependency.
 
+## Phase-2 logistics economics
+
+Phase-1 judge feedback asked us to bring distributor transport and cash-in-transit costs into the
+rebalancing loss function. We have no governed upay logistics rates, so Phase 2 adds a transparent,
+configurable **synthetic operational-cost proxy** that is ready to accept governed operator rates
+without code changes. Details: [docs/EVALUATION.md §9](docs/EVALUATION.md#9-phase-2-logistics-economics-synthetic-operational-cost-proxy).
+
+**What was added**
+* One shared module, `ml/agentflow/logistics.py`, used by rebalancing V1, V2 and the impact simulator.
+  Every recommended transfer now carries a cost breakdown:
+
+  `total = handling + billable km × per-km cost + (billable km ÷ field speed + handling time) × hourly
+  field-officer cost + amount × cash-in-transit bps ÷ 10,000`, where billable km = one-way km × distance
+  multiplier (round trip by default). The parts always add up exactly to the total.
+* A distributor replenishment proxy for every escalation, measured from a **synthetic distributor hub**
+  (the district centroid of the synthetic data generator, not a real distributor location). Missing
+  inputs are reported as unavailable, never guessed.
+* **Serving default: V2 keeps the proven Phase-1 ranking** (risk points removed per BDT 100 of
+  BDT 150 + BDT 25/km). The richer proxy is used to **cost** every recommended transfer and escalation.
+  Ranking donors by the proxy (`ranking_cost_model="logistics_proxy"`) is kept as an explicit, labelled
+  **experiment that was not adopted**, because it did not improve held-out outcomes (below). Every
+  safety rule is unchanged either way.
+* `GET /api/logistics/assumptions`, cost fields on every recommendation, escalation and simulation,
+  an "Operational cost breakdown" on the Rebalancing page and review drawer, and a Phase-2 card on the
+  Impact page. All are labelled *Simulated operational-cost proxy — replace assumptions with governed
+  operator rates for deployment.*
+* A separately versioned `phase2_logistics` block in `ml/artifacts/impact.json`. **The Phase-1
+  `policies` block is unchanged** (V2 there still uses the Phase-1 ranking cost, BDT 150 + BDT 25/km),
+  so every Phase-1 number stays auditable.
+
+**Ranking experiment, not adopted (synthetic held-out simulation).** Ranking V2 donors by the richer
+proxy changed 13 of 345 transfers and was slightly worse: shortage events 1,223 → 1,229, unmet cash
+demand BDT 56,90,940 → BDT 56,99,290 (−40.3% → −40.2% vs status quo), donor shortage events 14 → 15
+(unnecessary-transfer share 24.3% → 24.1%). The serving V2 therefore stays on the Phase-1 ranking, and the
+default demo plan is unchanged from Phase 1 (14 transfers including RB-013, BDT 4.7 lakh recommended, BDT
+5.0 lakh escalated). Costed with the proxy, the serving V2's 345 held-out transfers come to BDT 2,09,482
+(BDT 607 each).
+
+**Synthetic assumptions (illustrative demo defaults, not upay or distributor rates):** BDT 100
+handling per trip, round trip (×2), BDT 12 per km, 15 km/h average field speed, 15 minutes handling,
+BDT 250 per field-officer hour, 10 bps cash-in-transit exposure; distributor trips BDT 150 handling
+and ×2. Override any of them with `AGENTFLOW_LOGISTICS_<FIELD>` environment variables (numbers only,
+validated; see `.env.example`).
+
+**Still required before production:** governed per-trip, per-km and staff-time rates per district
+and vehicle type; real distributor and branch locations and road distances; cash-in-transit insurance
+or security rates and limits; field-officer capacity and service windows; then re-selection of V2
+parameters on real validation data.
+
+## Phase-2 business impact (synthetic simulated estimate)
+
+Judges asked us to translate technical gains into transaction completion, agent revenue, logistics cost,
+customer impact and ROI. `ml/agentflow/business_impact.py` does this as a separate, versioned layer
+(`ml/artifacts/business_impact.json`, `GET /api/business-impact`, and a *Business Impact — Synthetic
+Simulation* card on the Impact page). Every figure is labelled **Synthetic simulated estimate — not
+measured upay performance.** `impact.json` and all Phase-1 and Phase-2 logistics numbers are unchanged.
+
+* **Direct (measured in the simulation):** cash-out value requested / served / unmet, fill rate,
+  shortage agent-hours, requested transaction counts, peer transfers, distributor escalations.
+* **Estimated:** protected cash-out transactions. The simulator removes BDT, not individual
+  transactions, so failed transactions = unmet BDT ÷ the agent-hour's average synthetic ticket, with a
+  cluster-ticket cross-check.
+* **Assumption-based:** agent commission = protected cash-out value × an illustrative **50 bps** (not
+  upay's or any provider's rate; override with `AGENTFLOW_BUSINESS_AGENT_COMMISSION_BPS`). Distributor
+  profit is shown only if `AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT` is set; otherwise the
+  break-even fee per trip is reported.
+
+V2 (the serving Phase-1-ranked plan) over the 14 held-out days, against the status quo: **BDT 38.5
+lakh** of cash-out served that was unmet, **≈ 2,466 estimated transactions** protected (range
+2,438–2,466), 794 fewer shortage agent-hours, 345 peer transfers and 154 distributor agent-day trips. At
+50 bps the illustrative commission protected (BDT 19,230) does **not** cover the peer logistics cost proxy
+(BDT 2,09,482); break-even needs about 545 bps. The logistics-ranked experiment is reported separately
+and never mixed into these figures. A small sensitivity grid (25–200 bps × 0.5–1.5× cost) stays negative throughout. The case rests on
+customers served and on cheaper delivery (V2: BDT 85 of logistics per protected transaction vs BDT 116
+for V1). **No ROI is claimed**, because one would need retention, lifetime-value or provider-revenue data
+that a synthetic prototype does not have. Details: [docs/EVALUATION.md §10](docs/EVALUATION.md#10-phase-2-business-impact-synthetic-simulated-estimate).
+
+## Phase-2 security, approval and manipulation guardrails
+
+Prototype controls that answer the judges' security gaps. **They are not enterprise IAM or banking-grade
+infrastructure.** Details: [docs/SECURITY.md](docs/SECURITY.md).
+
+* **Server-enforced approval:** intraday `POST /api/rebalancing/simulate` requires
+  `reviewer_acknowledged: true` (strict boolean), like the Morning Plan endpoint. Bypassing the dashboard
+  does not bypass the check.
+* **Replay guard:** the same approval submitted twice returns the original audit record (`replayed: true`).
+* **Rate limiting:** process-local sliding window on the two simulation endpoints only (default 20 per
+  60 s per client; HTTP 429 with `Retry-After`). Dashboard reads are never limited.
+* **Tamper-evident audit:** SHA-256 hash chain (`previous_hash`, `record_hash`) over every simulated
+  approval, verified before each write; a broken chain blocks new approvals. Optional append-only JSONL file
+  via `AGENTFLOW_AUDIT_LOG_PATH`, re-verified at start-up. Durability across containers needs a persistent
+  volume or an external governed audit store.
+* **Manipulation guardrail:** tests show that a manufactured transaction surge on an at-risk agent is
+  flagged ANOMALOUS by the unchanged Phase-1 detector and then held for review with no peer liquidity.
+  Anomaly is never labelled fraud. Limitations: milder manipulation can stay below the thresholds, and
+  WATCH-level agents are not held.
+* **Authentication:** not implemented; no secret is exposed to the browser. Enterprise identity and
+  role-based approval remain production requirements.
+
+## Phase-2 targeted ML experiment (pre-registered)
+
+Details: [docs/ML_EXPERIMENT.md](docs/ML_EXPERIMENT.md). Synthetic controlled experiment. Selection used
+training-period validation folds only; the held-out period was evaluated once against criteria fixed beforehand.
+
+* **Peak-requirement forecast:** four candidates were tested: lagged same-district / nearest-outlet
+  aggregates, temporal regime features, both, and a temporal 3-seed ensemble blended with the seasonal
+  baseline. Spatial features made validation error worse; the generator has no cross-agent correlation.
+  The selected ensemble cut held-out peak MAE by only **1.99%** (5,147 → 5,045). That is 8.7% better than
+  seasonal, against a bar of 10%, and V2 shortage events rose 3.5% (1,223 → 1,266). **Rejected: the
+  serving model and all published metrics are unchanged.**
+* **Early-warning recall:** the pre-registered operating-point rule selected risk score ≥ 25 (**MEDIUM+**).
+  On held-out, recall rose from **41.7% to 63.0%** while precision fell from 81.5% to **72.4%**, with 1.7×
+  the alerts. It was **adopted as the early-warning definition**. HIGH+ remains the action tier, and risk
+  levels and rebalancing are unchanged. The gain comes from the operating point, not from a better model.
+* Evidence: `ml/artifacts/ml_experiment.json` (`phase2-ml-1`) plus the hashed pre-registration file,
+  `GET /api/ml-experiment`, and the **Targeted ML experiment** card under Model health.
+  Reproduce with `python ml/scripts/ml_experiment.py`.
+
+## Phase-2 integration & scale (synthetic benchmark evidence)
+
+**Synthetic benchmark evidence — not real upay production performance, and not a real upay integration.**
+Details: [docs/INTEGRATION.md](docs/INTEGRATION.md). No Kafka, WebSockets, database or new models were added.
+
+* **Feed contract `agentflow.feed.v1`:** one aggregated record per agent per hour (balances, cash-in/out
+  counts and amounts, requested vs served cash-out, send-money/payment counts) plus an agent registry.
+  There is no personal data. Validation is strict: unknown and personal-data-like fields are rejected,
+  timestamps must be hour-aligned, amounts finite and non-negative, counts integer, served ≤ requested,
+  and invalid batches are rejected whole. The contract maps one-to-one onto the existing pipeline inputs;
+  its JSON Schema is at `GET /api/integration/feed-schema`.
+* **Replay = batch pipeline:** the stored synthetic dataset was replayed hour by hour through the contract
+  (1,814 hours, 362,800 events). At four held-out timestamps, including the default demo time, the
+  streamed decision snapshot matches `Engine.load(serving=True)` for all 200 agents, with identical
+  risk, anomaly and review decisions and a maximum numeric difference of 0.0. The replay is deterministic.
+* **Decision-path benchmark** (one hourly refresh = validate, features, forecast + anomaly inference, risk
+  snapshot, V1 + V2 plans; median of 3; 4 vCPUs): 200 agents 0.61 s · 1,000 agents 2.3 s · 5,000 agents
+  12.0 s · 10,000 agents 23.6 s, with peak memory 1.9 GB at 10,000.
+* **Bottleneck (honest):** the existing engine recomputes features and model scores for the whole 216-hour
+  window every refresh (about 80% of the time at 10,000 agents). Incremental caching is not implemented.
+  The V2 transfer search is a Python loop that grows roughly linearly or slightly faster.
+* Evidence: `ml/artifacts/integration_scale.json` (`phase2-integration-1`), `GET /api/integration-scale`,
+  and the **Integration & Scale** card on the Impact page. Reproduce with `python ml/scripts/integration_scale.py`.
+
 ## Synthetic-data strategy
 
 200 agents × 76 days × hourly (364,800 rows) across 8 districts, 3 location clusters and 3 volume
@@ -190,7 +332,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (103 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (237 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -200,12 +342,12 @@ agentflow-ai/
     api/app/          FastAPI service (main.py routes, schemas.py, service.py, morning_plan.py)
     web/src/          Next.js dashboard (app/ pages, components/, lib/)
   ml/
-    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation
-    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py; research/ (Morning Plan fixture builder)
+    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation, integration, ml_experiment
+    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py, integration_scale.py, ml_experiment.py; research/ (Morning Plan fixture builder)
     artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json,
-                      morning_plan_demo.json, morning_plan_evidence.json (committed)
+                      morning_plan_demo.json, morning_plan_evidence.json, integration_scale.json, ml_experiment*.json (committed)
     data/ models/     generated data and model binaries (git-ignored, reproducible)
-  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY, MORNING_PLAN
+  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY, MORNING_PLAN, INTEGRATION, ML_EXPERIMENT
   tests/              data, forecast, risk/anomaly, rebalancing, impact, API, contract tests
   .github/workflows/  CI
 ```
@@ -229,6 +371,9 @@ python ml/scripts/generate_data.py   # synthetic dataset -> ml/data/
 python ml/scripts/train.py           # models -> ml/models/
 python ml/scripts/select_policy.py   # V2 parameters on training-period validation folds -> policy_selection.json
 python ml/scripts/evaluate.py        # metrics.json + impact.json -> ml/artifacts/
+# optional, separate (wall-clock timings vary run to run):
+python ml/scripts/integration_scale.py   # feed-contract replay equivalence + scale benchmark -> integration_scale.json (~3 min)
+python ml/scripts/ml_experiment.py       # pre-registered ML experiment (validation selection, one held-out run) (~6 min)
 ```
 
 (The API also runs generation + training automatically on first start if artifacts are missing.)
@@ -258,11 +403,16 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 | `AGENTFLOW_CORS_ORIGINS` | API | `http://localhost:3000` | comma-separated allowed browser origins |
 | `AGENTFLOW_AS_OF` | API | `2026-08-31T13:00` | default decision time |
 | `NEXT_PUBLIC_API_URL` | web | `http://localhost:8000` | API base URL seen by the browser |
+| `AGENTFLOW_BUSINESS_AGENT_COMMISSION_BPS` / `AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT` | API / ML | 50 / unset | illustrative business-impact rates (numbers only; synthetic simulated estimate) |
+| `AGENTFLOW_RATE_LIMIT_SIMULATIONS` / `AGENTFLOW_RATE_LIMIT_WINDOW_SECONDS` | API | 20 / 60 | prototype rate limit on simulation endpoints (0 disables) |
+| `AGENTFLOW_RATE_LIMIT_TRUST_FORWARDED_FOR` | API | off | `1` = key clients by X-Forwarded-For (only behind a trusted proxy) |
+| `AGENTFLOW_AUDIT_LOG_PATH` | API | unset (in memory) | optional append-only JSONL file for the tamper-evident simulation audit |
+| `AGENTFLOW_LOGISTICS_<FIELD>` | API / ML | synthetic demo values | override one logistics-cost assumption, e.g. `AGENTFLOW_LOGISTICS_CASH_IN_TRANSIT_BPS=10` (numbers only) |
 
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 103 tests (data, leakage, models, risk, rebalancing V1/V2, policy selection, impact, API, contract, Morning Plan)
+python -m pytest -q                       # from repo root: 237 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, feed contract + replay equivalence + benchmark artifact, ML experiment leakage + decision, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 
@@ -306,13 +456,14 @@ Security & prototype threat model: [docs/SECURITY.md](docs/SECURITY.md)
 
 * Synthetic data; results demonstrate the method, not real-world upay performance.
 * Peak-requirement forecast improves on a strong seasonal baseline only modestly (−6.8% MAE).
-* HIGH+ alerts catch ~42% of shortage windows; sudden spikes remain hard to anticipate.
+* HIGH+ alerts catch ~42% of shortage windows; sudden spikes remain hard to anticipate. The adopted MEDIUM+ early-warning tier catches 63.0% at 72.4% precision (more false alarms). A pre-registered attempt to improve the forecast itself gained only ~2% and was rejected.
 * Policy V2: 24.3% of its 345 simulated transfers were not strictly needed (V1: 21.4% of 501), and there
   were still 14 donor shortage events (V1: 25). V2 is slightly worse than V1 for rural agents.
 * The intraday simulator assumes exogenous demand, 1-hour transfers and simple costs. In this legacy
   environment, e-float is tracked but is not a binding constraint. Only the separate Morning Plan
   environment treats e-float as binding.
-* Audit log is in memory (resets when the API restarts); no authentication (out of scope for the prototype).
+* Integration & scale evidence is synthetic: a deterministic file replay through the feed contract (no live ledger, broker or real upay integration) and a single-container benchmark. Each hourly refresh recomputes the full 216-hour window (no incremental cache), so cost grows roughly linearly with agents (23.6 s at 10,000 synthetic agents).
+* The audit log is tamper-evident but in memory by default (optional JSONL file on a persistent volume); rate limiting is process-local; there is no authentication (out of scope for the prototype).
 * **Morning Plan:**
   * The demo is a synthetic fixture (one world, 14 dates), and its evidence comes from the same
     synthetic world family.

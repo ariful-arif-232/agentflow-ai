@@ -12,6 +12,11 @@ Greedy constrained optimiser
    donors within 15 km (distance ~ operational cost), in BDT 500 steps, minimum BDT 2,000.
 5. Remaining need is escalated to distributor replenishment.
 
+Costs: every transfer keeps the Phase-1 estimate ``estimated_cost_bdt`` (BDT 150 + BDT 25/km) and
+adds a Phase-2 component breakdown ``logistics_cost`` from ``logistics.py`` (synthetic operational
+cost proxy). Every escalation carries a distributor replenishment proxy ``replenishment_cost`` from
+the synthetic district hub. V1 ranking (nearest donor first) does not use cost and is unchanged.
+
 Invariants (tested): amount <= donor safe surplus, no negative balances, donors never
 pushed below their protected level, and the input snapshot is never mutated.
 Recommendations are decision support only — nothing is executed without human approval,
@@ -24,7 +29,7 @@ from dataclasses import asdict, dataclass
 import numpy as np
 import pandas as pd
 
-from . import risk
+from . import logistics, risk
 
 TRIGGER_LEVELS = ("HIGH", "CRITICAL")
 
@@ -59,8 +64,9 @@ def _risk_for(cash, row) -> dict:
 
 
 def recommend(snap: pd.DataFrame, cfg: RebalanceConfig = RebalanceConfig(),
-              with_details: bool = True) -> dict:
+              with_details: bool = True, logistics_cfg: logistics.LogisticsCostConfig | None = None) -> dict:
     """Return {"recommendations": [...], "escalations": [...], "held_for_review": [...], "summary": {...}}."""
+    lcfg = logistics_cfg or logistics.DEFAULT_CONFIG
     s = snap.set_index("agent_id", drop=False)
     cash = s["cash_balance"].astype(float).to_dict()
     is_recipient = s["risk_level"].isin(TRIGGER_LEVELS)
@@ -107,12 +113,17 @@ def recommend(snap: pd.DataFrame, cfg: RebalanceConfig = RebalanceConfig(),
                 "recommended_amount": float(amount),
                 "district": r["district"],
                 "distance_km": round(float(d["distance_km"]), 2),
-                "estimated_cost_bdt": round(cfg.cost_fixed_bdt + cfg.cost_per_km_bdt * float(d["distance_km"]), 0),
+                "estimated_cost_bdt": round(logistics.phase1_simple_cost(float(d["distance_km"]), cfg.cost_fixed_bdt,
+                                                                         cfg.cost_per_km_bdt), 0),
+                "logistics_cost": logistics.transfer_cost(float(d["distance_km"]), float(amount), lcfg),
                 "donor_rank": used,
             })
         if need >= cfg.min_transfer:
+            unresolved = float(np.ceil(need / cfg.round_to) * cfg.round_to)
             escalations.append({"agent_id": rid, "district": r["district"], "risk_score": float(r["risk_score"]),
-                                "unresolved_need": float(np.ceil(need / cfg.round_to) * cfg.round_to),
+                                "unresolved_need": unresolved,
+                                "replenishment_cost": logistics.replenishment_cost(
+                                    r["district"], r.get("synthetic_latitude"), r.get("synthetic_longitude"), unresolved, lcfg),
                                 "reason": "No eligible peer surplus within range — escalate to distributor replenishment."})
     # Plan-level before/after: "before" = current state, "after" = state once every
     # recommendation in this plan is applied (an agent may appear in several legs).
@@ -150,9 +161,30 @@ def recommend(snap: pd.DataFrame, cfg: RebalanceConfig = RebalanceConfig(),
         "escalated_amount": float(sum(x["unresolved_need"] for x in escalations)),
         "n_held_for_review": len(held),
         "estimated_cost_bdt": float(sum(x["estimated_cost_bdt"] for x in recs)),
+        **logistics_summary(recs, escalations, lcfg),
         "config": asdict(cfg),
     }
     return {"recommendations": recs, "escalations": escalations, "held_for_review": held, "summary": summary}
+
+
+def logistics_summary(recs: list[dict], escalations: list[dict], lcfg: logistics.LogisticsCostConfig) -> dict:
+    """Phase-2 plan-level cost totals (synthetic operational cost proxy), shared by V1 and V2."""
+    peer = [x["logistics_cost"] for x in recs]
+    esc = [x["replenishment_cost"] for x in escalations]
+    esc_ok = [e for e in esc if e.get("available")]
+    peer_total = round(sum(c["total_estimated_cost_bdt"] for c in peer), 2)
+    esc_total = round(sum(e["total_estimated_cost_bdt"] for e in esc_ok), 2)
+    return {"logistics": {
+        "peer_transfer_cost_bdt": peer_total,
+        "peer_cash_in_transit_cost_bdt": round(sum(c["cash_in_transit_cost_bdt"] for c in peer), 2),
+        "average_cost_per_transfer_bdt": round(peer_total / len(peer), 2) if peer else None,
+        "escalation_replenishment_cost_bdt": esc_total,
+        "escalation_cash_in_transit_cost_bdt": round(sum(e["cash_in_transit_cost_bdt"] for e in esc_ok), 2),
+        "escalations_costed": len(esc_ok),
+        "escalations_cost_unavailable": len(esc) - len(esc_ok),
+        "total_operational_cost_bdt": round(peer_total + esc_total, 2),
+        **logistics.describe(lcfg),
+    }}
 
 
 def transfers_to_cash_delta(recs: list[dict]) -> dict[str, float]:

@@ -352,6 +352,17 @@ Say: *"synthetic simulated estimate, not measured upay performance."*
   WATCH-level agents are not held: say so if asked.
 - **Login:** there is none. Real identity and role-based approval are production requirements.
 
+### 13d. Integration & scale (Phase 2, synthetic benchmark evidence)
+
+- **Data contract:** a provider would send one total per agent per hour (balances, cash-in/out, requested
+  vs served cash-out, counts). There are no customer details, and the contract rejects any extra field.
+- **Replay proof:** we fed our stored synthetic data through that contract hour by hour. At four test-period
+  times the decisions were identical to the normal pipeline for all 200 agents.
+- **Scale:** one full hourly refresh took about 2.3 s for 1,000 synthetic agents and about 24 s for 10,000
+  on a 4-core container. This is a synthetic benchmark, not upay production performance.
+- **Weak spot (say it):** every refresh recomputes 9 days of history; a cache is not built yet. There is no
+  live ledger connection, no streaming broker and no real upay integration.
+
 ## 14. Why the dataset is synthetic
 
 - We have **no access to upay data**, and real customer data should not be used in a hackathon
@@ -439,7 +450,8 @@ between them. An automated test confirms that no prediction uses future informat
 These are **future steps**, not done today:
 
 1. Receive **hourly per-agent totals** (amounts and counts only, no customer data), including
-   declined cash-out attempts.
+   declined cash-out attempts, in the `agentflow.feed.v1` format already defined and replay-tested
+   (see `docs/INTEGRATION.md`).
 2. Retrain and re-evaluate with the same pipeline and the same "past vs. future" testing.
 3. Check the simulator against historical rebalancing records and real distributor constraints.
 4. Run a **shadow pilot**: operations staff see recommendations, decide themselves, and outcomes are
@@ -557,6 +569,8 @@ Keep answers to one or two sentences. The same table is in `docs/DEMO_SCRIPT.md`
 | What if the forecast is wrong? | We plan for a cautious P90 scenario, donors keep a reserve, and a person reviews. It still happens: 14 donor shortage events in 345 simulated transfers. |
 | Why is unnecessary-transfer % higher in V2? | V2 makes fewer, larger transfers. The number of unnecessary ones fell (107 → 84) but their share rose (21.4% → 24.3%). |
 | How did you avoid tuning on the test set? | V2 settings were chosen on two earlier validation windows inside the training period. The 14-day test window was used once, with a decision rule written beforehand. |
+| Can it connect to a live ledger? | We defined a provider-neutral hourly feed contract (no personal data) and proved that replaying our synthetic data through it gives exactly the same decisions. It is not connected to any real ledger. |
+| Can it handle thousands of agents? | In a synthetic benchmark, a full hourly refresh took about 2.3 s for 1,000 agents and about 24 s for 10,000 on 4 cores. The bottleneck is recomputing 9 days of history each hour. Not upay production performance. |
 | What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot and re-tuning. |
 
 **Demo controls you may be asked to use:** **Reset demo** (top right) restores the default snapshot
@@ -566,6 +580,8 @@ click **Retry**; nothing was changed or approved.
 
 ## 20. Things teammates must NOT claim
 
+- ❌ Do **not** claim AgentFlow is connected to upay's ledger or runs at 10,000 upay agents in production. The scale
+  numbers are a synthetic benchmark on one container, and the replay is a file replay through our feed contract.
 - ❌ Do **not** claim we used real upay customer data, or any real data. It is all synthetic.
 - ❌ Do **not** claim the synthetic simulation proves real-world performance. Say *"in a synthetic
   held-out simulation"*.

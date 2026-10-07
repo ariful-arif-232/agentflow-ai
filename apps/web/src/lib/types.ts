@@ -701,3 +701,40 @@ export interface BusinessImpact {
   sensitivity: Record<"agentflow_v1" | "agentflow_v2", { grid: (BizEconomics & { cost_multiplier: number })[]; break_even_commission_bps_by_cost_multiplier: { cost_multiplier: number; break_even_commission_bps: number | null }[] }>;
   limitations: string[];
 }
+
+/** Phase-2 integration & scale evidence (GET /api/integration-scale). Synthetic benchmark evidence. */
+export interface IntegrationScaleRun {
+  agents: number;
+  window_hours: number;
+  rows_in_window: number;
+  repeats: number;
+  median_seconds: Record<string, number>;
+  hourly_refresh_seconds: number;
+  agents_per_second_refresh: number;
+  events_per_second_validation: number;
+  peak_rss_mb: number;
+  rss_after_model_load_mb: number;
+  decisions: { v1_transfers: number; v2_transfers: number; v2_held_for_review: number; snapshot_digest: string };
+}
+
+export interface IntegrationScale {
+  version: string;
+  label: string;
+  generated_at: string;
+  command: string;
+  contract: { schema_version: string; granularity: string; personal_data: string; validation_rules: string[]; mapping: { feed: string; agentflow: string }[] };
+  replay: {
+    hours_replayed: number;
+    events_validated: number;
+    events_rejected: number;
+    agents: number;
+    window_hours: number;
+    all_match: boolean;
+    hist_shortage_rate_matches_batch: boolean;
+    comparison: string;
+    targets: { timestamp: string; match: boolean; max_abs_numeric_diff: number; high_or_critical_agents: number }[];
+  };
+  benchmark: { label: string; method: string; scales: IntegrationScaleRun[]; bottlenecks: string[] };
+  environment: { python: string; cpu_model: string; logical_cpus: number; memory_gb: number | null; process: string };
+  limitations: string[];
+}

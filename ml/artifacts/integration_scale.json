@@ -1,0 +1,455 @@
+{
+  "version": "phase2-integration-1",
+  "label": "Synthetic integration and benchmark evidence \u2014 not real upay production performance or a real upay integration.",
+  "generated_at": "2026-10-07T04:59:06+00:00",
+  "command": "python ml/scripts/integration_scale.py",
+  "contract": {
+    "schema_version": "agentflow.feed.v1",
+    "schema_sha256": "6454dd7872ea25d18c359041e4e673f29edd4ed0f3cb811138bd9ef11d178311",
+    "granularity": "one aggregated record per agent per hour; no individual transactions",
+    "personal_data": "none \u2014 no customer, owner, phone, national-ID or account fields; unknown fields are rejected and field names that look like personal data are refused",
+    "feed_event_fields": [
+      "schema_version",
+      "agent_id",
+      "hour_start",
+      "closing_cash_bdt",
+      "closing_efloat_bdt",
+      "cash_in_count",
+      "cash_in_amount_bdt",
+      "cash_out_count",
+      "cash_out_requested_bdt",
+      "cash_out_served_bdt",
+      "send_money_count",
+      "payment_count",
+      "transaction_count"
+    ],
+    "agent_record_fields": [
+      "agent_id",
+      "district",
+      "location_cluster",
+      "agent_volume_segment",
+      "agent_type",
+      "outlet_latitude",
+      "outlet_longitude",
+      "market_day",
+      "standard_morning_cash_bdt"
+    ],
+    "mapping": [
+      {
+        "feed": "closing_cash_bdt",
+        "agentflow": "cash_balance"
+      },
+      {
+        "feed": "closing_efloat_bdt",
+        "agentflow": "efloat_balance"
+      },
+      {
+        "feed": "cash_in_count / cash_in_amount_bdt",
+        "agentflow": "cash_in_count / cash_in_amount"
+      },
+      {
+        "feed": "cash_out_count / cash_out_requested_bdt",
+        "agentflow": "cash_out_count / cash_out_amount"
+      },
+      {
+        "feed": "cash_out_served_bdt",
+        "agentflow": "cash_out_served"
+      },
+      {
+        "feed": "requested \u2212 served",
+        "agentflow": "unmet_cash_out, liquidity_shortage (unmet > 0)"
+      },
+      {
+        "feed": "(cash-in + cash-out amount) \u00f7 cash transactions",
+        "agentflow": "average_transaction_value"
+      },
+      {
+        "feed": "send_money_count / payment_count / transaction_count",
+        "agentflow": "same names"
+      },
+      {
+        "feed": "hour_start (Asia/Dhaka, hour-aligned)",
+        "agentflow": "timestamp, hour, day_of_week, is_weekend (Fri\u2013Sat), is_salary_period"
+      },
+      {
+        "feed": "AgentRecord registry",
+        "agentflow": "district, location_cluster, agent_type, volume segment, outlet coordinates, market_day, target_cash_level"
+      }
+    ],
+    "validation_rules": [
+      "schema_version must be agentflow.feed.v1",
+      "unknown fields rejected (extra = forbid)",
+      "personal-data-like field names rejected",
+      "agent_id pattern AG-NNNN",
+      "hour_start hour-aligned, no UTC offset",
+      "amounts finite and \u2265 0",
+      "counts are non-negative integers (no coercion)",
+      "cash_out_served \u2264 cash_out_requested",
+      "transaction_count \u2265 sum of component counts",
+      "no duplicate agent-hour in a batch",
+      "one hour per batch, strictly increasing",
+      "agent must be in the registry"
+    ],
+    "not_in_feed": "known_anomaly_label and anomaly_type exist only in the synthetic generator (evaluation ground truth)"
+  },
+  "replay": {
+    "source": "stored synthetic dataset (ml/data), replayed from its first hour",
+    "first_hour": "2026-06-17 00:00:00",
+    "last_hour_replayed": "2026-08-31 13:00:00",
+    "hours_replayed": 1814,
+    "events_validated": 362800,
+    "events_rejected": 0,
+    "agents": 200,
+    "window_hours": 216,
+    "ingest_seconds_total": 20.94,
+    "wall_seconds_total": 26.9,
+    "hist_shortage_rate_matches_batch": true,
+    "reference": "Engine.load(serving=True).snapshot(ts) \u2014 the existing batch pipeline used by the API",
+    "comparison": "numeric decision fields within rtol = atol = 1e-6; risk level, anomaly status and review priority must be identical for every agent",
+    "targets": [
+      {
+        "timestamp": "2026-08-18 09:00:00",
+        "match": true,
+        "max_abs_numeric_diff": 0.0,
+        "categorical_identical": {
+          "risk_level": true,
+          "anomaly_status": true,
+          "review_priority": true
+        },
+        "agents": 200,
+        "replay_snapshot_digest": "beee703cd2a7236ff393ca62d380e400343c80ac3f775c025d8c21aaeed85d2e",
+        "batch_snapshot_digest": "beee703cd2a7236ff393ca62d380e400343c80ac3f775c025d8c21aaeed85d2e",
+        "high_or_critical_agents": 0,
+        "non_normal_anomaly_agents": 9,
+        "snapshot_seconds": 0.518
+      },
+      {
+        "timestamp": "2026-08-22 17:00:00",
+        "match": true,
+        "max_abs_numeric_diff": 0.0,
+        "categorical_identical": {
+          "risk_level": true,
+          "anomaly_status": true,
+          "review_priority": true
+        },
+        "agents": 200,
+        "replay_snapshot_digest": "ae7a14dcf2b17131e060aaf90ab408d151544f83e0d40d383e0d3b2463d0323e",
+        "batch_snapshot_digest": "ae7a14dcf2b17131e060aaf90ab408d151544f83e0d40d383e0d3b2463d0323e",
+        "high_or_critical_agents": 1,
+        "non_normal_anomaly_agents": 2,
+        "snapshot_seconds": 0.488
+      },
+      {
+        "timestamp": "2026-08-27 03:00:00",
+        "match": true,
+        "max_abs_numeric_diff": 0.0,
+        "categorical_identical": {
+          "risk_level": true,
+          "anomaly_status": true,
+          "review_priority": true
+        },
+        "agents": 200,
+        "replay_snapshot_digest": "8793fd7c9ad24ef031503381930eeb4a2e47ac2d813c88ba32ee19ec0806bd56",
+        "batch_snapshot_digest": "8793fd7c9ad24ef031503381930eeb4a2e47ac2d813c88ba32ee19ec0806bd56",
+        "high_or_critical_agents": 38,
+        "non_normal_anomaly_agents": 26,
+        "snapshot_seconds": 0.499
+      },
+      {
+        "timestamp": "2026-08-31 13:00:00",
+        "match": true,
+        "max_abs_numeric_diff": 0.0,
+        "categorical_identical": {
+          "risk_level": true,
+          "anomaly_status": true,
+          "review_priority": true
+        },
+        "agents": 200,
+        "replay_snapshot_digest": "06fe9181c9347c6ce2c7b9412b3ea9543a6c340eccf8be90a7f68015e396b87a",
+        "batch_snapshot_digest": "06fe9181c9347c6ce2c7b9412b3ea9543a6c340eccf8be90a7f68015e396b87a",
+        "high_or_critical_agents": 25,
+        "non_normal_anomaly_agents": 15,
+        "snapshot_seconds": 0.484
+      }
+    ],
+    "all_match": true
+  },
+  "benchmark": {
+    "label": "Synthetic benchmark evidence \u2014 not real upay production performance.",
+    "method": "Same synthetic generator, fixed seed, N agents \u00d7 9 days (the decision path's rolling window). One hourly refresh = validate the newest hour's events, rebuild features over the window, run the trained forecast and anomaly models (existing Engine), assemble the decision snapshot, then build the V1 and serving V2 peer-transfer plans. Median of repeats; data generation excluded. Peak memory is the worker process's peak resident set size (VmHWM from /proc/self/status).",
+    "seed": 20260907,
+    "decision_time": "2026-08-17 13:00:00",
+    "stages": [
+      "contract_validate_hour",
+      "feature_build_window",
+      "engine_inference_window",
+      "snapshot_risk_anomaly",
+      "plan_v1",
+      "plan_v2_serving"
+    ],
+    "scales_requested": [
+      200,
+      1000,
+      5000,
+      10000
+    ],
+    "scales": [
+      {
+        "agents": 200,
+        "window_hours": 216,
+        "rows_in_window": 43200,
+        "repeats": 3,
+        "decision_time": "2026-08-17 13:00:00",
+        "median_seconds": {
+          "contract_validate_hour": 0.0113,
+          "feature_build_window": 0.1592,
+          "engine_inference_window": 0.3246,
+          "snapshot_risk_anomaly": 0.0151,
+          "plan_v1": 0.0628,
+          "plan_v2_serving": 0.0332,
+          "decision_hour_model_inference": 0.0594
+        },
+        "min_seconds": {
+          "contract_validate_hour": 0.0092,
+          "feature_build_window": 0.1411,
+          "engine_inference_window": 0.3205,
+          "snapshot_risk_anomaly": 0.0149,
+          "plan_v1": 0.0622,
+          "plan_v2_serving": 0.0312,
+          "decision_hour_model_inference": 0.0482
+        },
+        "max_seconds": {
+          "contract_validate_hour": 0.0117,
+          "feature_build_window": 0.1636,
+          "engine_inference_window": 0.3486,
+          "snapshot_risk_anomaly": 0.0179,
+          "plan_v1": 0.0996,
+          "plan_v2_serving": 0.0407,
+          "decision_hour_model_inference": 0.0622
+        },
+        "hourly_refresh_seconds": 0.6062,
+        "agents_per_second_refresh": 329.9,
+        "events_per_second_validation": 17699.0,
+        "registry_validation_seconds": 0.0048,
+        "data_generation_seconds_excluded": 0.08,
+        "peak_rss_mb": 295.0,
+        "rss_after_model_load_mb": 235.2,
+        "decisions": {
+          "risk_levels": {
+            "CRITICAL": 2,
+            "HIGH": 7,
+            "LOW": 186,
+            "MEDIUM": 5
+          },
+          "anomaly_statuses": {
+            "ANOMALOUS": 13,
+            "NORMAL": 185,
+            "WATCH": 2
+          },
+          "v1_transfers": 6,
+          "v2_transfers": 4,
+          "v2_held_for_review": 3,
+          "snapshot_digest": "a0eee70fc72e7e4d157fea32520f153022c1297b4f872b2c3bddb33a02a24cd8"
+        }
+      },
+      {
+        "agents": 1000,
+        "window_hours": 216,
+        "rows_in_window": 216000,
+        "repeats": 3,
+        "decision_time": "2026-08-17 13:00:00",
+        "median_seconds": {
+          "contract_validate_hour": 0.0285,
+          "feature_build_window": 0.5676,
+          "engine_inference_window": 1.4213,
+          "snapshot_risk_anomaly": 0.021,
+          "plan_v1": 0.1588,
+          "plan_v2_serving": 0.1011,
+          "decision_hour_model_inference": 0.0884
+        },
+        "min_seconds": {
+          "contract_validate_hour": 0.0274,
+          "feature_build_window": 0.5135,
+          "engine_inference_window": 1.4078,
+          "snapshot_risk_anomaly": 0.0193,
+          "plan_v1": 0.1564,
+          "plan_v2_serving": 0.0965,
+          "decision_hour_model_inference": 0.082
+        },
+        "max_seconds": {
+          "contract_validate_hour": 0.0305,
+          "feature_build_window": 0.7167,
+          "engine_inference_window": 1.4725,
+          "snapshot_risk_anomaly": 0.0252,
+          "plan_v1": 0.1823,
+          "plan_v2_serving": 0.1059,
+          "decision_hour_model_inference": 0.0988
+        },
+        "hourly_refresh_seconds": 2.2983,
+        "agents_per_second_refresh": 435.1,
+        "events_per_second_validation": 35088.0,
+        "registry_validation_seconds": 0.018,
+        "data_generation_seconds_excluded": 0.32,
+        "peak_rss_mb": 436.8,
+        "rss_after_model_load_mb": 235.3,
+        "decisions": {
+          "risk_levels": {
+            "CRITICAL": 5,
+            "HIGH": 10,
+            "LOW": 971,
+            "MEDIUM": 14
+          },
+          "anomaly_statuses": {
+            "ANOMALOUS": 11,
+            "NORMAL": 969,
+            "WATCH": 20
+          },
+          "v1_transfers": 18,
+          "v2_transfers": 12,
+          "v2_held_for_review": 3,
+          "snapshot_digest": "349cceaedbed795a814e4714ae838e4f90b33cc29802a5dfff99dfe0cf4c90c5"
+        }
+      },
+      {
+        "agents": 5000,
+        "window_hours": 216,
+        "rows_in_window": 1080000,
+        "repeats": 3,
+        "decision_time": "2026-08-17 13:00:00",
+        "median_seconds": {
+          "contract_validate_hour": 0.1243,
+          "feature_build_window": 3.2589,
+          "engine_inference_window": 6.4649,
+          "snapshot_risk_anomaly": 0.0509,
+          "plan_v1": 1.1999,
+          "plan_v2_serving": 0.9428,
+          "decision_hour_model_inference": 0.2734
+        },
+        "min_seconds": {
+          "contract_validate_hour": 0.1242,
+          "feature_build_window": 3.0292,
+          "engine_inference_window": 6.0928,
+          "snapshot_risk_anomaly": 0.0503,
+          "plan_v1": 1.0816,
+          "plan_v2_serving": 0.788,
+          "decision_hour_model_inference": 0.2596
+        },
+        "max_seconds": {
+          "contract_validate_hour": 0.1748,
+          "feature_build_window": 3.6457,
+          "engine_inference_window": 6.6018,
+          "snapshot_risk_anomaly": 0.0516,
+          "plan_v1": 1.2595,
+          "plan_v2_serving": 0.9896,
+          "decision_hour_model_inference": 0.3236
+        },
+        "hourly_refresh_seconds": 12.0417,
+        "agents_per_second_refresh": 415.2,
+        "events_per_second_validation": 40225.0,
+        "registry_validation_seconds": 0.0883,
+        "data_generation_seconds_excluded": 2.81,
+        "peak_rss_mb": 1145.5,
+        "rss_after_model_load_mb": 235.4,
+        "decisions": {
+          "risk_levels": {
+            "CRITICAL": 17,
+            "HIGH": 65,
+            "LOW": 4846,
+            "MEDIUM": 72
+          },
+          "anomaly_statuses": {
+            "ANOMALOUS": 22,
+            "NORMAL": 4876,
+            "WATCH": 102
+          },
+          "v1_transfers": 112,
+          "v2_transfers": 78,
+          "v2_held_for_review": 4,
+          "snapshot_digest": "d526aea7886efbf19b767d62653d0b4babb69741e78f878bf5eb0a3c0593fc5c"
+        }
+      },
+      {
+        "agents": 10000,
+        "window_hours": 216,
+        "rows_in_window": 2160000,
+        "repeats": 3,
+        "decision_time": "2026-08-17 13:00:00",
+        "median_seconds": {
+          "contract_validate_hour": 0.3633,
+          "feature_build_window": 7.1236,
+          "engine_inference_window": 12.0888,
+          "snapshot_risk_anomaly": 0.0923,
+          "plan_v1": 2.1776,
+          "plan_v2_serving": 1.7858,
+          "decision_hour_model_inference": 0.4866
+        },
+        "min_seconds": {
+          "contract_validate_hour": 0.3198,
+          "feature_build_window": 6.3575,
+          "engine_inference_window": 11.7874,
+          "snapshot_risk_anomaly": 0.0864,
+          "plan_v1": 1.9442,
+          "plan_v2_serving": 1.7663,
+          "decision_hour_model_inference": 0.4769
+        },
+        "max_seconds": {
+          "contract_validate_hour": 0.3739,
+          "feature_build_window": 7.8121,
+          "engine_inference_window": 12.2911,
+          "snapshot_risk_anomaly": 0.1033,
+          "plan_v1": 2.4254,
+          "plan_v2_serving": 1.7974,
+          "decision_hour_model_inference": 0.4959
+        },
+        "hourly_refresh_seconds": 23.6314,
+        "agents_per_second_refresh": 423.2,
+        "events_per_second_validation": 27525.0,
+        "registry_validation_seconds": 0.2072,
+        "data_generation_seconds_excluded": 4.26,
+        "peak_rss_mb": 1982.7,
+        "rss_after_model_load_mb": 235.3,
+        "decisions": {
+          "risk_levels": {
+            "CRITICAL": 39,
+            "HIGH": 92,
+            "LOW": 9726,
+            "MEDIUM": 143
+          },
+          "anomaly_statuses": {
+            "ANOMALOUS": 34,
+            "NORMAL": 9750,
+            "WATCH": 216
+          },
+          "v1_transfers": 201,
+          "v2_transfers": 126,
+          "v2_held_for_review": 6,
+          "snapshot_digest": "5861610774eff559e480d620d95fb3666d1a3671fa17bcb7804420721085b1fc"
+        }
+      }
+    ],
+    "bottlenecks": [
+      "At 10,000 agents the two largest stages are forecast + anomaly inference over the whole rolling window (51%) and feature rebuild over the whole 216-hour window (30%) of the measured hourly refresh.",
+      "The existing engine recomputes features, forecasts and anomaly scores for the full 216-hour window on every refresh, although only the newest hour changes. Model inference for the decision hour alone measured 0.487 s at 10,000 agents. Caching earlier hours' features and scores would avoid most of that recomputation; it is not implemented or measured here (no redesign in this phase).",
+      "Refresh time grew 39\u00d7 from 200 to 10,000 agents (50\u00d7 more agents). The V2 transfer search grew 54\u00d7, faster than the agent count at these scales; its candidate pairs are recipients \u00d7 same-district donors, so it can grow faster than linearly if more agents are at risk at once.",
+      "Peak resident memory grew about 167 MB per extra 1,000 agents between 5,000 and 10,000, reaching 1,983 MB at 10,000 agents including Python, libraries and models (~235 MB before any data). The whole rolling window is held in memory as pandas frames."
+    ]
+  },
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Linux-6.18.44-fc-v77-x86_64-with-glibc2.39",
+    "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "logical_cpus": 4,
+    "memory_gb": 15.7,
+    "numpy": "2.4.6",
+    "pandas": "3.0.6",
+    "scikit_learn": "1.9.1",
+    "process": "single Python process per scale, no parallelism added"
+  },
+  "limitations": [
+    "Synthetic data and a single container; no network, queue or database in the measured path.",
+    "Replay is a deterministic file replay through the contract, not a live ledger connection or streaming broker.",
+    "Timings vary with hardware and load; treat them as orders of magnitude, not service-level guarantees.",
+    "Not real upay production performance, and not evidence of a real upay integration."
+  ],
+  "total_seconds": 163.1
+}

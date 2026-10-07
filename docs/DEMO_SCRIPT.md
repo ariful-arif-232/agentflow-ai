@@ -157,6 +157,8 @@ There is deliberately no fake "offline mode": the app never presents cached numb
 | What is the Morning Plan? | A proactive 08:00 plan: a full-day forecast of cash and e-float needs, and the same district budgets repositioned (BDT 0 extra). A person reviews it; approval only simulates. |
 | Does the ML really matter there? | In fresh synthetic audit worlds it beat strong cautious historical rules (7-day q90 and max) in 5 of 5, with a median 20.6% lower unmet demand. That is synthetic evidence, not upay results, and low-volume agents did worse than q90 in 4 of 5. |
 | Why not peer cash/e-float swaps? | We tested it: safe, nearby, same-time complementary agents were too rare, so we rejected it. |
+| Can it connect to a live ledger? | We defined a provider-neutral hourly feed contract (no personal data) and proved that replaying our synthetic data through it gives exactly the same decisions. It is not connected to any real ledger. |
+| Can it handle thousands of agents? | In a synthetic benchmark, a full hourly refresh took about 2.3 s for 1,000 agents and about 24 s for 10,000 on 4 cores. The bottleneck is recomputing 9 days of history each hour. Not upay production performance. |
 | What is the biggest limitation? | It's all synthetic. Real data would need re-validation, a shadow pilot with operations staff, and re-tuning. |
 
 ---
@@ -168,4 +170,5 @@ There is deliberately no fake "offline mode": the app never presents cached numb
 - "Fraud detected".
 - "V2 is better on every metric".
 - "Proven in the real world".
+- "It handles 10,000 upay agents in production" / "it is integrated with upay's ledger" (the scale numbers are a synthetic benchmark; the replay is a file replay).
 - "The Morning Plan will save 20.6% today" (it is historical synthetic evidence, not a per-date saving).

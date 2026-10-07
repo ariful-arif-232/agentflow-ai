@@ -89,6 +89,8 @@ class AgentFlowService:
         # Phase-2 business layer (synthetic simulated estimate); re-priced with any env rate overrides.
         biz = self._read_json("business_impact.json")
         self.business_impact = business_impact.reprice(biz, business_impact.assumptions_from_env()) if biz else {}
+        # Phase-2 integration & scale evidence (synthetic benchmark; produced by ml/scripts/integration_scale.py).
+        self.integration_scale = self._read_json("integration_scale.json")
         # Default rebalancing policy comes from the pre-registered held-out deployment rule.
         self.default_policy = self.impact.get("deployment_decision", {}).get("default_policy", "v1")
         self.v2_cfg = rebalance_v2.selected_config()

@@ -23,6 +23,8 @@ from .schemas import (AgentsResponse, ErrorResponse, HealthResponse, MorningPlan
                       SimulateRequest)
 from .service import get_service
 
+from agentflow import integration  # noqa: E402  (importable once .service has set up the ML path)
+
 log = logging.getLogger("agentflow.api")
 
 
@@ -215,6 +217,21 @@ def business_impact():
     if not biz:
         raise HTTPException(status_code=404, detail="Business-impact artifact missing - run python ml/scripts/evaluate.py")
     return biz
+
+
+@app.get("/api/integration-scale")
+def integration_scale():
+    """Phase-2 feed contract, replay equivalence and decision-path benchmark. Synthetic benchmark evidence — read-only."""
+    ev = get_service().integration_scale
+    if not ev:
+        raise HTTPException(status_code=404, detail="Integration artifact missing - run python ml/scripts/integration_scale.py")
+    return ev
+
+
+@app.get("/api/integration/feed-schema")
+def feed_schema():
+    """JSON Schema of the provider-neutral agentflow.feed.v1 contract (aggregated agent-hours, no personal data)."""
+    return integration.json_schema()
 
 
 @app.get("/api/impact")

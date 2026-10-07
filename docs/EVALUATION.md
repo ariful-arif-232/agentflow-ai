@@ -468,10 +468,46 @@ measure.
 customers do not retry or switch agents; escalations are costed but their benefit is not simulated; the
 sensitivity re-prices a fixed plan; no ROI, retention or lifetime-value claim.
 
+## 11. Phase-2 integration & scale (synthetic benchmark evidence)
+
+**Synthetic benchmark evidence — not real upay production performance, and not a real upay integration.**
+Full method and tables: [INTEGRATION.md](INTEGRATION.md); artifact `ml/artifacts/integration_scale.json`
+(`phase2-integration-1`).
+
+**Replay equivalence.** The stored synthetic dataset was replayed chronologically through the
+`agentflow.feed.v1` contract from its first hour (1,814 hours, 362,800 events, all validated). At
+2026-08-18 09:00, 2026-08-22 17:00, 2026-08-27 03:00 and 2026-08-31 13:00, the streamed snapshot equals
+the batch pipeline (`Engine.load(serving=True)`) for all 200 agents:
+
+* risk level, anomaly status and review priority are identical;
+* numeric fields agree within 1e-6, with an observed maximum difference of 0.0;
+* the streamed training-period shortage rate equals the batch statistic.
+
+The snapshot digests are re-checked by the tests (determinism).
+
+**Benchmark.** Synthetic populations with a fixed seed, N agents × 216 hours; median of 3; 4 vCPUs; one
+process per scale.
+
+| Agents | Hourly refresh | Model inference (window) | Features | V2 plan | Peak memory |
+|---:|---:|---:|---:|---:|---:|
+| 200 | 0.61 s | 0.32 s | 0.16 s | 0.03 s | 295 MB |
+| 1,000 | 2.30 s | 1.42 s | 0.57 s | 0.10 s | 437 MB |
+| 5,000 | 12.0 s | 6.46 s | 3.26 s | 0.94 s | 1.1 GB |
+| 10,000 | 23.6 s | 12.1 s | 7.12 s | 1.79 s | 1.9 GB |
+
+**Bottleneck.** Full-window recomputation of features and model scores takes about 80% of the refresh at
+10,000 agents, because only the newest hour changes but all 216 hours are recomputed. An incremental cache
+is not implemented. The V2 search grows roughly linearly or slightly faster (recipients × same-district
+donors).
+
+**Limitations.** One container, synthetic data, no network, queue or database; total refresh times differed
+by up to about 12% between runs (small stages by up to about 20%).
+
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 192 tests
+python -m pytest -q                 # 225 tests
+python ml/scripts/integration_scale.py   # optional: replay equivalence + scale benchmark (~3 min)
 ```

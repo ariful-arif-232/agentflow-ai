@@ -244,6 +244,24 @@ ranking) against the status quo:
 * **Authentication:** not implemented (no secret is placed in the browser). Enterprise identity and
   role-based approval remain production requirements.
 
+## 11d. Phase-2 integration & scale (synthetic benchmark evidence)
+
+*Synthetic benchmark evidence — not real upay production performance, and not a real upay integration.*
+
+* **Feed contract `agentflow.feed.v1`:** aggregated agent-hours plus an agent registry, with no personal
+  data. Validation is strict (unknown and personal-data-like fields rejected, hour-aligned timestamps,
+  finite non-negative amounts, integer counts, served ≤ requested, whole-batch rejection), and the
+  contract maps one-to-one onto the existing pipeline inputs.
+* **Replay equivalence:** a chronological replay of the stored dataset through the contract (362,800
+  events) reproduces the batch pipeline's decision snapshot exactly at four held-out timestamps, for all
+  200 agents. The replay is deterministic.
+* **Benchmark** (median hourly refresh, 4 vCPUs): 0.61 s for 200 agents, 2.3 s for 1,000, 12.0 s for
+  5,000 and 23.6 s for 10,000, with peak memory 1.9 GB at 10,000.
+* **Bottleneck:** the whole 216-hour window is recomputed on every refresh (about 80% of the time at
+  10,000 agents). Incremental caching is not implemented.
+
+Details: `docs/INTEGRATION.md`.
+
 ## 12. Responsible AI
 
 Synthetic data and tested absence of PII; deterministic, evidence-based explanations; source tags
@@ -262,7 +280,9 @@ separate Morning Plan world treats it as binding); in-memory audit log; no authe
 ## 14. Scalability
 
 Vectorised feature pipeline and gradient boosting train in seconds on 260k rows and predict all
-agents in one batch; the API serves cached snapshots in tens of milliseconds. Path to scale: warehouse
+agents in one batch; the API serves cached snapshots in tens of milliseconds. A measured synthetic benchmark (§11d) runs a full
+hourly refresh in 2.3 s for 1,000 agents and 23.6 s for 10,000 agents on 4 vCPUs. That is synthetic
+benchmark evidence, not upay production performance. The main cost is recomputing the whole rolling window. Path to scale: warehouse
 feature jobs, nightly retraining behind the same time-based evaluation gate, database-backed audit and
 approvals with RBAC, webhook hand-off of *approved* actions to existing field workflows, and a
 min-cost-flow optimiser if routing constraints are added.

@@ -263,6 +263,30 @@ infrastructure.** Details: [docs/SECURITY.md](docs/SECURITY.md).
 * **Authentication:** not implemented; no secret is exposed to the browser. Enterprise identity and
   role-based approval remain production requirements.
 
+## Phase-2 integration & scale (synthetic benchmark evidence)
+
+**Synthetic benchmark evidence — not real upay production performance, and not a real upay integration.**
+Details: [docs/INTEGRATION.md](docs/INTEGRATION.md). No Kafka, WebSockets, database or new models were added.
+
+* **Feed contract `agentflow.feed.v1`:** one aggregated record per agent per hour (balances, cash-in/out
+  counts and amounts, requested vs served cash-out, send-money/payment counts) plus an agent registry.
+  There is no personal data. Validation is strict: unknown and personal-data-like fields are rejected,
+  timestamps must be hour-aligned, amounts finite and non-negative, counts integer, served ≤ requested,
+  and invalid batches are rejected whole. The contract maps one-to-one onto the existing pipeline inputs;
+  its JSON Schema is at `GET /api/integration/feed-schema`.
+* **Replay = batch pipeline:** the stored synthetic dataset was replayed hour by hour through the contract
+  (1,814 hours, 362,800 events). At four held-out timestamps, including the default demo time, the
+  streamed decision snapshot matches `Engine.load(serving=True)` for all 200 agents, with identical
+  risk, anomaly and review decisions and a maximum numeric difference of 0.0. The replay is deterministic.
+* **Decision-path benchmark** (one hourly refresh = validate, features, forecast + anomaly inference, risk
+  snapshot, V1 + V2 plans; median of 3; 4 vCPUs): 200 agents 0.61 s · 1,000 agents 2.3 s · 5,000 agents
+  12.0 s · 10,000 agents 23.6 s, with peak memory 1.9 GB at 10,000.
+* **Bottleneck (honest):** the existing engine recomputes features and model scores for the whole 216-hour
+  window every refresh (about 80% of the time at 10,000 agents). Incremental caching is not implemented.
+  The V2 transfer search is a Python loop that grows roughly linearly or slightly faster.
+* Evidence: `ml/artifacts/integration_scale.json` (`phase2-integration-1`), `GET /api/integration-scale`,
+  and the **Integration & Scale** card on the Impact page. Reproduce with `python ml/scripts/integration_scale.py`.
+
 ## Synthetic-data strategy
 
 200 agents × 76 days × hourly (364,800 rows) across 8 districts, 3 location clusters and 3 volume
@@ -289,7 +313,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (192 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (225 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -299,12 +323,12 @@ agentflow-ai/
     api/app/          FastAPI service (main.py routes, schemas.py, service.py, morning_plan.py)
     web/src/          Next.js dashboard (app/ pages, components/, lib/)
   ml/
-    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation
-    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py; research/ (Morning Plan fixture builder)
+    agentflow/        data_gen, features, forecast, anomaly, risk, rebalance (V1), rebalance_v2, policy_selection, impact, engine, evaluation, integration
+    scripts/          generate_data.py, train.py, evaluate.py, run_pipeline.py, integration_scale.py; research/ (Morning Plan fixture builder)
     artifacts/        metrics.json, impact.json, training_metadata.json, dataset_summary.json,
-                      morning_plan_demo.json, morning_plan_evidence.json (committed)
+                      morning_plan_demo.json, morning_plan_evidence.json, integration_scale.json (committed)
     data/ models/     generated data and model binaries (git-ignored, reproducible)
-  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY, MORNING_PLAN
+  docs/               ARCHITECTURE, DATA_CARD, MODEL_CARD, EVALUATION, DEMO_SCRIPT, PROJECT_REPORT, TEAM_BRIEFING, SECURITY, MORNING_PLAN, INTEGRATION
   tests/              data, forecast, risk/anomaly, rebalancing, impact, API, contract tests
   .github/workflows/  CI
 ```
@@ -328,6 +352,8 @@ python ml/scripts/generate_data.py   # synthetic dataset -> ml/data/
 python ml/scripts/train.py           # models -> ml/models/
 python ml/scripts/select_policy.py   # V2 parameters on training-period validation folds -> policy_selection.json
 python ml/scripts/evaluate.py        # metrics.json + impact.json -> ml/artifacts/
+# optional, separate (wall-clock timings vary run to run):
+python ml/scripts/integration_scale.py   # feed-contract replay equivalence + scale benchmark -> integration_scale.json (~3 min)
 ```
 
 (The API also runs generation + training automatically on first start if artifacts are missing.)
@@ -366,7 +392,7 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 192 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, policy selection, impact, API, contract, Morning Plan)
+python -m pytest -q                       # from repo root: 225 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, feed contract + replay equivalence + benchmark artifact, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 
@@ -416,6 +442,7 @@ Security & prototype threat model: [docs/SECURITY.md](docs/SECURITY.md)
 * The intraday simulator assumes exogenous demand, 1-hour transfers and simple costs. In this legacy
   environment, e-float is tracked but is not a binding constraint. Only the separate Morning Plan
   environment treats e-float as binding.
+* Integration & scale evidence is synthetic: a deterministic file replay through the feed contract (no live ledger, broker or real upay integration) and a single-container benchmark. Each hourly refresh recomputes the full 216-hour window (no incremental cache), so cost grows roughly linearly with agents (23.6 s at 10,000 synthetic agents).
 * The audit log is tamper-evident but in memory by default (optional JSONL file on a persistent volume); rate limiting is process-local; there is no authentication (out of scope for the prototype).
 * **Morning Plan:**
   * The demo is a synthetic fixture (one world, 14 dates), and its evidence comes from the same

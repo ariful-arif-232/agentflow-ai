@@ -90,6 +90,8 @@ served from memory (overview ≈ tens of ms; a new decision time ≈ 0.3 s).
 | GET | `/api/morning-plan/evidence` | aggregate synthetic research evidence and caveats |
 | POST | `/api/morning-plan/simulate` | human-review simulation of a Morning Plan (acknowledgement required; no money moved) |
 | GET | `/api/morning-plan/audit` | simulated Morning Plan approvals log |
+| GET | `/api/integration-scale` | Phase-2 feed contract summary, replay equivalence and decision-path benchmark (synthetic benchmark evidence) |
+| GET | `/api/integration/feed-schema` | JSON Schema of the `agentflow.feed.v1` contract (aggregated agent-hours, no personal data) |
 
 All analytics endpoints accept `as_of` (a held-out hour, 06:00–21:00).
 
@@ -120,6 +122,17 @@ frozen full-day forecasts (ml/artifacts/morning_plan_demo.json, ~164 KB)
 See [MORNING_PLAN.md](MORNING_PLAN.md).
 
 ## Scalability and integration path
+
+*Implemented in Phase 2 (synthetic benchmark evidence, see [INTEGRATION.md](INTEGRATION.md)):*
+
+* A provider-neutral hourly feed contract (`agentflow.feed.v1`, `ml/agentflow/integration.py`) with strict
+  validation and a one-to-one mapping onto `build_features` inputs.
+* `StreamingDecisionAdapter`, which keeps a bounded 216-hour window. Its decisions equal the batch
+  pipeline in a full chronological replay.
+* A measured decision-path benchmark: hourly refresh 2.3 s for 1,000 synthetic agents and 23.6 s for
+  10,000 on 4 vCPUs. The main cost is recomputing the whole window every hour.
+
+*Still future work:*
 
 * **Data:** replace `data_gen` with a scheduled extract of hourly per-agent aggregates (amounts and
   counts only — no customer PII) into Parquet / PostgreSQL. `features.build_features` is vectorised

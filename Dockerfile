@@ -12,6 +12,7 @@ COPY ml ./ml
 COPY apps/api ./apps/api
 RUN python ml/scripts/generate_data.py > /dev/null \
  && python ml/scripts/train.py \
+ && python ml/scripts/model_monitoring.py \
  && rm -rf /root/.cache
 
 RUN useradd --create-home --uid 10001 agentflow && chown -R agentflow /srv

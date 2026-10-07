@@ -28,3 +28,6 @@ next-env.d.ts
 .vscode/
 .idea/
 *.log
+
+# Optional local tamper-evident audit logs (AGENTFLOW_AUDIT_LOG_PATH) — never commit
+*audit*.jsonl

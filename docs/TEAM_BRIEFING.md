@@ -111,7 +111,7 @@ any hour in the 14-day test period.
 
 | Page | What it shows |
 |---|---|
-| **Command Center** | At the default time: 200 active agents, **25 at risk** (HIGH or CRITICAL), **7 critical**, 32 at MEDIUM, 15 with unusual activity. Projected service readiness **71.5% → 77.5%** with the recommended plan (policy V2). Recommended rebalancing **BDT 4.5 lakh** in **14 transfers**; BDT 5.2 lakh escalated to the distributor (Phase-2 V2 ranking by the synthetic logistics-cost proxy; the Phase-1 ranking gave BDT 4.7 lakh and BDT 5.0 lakh). (With policy V1 the same moment needs 21 transfers for BDT 4.0 lakh, reaching 77.0%.) Also a 48-hour forecast-vs-actual chart, a risk chart, top at-risk agents and a district table. |
+| **Command Center** | At the default time: 200 active agents, **25 at risk** (HIGH or CRITICAL), **7 critical**, 32 at MEDIUM, 15 with unusual activity. Projected service readiness **71.5% → 77.5%** with the recommended plan (policy V2). Recommended rebalancing **BDT 4.7 lakh** in **14 transfers**; BDT 5.0 lakh escalated to the distributor. (With policy V1 the same moment needs 21 transfers for BDT 4.0 lakh, reaching 77.0%.) Also a 48-hour forecast-vs-actual chart, a risk chart, top at-risk agents and a district table. |
 | **Morning Plan** (new, proactive) | At 07:00 a full-day model forecasts each agent's **cash and e-float** needs for 08:00–23:59. At 08:00 it proposes where the **same** district working capital should sit: the budget and recommendation match exactly, with BDT 0 extra. It includes a review-focus panel (largest cuts, low-volume cuts, rural e-float reductions), an agent table with an explanation drawer, a district conservation proof, **Approve Simulation**, and the research evidence with caveats. It uses a separate synthetic demo world. |
 | **Agents** | Table of all 200 agents; sort and filter by risk, behaviour, district, location type, volume and ID. |
 | **Agent Intelligence** (click an agent) | Current cash, 6-hour forecasts, expected gap, risk score with its 5 parts, "Why this risk?" (with Bangla button), recommended action, unusual-activity panel, 72-hour history chart, model accuracy. |
@@ -325,17 +325,32 @@ These are **peer-to-peer** moves, so the total cash in the network does not chan
 ### 13b. Business impact (Phase 2, synthetic simulated estimate)
 
 Say: *"synthetic simulated estimate, not measured upay performance."*
-- **Measured in the simulation:** V2 served BDT 38.4 lakh of cash-out that was unmet without AgentFlow,
-  and had 788 fewer shortage agent-hours.
-- **Estimated:** about 2,459 transactions protected (unmet BDT ÷ average synthetic ticket size). The
+- **Measured in the simulation:** V2 served BDT 38.5 lakh of cash-out that was unmet without AgentFlow,
+  and had 794 fewer shortage agent-hours.
+- **Estimated:** about 2,466 transactions protected (unmet BDT ÷ average synthetic ticket size). The
   simulator works in BDT, not individual transactions, so this is an estimate, never an exact count.
 - **Assumed:** the agent commission (50 bps) is an illustrative round number, not upay's rate. At that
-  rate, commission protected (BDT 19,188) is far below the peer logistics cost proxy (BDT 2.09 lakh);
-  break-even is about 544 bps. We say this openly.
-- **Distributor:** 153 escalated agent-days (trips); break-even fee about BDT 1,531 per trip. We do not
+  rate, commission protected (BDT 19,230) is far below the peer logistics cost proxy (BDT 2.09 lakh);
+  break-even is about 545 bps. We say this openly.
+- **Distributor:** 154 escalated agent-days (trips); break-even fee about BDT 1,524 per trip. We do not
   compute distributor profit because we have no real fee.
 - **The honest pitch:** customers served, at lower logistics cost per protected transaction with V2
   (BDT 85) than V1 (BDT 116). **No ROI is claimed.**
+
+### 13c. Logistics ranking and security safeguards (Phase 2)
+
+- **Ranking:** V2 still ranks donors exactly as in Phase 1. We tried ranking by the richer logistics cost; it
+  was slightly worse (1,229 vs 1,223 shortage events), so we did not adopt it. The richer cost is still used
+  to *cost* every transfer.
+- **Approval:** the server refuses a simulated approval unless the reviewer acknowledged the evidence. A
+  repeated approval does not create a second audit record.
+- **Audit:** every simulated approval is hash-chained, so editing a record is detectable. It is tamper-evident,
+  not tamper-proof, and it is not a production audit store.
+- **Rate limit:** simulation requests are limited per client (prototype, single process; not a WAF).
+- **Gaming:** an agent that manufactures a large burst of transactions is flagged ANOMALOUS by the existing
+  detector and held for review, so it is not sent cash. Smaller manipulation may not be flagged, and
+  WATCH-level agents are not held: say so if asked.
+- **Login:** there is none. Real identity and role-based approval are production requirements.
 
 ## 14. Why the dataset is synthetic
 
@@ -573,6 +588,8 @@ click **Retry**; nothing was changed or approved.
 - ❌ Do **not** claim AgentFlow is in production or used by upay.
 - ❌ Do **not** claim real upay revenue, commission, savings or ROI. Business-impact figures are synthetic
   simulated estimates; the 50 bps commission is illustrative, and "2,459 transactions" is an estimate.
+- ❌ Do **not** claim enterprise or bank-grade security, a login system, or immutable audit storage. The
+  safeguards are prototype controls.
 - ❌ Do **not** claim AgentFlow pays for itself. Under the illustrative rates, commission protected does not
   cover the logistics cost proxy.
 - ❌ Do **not** present 20.6% as the saving for the date shown on the Morning Plan page. It is

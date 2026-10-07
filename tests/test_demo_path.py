@@ -52,7 +52,7 @@ def test_demo_agent_story_is_backed_by_live_outputs(client):
 def test_approve_simulation_is_simulation_only_and_audited(client):
     rid = client.get(f"/api/agents/{DEMO_AGENT}").json()["recommendations"]["as_destination"][0]["id"]
     before = client.get("/api/overview").json()["kpis"]
-    s = client.post("/api/rebalancing/simulate", json={"recommendation_ids": [rid], "reviewer_note": "demo"}).json()
+    s = client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": [rid], "reviewer_note": "demo"}).json()
     assert s["simulation_only"] is True
     assert "no money moved" in s["status"].lower()
     assert s["policy"] == "v2"

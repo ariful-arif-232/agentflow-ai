@@ -282,6 +282,10 @@ export interface AgentDetail extends Meta {
 
 export interface SimulationResult extends Meta {
   simulation_id: string;
+  /** true when the same approval was submitted before: the original audit record is returned. */
+  replayed?: boolean;
+  record_hash?: string;
+  audit_note?: string;
   created_at: string;
   recommendation_ids: string[];
   total_amount: number;
@@ -376,13 +380,17 @@ export interface Phase2Logistics {
   version: string;
   assumptions: LogisticsAssumptions;
   metric_definitions: Record<string, string>;
-  v2_ranking_cost_model: string;
+  serving_v2_ranking_cost_model: "phase1_simple";
+  experiment_ranking_cost_model: "logistics_proxy";
+  experiment_status: string;
   v2_parameters_note: string;
   policies: {
     naive_rebalancing: Phase2PolicyLogistics;
     agentflow: Phase2PolicyLogistics;
-    agentflow_v2_phase1_ranking: Phase2PolicyLogistics;
-    agentflow_v2: Phase2PolicyLogistics & PolicyMetrics;
+    /** Serving V2 (proven Phase-1 ranking), costed with the Phase-2 proxy. */
+    agentflow_v2: Phase2PolicyLogistics;
+    /** Experiment, not adopted: V2 ranked by the logistics-cost proxy. */
+    agentflow_v2_logistics_ranking_experiment: Phase2PolicyLogistics & PolicyMetrics;
   };
   v2_ranking_change: {
     phase1_ranking: Partial<PolicyMetrics>;
@@ -687,8 +695,8 @@ export interface BusinessImpact {
   methodology: { transaction_estimate: string; roi_note: string; fallback_ticket_share_of_status_quo_unmet_pct: number };
   metric_definitions: Record<string, string>;
   calculations: {
-    policies: Record<"status_quo" | "agentflow_v1" | "agentflow_v2_phase1_ranking" | "agentflow_v2", BizPolicy>;
-    vs_status_quo: Record<"agentflow_v1" | "agentflow_v2_phase1_ranking" | "agentflow_v2", BizVsStatusQuo>;
+    policies: Record<"status_quo" | "agentflow_v1" | "agentflow_v2" | "agentflow_v2_logistics_ranking_experiment", BizPolicy>;
+    vs_status_quo: Record<"agentflow_v1" | "agentflow_v2" | "agentflow_v2_logistics_ranking_experiment", BizVsStatusQuo>;
   };
   sensitivity: Record<"agentflow_v1" | "agentflow_v2", { grid: (BizEconomics & { cost_multiplier: number })[]; break_even_commission_bps_by_cost_multiplier: { cost_multiplier: number; break_even_commission_bps: number | null }[] }>;
   limitations: string[];

@@ -52,7 +52,7 @@ GRID = {
 }
 RETENTION_MIN = 0.95
 # The pre-registered Phase-1 selection protocol ranked donors by the Phase-1 cost; keep it reproducible.
-SELECTION_BASE = RebalanceV2Config(ranking_cost_model="phase1_simple")
+SELECTION_BASE = RebalanceV2Config(ranking_cost_model="phase1_simple")  # explicit, independent of the default
 
 
 def assert_folds_before_test(folds=FOLDS) -> None:

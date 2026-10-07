@@ -247,6 +247,6 @@ def test_api_policy_selection(client):
     assert all("expected_benefit" not in r for r in v1["recommendations"])
     assert client.get("/api/rebalancing/recommendations", params={"policy": "v9"}).status_code == 422
     rid = v1["recommendations"][0]["id"]
-    sim = client.post("/api/rebalancing/simulate", json={"recommendation_ids": [rid], "policy": "v1"}).json()
+    sim = client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": [rid], "policy": "v1"}).json()
     assert sim["policy"] == "v1" and sim["simulation_only"] is True
-    assert client.post("/api/rebalancing/simulate", json={"recommendation_ids": [rid], "policy": "x"}).status_code == 422
+    assert client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": [rid], "policy": "x"}).status_code == 422

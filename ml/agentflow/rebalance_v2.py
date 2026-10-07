@@ -28,11 +28,13 @@ recipient, distributor escalation, simulation-only approval) and changes four th
    (ii) highest recipient risk-points removed per BDT 100 of logistics cost, then
    (iii) largest donor margin above its reserve after the transfer, then (iv) distance.
 
-   The cost in (ii) is set by ``ranking_cost_model``: ``"logistics_proxy"`` (Phase 2, default) uses
-   the total of the component-based synthetic operational cost proxy in ``logistics.py`` (handling,
-   round-trip distance, field-officer time, cash-in-transit exposure); ``"phase1_simple"`` reproduces
-   the Phase-1 ranking (BDT 150 + BDT 25/km). Cost only ranks candidates that already passed every
-   safety check — it never relaxes a constraint.
+   The cost in (ii) is set by ``ranking_cost_model``. ``"phase1_simple"`` (BDT 150 + BDT 25/km) is the
+   **serving default**: it is the ranking behind the published Phase-1 evidence. ``"logistics_proxy"``
+   ranks by the total of the Phase-2 synthetic operational cost proxy in ``logistics.py``; it is a
+   Phase-2 *experiment* that did not improve held-out outcomes (1,229 vs 1,223 shortage events), so it
+   is only used when requested explicitly. Either way every transfer is still *costed* with the
+   Phase-2 proxy (``logistics_cost``). Cost only ranks candidates that already passed every safety
+   check — it never relaxes a constraint.
 
 ``target_quantile_weight``, ``donor_uncertainty_mult``, ``min_risk_drop`` and
 ``require_p50_shortfall`` are selected on chronological policy-validation folds inside
@@ -54,7 +56,9 @@ from .rebalance import TRIGGER_LEVELS, _risk_for, haversine_km, logistics_summar
 SELECTION_PATH = config.ARTIFACTS_DIR / "policy_selection.json"
 
 
-RANKING_COST_MODELS = ("logistics_proxy", "phase1_simple")
+RANKING_COST_MODELS = ("phase1_simple", "logistics_proxy")
+SERVING_RANKING_COST_MODEL = "phase1_simple"
+EXPERIMENT_RANKING_COST_MODEL = "logistics_proxy"
 
 
 @dataclass(frozen=True)
@@ -79,8 +83,9 @@ class RebalanceV2Config:
     history_scale: float = 0.15
     min_shortfall_cut_frac: float = 0.5
     donor_max_level_after: str = "LOW"
-    # --- Phase-2: which cost the donor ranking divides by ("logistics_proxy" | "phase1_simple") ---
-    ranking_cost_model: str = "logistics_proxy"
+    # --- which cost the donor ranking divides by. Serving default: the proven Phase-1 ranking.
+    #     "logistics_proxy" is the Phase-2 ranking experiment and must be requested explicitly. ---
+    ranking_cost_model: str = "phase1_simple"
 
     def __post_init__(self) -> None:
         if self.ranking_cost_model not in RANKING_COST_MODELS:

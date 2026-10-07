@@ -23,6 +23,8 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "ml"))
 
 from agentflow import business_impact, config, engine, logistics, rebalance, rebalance_v2, risk  # noqa: E402
+
+from .audit import fingerprint, get_audit_chain  # noqa: E402
 from agentflow.engine import DEFAULT_AS_OF  # noqa: E402
 
 DATA_LABEL = "Synthetic data for hackathon prototyping — not production upay data"
@@ -79,7 +81,7 @@ class AgentFlowService:
         # Decision times offered in the UI: held-out period, where history + forecasts exist.
         self.available_as_of = [t for t in ts if t >= config.TEST_START and 6 <= t.hour <= 21]
         self._lock = threading.Lock()
-        self.audit_log: list[dict] = []
+        self.audit = get_audit_chain()  # shared, hash-chained (tamper-evident) simulation audit
         self._snap_cache: dict = {}
         self._plan_cache: dict = {}
         self.metrics = self._read_json("metrics.json")
@@ -323,6 +325,10 @@ class AgentFlowService:
                       "default_policy": self.default_policy, "available_policies": ["v2", "v1"],
                       "simulation_only": True})
 
+    @property
+    def audit_log(self) -> list[dict]:
+        return self.audit.entries("intraday_rebalancing")
+
     def logistics_assumptions(self) -> dict:
         return clean({**logistics.describe(), "v2_ranking_cost_model": self.v2_cfg.ranking_cost_model,
                       "simulation_only": True,
@@ -358,17 +364,22 @@ class AgentFlowService:
                     "total_expected_shortfall": float(df["expected_shortfall"].sum()),
                     "projected_service_availability_pct": float(100 * cov.mean())}
 
-        entry = {"simulation_id": f"SIM-{uuid.uuid4().hex[:8].upper()}",
-                 "created_at": datetime.now(timezone.utc).isoformat(), "as_of": as_of.isoformat(),
-                 "recommendation_ids": ids, "policy": policy,
-                 "total_amount": float(sum(r["recommended_amount"] for r in chosen)),
-                 "logistics_cost_proxy_bdt": round(sum(r["logistics_cost"]["total_estimated_cost_bdt"] for r in chosen), 2),
-                 "logistics_assumption_label": logistics.ASSUMPTION_LABEL,
-                 "reviewer_note": reviewer_note, "status": "SIMULATED — no money moved"}
-        with self._lock:
-            self.audit_log.insert(0, entry)
-            del self.audit_log[200:]
-        return clean({**self.meta(as_of), **entry, "simulation_only": True,
+        fields = {"simulation_id": f"SIM-{uuid.uuid4().hex[:8].upper()}",
+                  "created_at": datetime.now(timezone.utc).isoformat(), "as_of": as_of.isoformat(),
+                  "recommendation_ids": ids, "policy": policy,
+                  "total_amount": float(sum(r["recommended_amount"] for r in chosen)),
+                  "logistics_cost_proxy_bdt": round(sum(r["logistics_cost"]["total_estimated_cost_bdt"] for r in chosen), 2),
+                  "logistics_assumption_label": logistics.ASSUMPTION_LABEL,
+                  "reviewer_acknowledged": True,
+                  "reviewer_note": reviewer_note, "status": "SIMULATED — no money moved"}
+        # Replay guard: the same approval (same decision time, policy and recommendations) is recorded once.
+        fp = fingerprint({"kind": "intraday_rebalancing", "as_of": as_of.isoformat(), "policy": policy,
+                          "recommendation_ids": sorted(ids)})
+        entry, created = self.audit.append("intraday_rebalancing", fields, fp)
+        return clean({**self.meta(as_of), **entry, "simulation_only": True, "replayed": not created,
+                      "audit_note": ("Recorded in the tamper-evident simulation audit log." if created else
+                                     "Duplicate approval: the original audit record is returned and no new record "
+                                     "was written."),
                       "agents": agents_out, "portfolio_before": portfolio(before),
                       "portfolio_after": portfolio(after)})
 

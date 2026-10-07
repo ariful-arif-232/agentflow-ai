@@ -60,8 +60,14 @@ class AgentsResponse(BaseModel):
 
 
 class SimulateRequest(BaseModel):
+    """Human-review simulation of intraday rebalancing. Never moves money.
+
+    ``reviewer_acknowledged`` is required and must be true: approval is enforced by the server, not only
+    by the dashboard checkbox.
+    """
     model_config = ConfigDict(extra="forbid")
     recommendation_ids: list[str] = Field(min_length=1, max_length=100)
+    reviewer_acknowledged: bool = Field(strict=True)  # JSON true/false only; "yes" or 1 are rejected
     reviewer_note: Optional[str] = Field(default=None, max_length=500)
     as_of: Optional[str] = Field(default=None, max_length=40)
     policy: Optional[Literal["v1", "v2"]] = None

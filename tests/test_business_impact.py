@@ -189,7 +189,7 @@ def test_business_layer_is_deterministic(small_data, small_features, small_bundl
     r1 = bi.run(f, small_data.agents, preds, hist, a=a)
     r2 = bi.run(f, small_data.agents, preds, hist, a=a)
     assert r1 == r2
-    assert set(r1["calculations"]["policies"]) == {"status_quo", "agentflow_v1", "agentflow_v2_phase1_ranking", "agentflow_v2"}
+    assert set(r1["calculations"]["policies"]) == {"status_quo", "agentflow_v1", "agentflow_v2", "agentflow_v2_logistics_ranking_experiment"}
 
 
 # ------------------------------------------------------------------ evidence preservation
@@ -211,8 +211,10 @@ def test_phase1_evidence_preserved():
 
 def test_phase2_logistics_evidence_preserved():
     p2 = IMPACT["phase2_logistics"]
-    assert p2["version"] == "phase2-logistics-1"
-    assert p2["policies"]["agentflow_v2"]["peer_transfer_logistics_cost_bdt"] == 208_611.9
+    assert p2["version"] == "phase2-logistics-2"
+    # values unchanged since phase2-logistics-1; only the keys were made explicit
+    assert p2["policies"]["agentflow_v2"]["peer_transfer_logistics_cost_bdt"] == 209_481.66
+    assert p2["policies"]["agentflow_v2_logistics_ranking_experiment"]["peer_transfer_logistics_cost_bdt"] == 208_611.9
     assert p2["v2_ranking_change"]["transfer_legs_changed"] == 13
     assert p2["v2_ranking_change"]["logistics_proxy_ranking"]["shortage_events"] == 1229
 

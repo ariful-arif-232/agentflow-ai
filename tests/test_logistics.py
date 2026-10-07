@@ -132,12 +132,15 @@ def test_every_transfer_and_escalation_carries_a_costed_breakdown(seed):
         assert lg["assumption_label"] == logistics.ASSUMPTION_LABEL
 
 
-def test_v2_ranks_by_the_richer_cost_and_phase1_ranking_stays_available():
+def test_serving_v2_uses_phase1_ranking_and_logistics_ranking_is_explicit_only():
     cfg = rebalance_v2.selected_config()
-    assert cfg.ranking_cost_model == "logistics_proxy"
+    assert cfg.ranking_cost_model == "phase1_simple" == rebalance_v2.SERVING_RANKING_COST_MODEL
+    assert rebalance_v2.RebalanceV2Config().ranking_cost_model == "phase1_simple"
     snap = make_snapshot(n=60, seed=2)
-    new = rebalance_v2.recommend_v2(snap, cfg)
-    old = rebalance_v2.recommend_v2(snap, replace(cfg, ranking_cost_model="phase1_simple"))
+    old = rebalance_v2.recommend_v2(snap, cfg)
+    new = rebalance_v2.recommend_v2(snap, replace(cfg, ranking_cost_model=rebalance_v2.EXPERIMENT_RANKING_COST_MODEL))
+    for r in old["recommendations"]:  # serving plan is still costed with the richer proxy
+        assert r["logistics_cost"]["assumption_label"] == logistics.ASSUMPTION_LABEL
     for r in new["recommendations"]:
         k = r["candidate_rank_key"]
         assert k["ranking_cost_model"] == "logistics_proxy"
@@ -213,7 +216,9 @@ def test_phase1_metrics_remain_intact():
 
 def test_phase2_block_is_versioned_labelled_and_consistent():
     p2 = IMPACT["phase2_logistics"]
-    assert p2["version"] == "phase2-logistics-1" and "not upay measured cost" in p2["label"]
+    assert p2["version"] == "phase2-logistics-2" and "not upay measured cost" in p2["label"]
+    assert p2["serving_v2_ranking_cost_model"] == "phase1_simple" and p2["experiment_ranking_cost_model"] == "logistics_proxy"
+    assert p2["experiment_status"].startswith("EXPERIMENTAL — not adopted")
     assert p2["assumptions"]["assumption_label"] == logistics.ASSUMPTION_LABEL
     ch = p2["v2_ranking_change"]
     for k, v in ch["phase1_ranking"].items():
@@ -223,7 +228,9 @@ def test_phase2_block_is_versioned_labelled_and_consistent():
         assert m["total_operational_logistics_cost_proxy_bdt"] == pytest.approx(
             m["peer_transfer_logistics_cost_bdt"] + m["distributor_escalation_cost_proxy_bdt"], abs=0.02)
         assert m["distributor_escalation_events_unavailable"] == 0
-    assert p2["policies"]["agentflow_v2_phase1_ranking"]["interventions"] == IMPACT["policies"]["agentflow_v2"]["interventions"]
+    assert p2["policies"]["agentflow_v2"]["interventions"] == IMPACT["policies"]["agentflow_v2"]["interventions"]
+    exp = p2["policies"]["agentflow_v2_logistics_ranking_experiment"]
+    assert exp["shortage_events"] == ch["logistics_proxy_ranking"]["shortage_events"] == 1229
 
 
 # ------------------------------------------------------------------ API and claim safety
@@ -239,14 +246,14 @@ def client():
 def test_api_exposes_the_assumption_label(client):
     a = client.get("/api/logistics/assumptions").json()
     assert a["assumption_label"] == logistics.ASSUMPTION_LABEL and a["simulation_only"] is True
-    assert "governed operator rates" in a["deployment_note"] and a["v2_ranking_cost_model"] == "logistics_proxy"
+    assert "governed operator rates" in a["deployment_note"] and a["v2_ranking_cost_model"] == "phase1_simple"
     for policy in ("v1", "v2"):
         plan = client.get(f"/api/rebalancing/recommendations?policy={policy}").json()
         assert plan["summary"]["logistics"]["assumption_label"] == logistics.ASSUMPTION_LABEL
         assert all(r["logistics_cost"]["assumption_label"] == logistics.ASSUMPTION_LABEL for r in plan["recommendations"])
         assert all("not the location of any real upay distributor" in e["replenishment_cost"]["hub_assumption"] for e in plan["escalations"])
     rid = client.get("/api/rebalancing/recommendations").json()["recommendations"][0]["id"]
-    sim = client.post("/api/rebalancing/simulate", json={"recommendation_ids": [rid]}).json()
+    sim = client.post("/api/rebalancing/simulate", json={"reviewer_acknowledged": True, "recommendation_ids": [rid]}).json()
     assert sim["simulation_only"] is True and sim["logistics_assumption_label"] == logistics.ASSUMPTION_LABEL
     assert client.get("/api/impact").json()["phase2_logistics"]["assumptions"]["assumption_label"] == logistics.ASSUMPTION_LABEL
 

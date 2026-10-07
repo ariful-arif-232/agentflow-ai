@@ -52,7 +52,10 @@ import pandas as pd
 
 from . import config, data_gen, impact, logistics, rebalance_v2
 
-VERSION = "phase2-business-1"
+VERSION = "phase2-business-2"
+VERSION_NOTE = ("phase2-business-2: 'agentflow_v2' is the serving V2 (proven Phase-1 ranking), costed with the "
+                "Phase-2 logistics proxy. The logistics-ranked V2 is kept separately as "
+                "'agentflow_v2_logistics_ranking_experiment' and is never combined with the serving figures.")
 LABEL = "Synthetic simulated estimate — not measured upay performance."
 ENV_PREFIX = "AGENTFLOW_BUSINESS_"
 NOT_ROI = ("No ROI is reported: a return on investment would need customer-retention, lifetime-value or "
@@ -60,8 +63,8 @@ NOT_ROI = ("No ROI is reported: a return on investment would need customer-reten
 POLICY_LABELS = {
     "status_quo": "Without AgentFlow (status quo)",
     "agentflow_v1": "AgentFlow V1",
-    "agentflow_v2_phase1_ranking": "AgentFlow V2, Phase-1 ranking (published Phase-1 evidence)",
-    "agentflow_v2": "AgentFlow V2, logistics-cost ranking (current default)",
+    "agentflow_v2": "AgentFlow V2 (serving default: Phase-1 ranking; costs from the Phase-2 proxy)",
+    "agentflow_v2_logistics_ranking_experiment": "EXPERIMENT (not adopted): V2 ranked by the logistics-cost proxy",
 }
 
 
@@ -324,6 +327,7 @@ def compute(sims: dict, counts: np.ndarray, cluster_ticket: np.ndarray, a: Busin
     return {
         "label": LABEL,
         "version": VERSION,
+        "version_note": VERSION_NOTE,
         "synthetic_data": True,
         "simulated_estimate": True,
         "product_story": "Same liquidity. Placed ahead of demand.",
@@ -361,9 +365,11 @@ def run(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFrame, hist_rat
     sims = {
         "status_quo": impact.simulate_policy(feats, agents, None, hist_rate, forecast_source="none"),
         "agentflow_v1": sim(forecast_source="ml", policy="v1"),
-        "agentflow_v2_phase1_ranking": sim(forecast_source="ml", policy="v2",
-                                           policy_cfg=replace(v2_cfg, ranking_cost_model="phase1_simple")),
-        "agentflow_v2": sim(forecast_source="ml", policy="v2", policy_cfg=v2_cfg),
+        "agentflow_v2": sim(forecast_source="ml", policy="v2",
+                            policy_cfg=replace(v2_cfg, ranking_cost_model=rebalance_v2.SERVING_RANKING_COST_MODEL)),
+        "agentflow_v2_logistics_ranking_experiment": sim(
+            forecast_source="ml", policy="v2",
+            policy_cfg=replace(v2_cfg, ranking_cost_model=rebalance_v2.EXPERIMENT_RANKING_COST_MODEL)),
     }
     s0 = sims["status_quo"]
     mats, _ = impact._matrices(feats, s0["agent_ids"], s0["hours"], ["cash_out_count"])
@@ -375,13 +381,20 @@ def run(feats: pd.DataFrame, agents: pd.DataFrame, preds: pd.DataFrame, hist_rat
 def reconcile(biz: dict, imp: dict) -> dict:
     """Cross-check against impact.json so the business layer provably reuses the same simulations."""
     p, p2 = imp["policies"], imp.get("phase2_logistics", {}).get("policies", {})
+    bp = biz["calculations"]["policies"]
     checks = {
         "status_quo_unmet": (biz["calculations"]["policies"]["status_quo"]["customer"]["unmet_cash_out_bdt"], p["status_quo"]["unmet_cash_demand_bdt"]),
         "v1_unmet": (biz["calculations"]["policies"]["agentflow_v1"]["customer"]["unmet_cash_out_bdt"], p["agentflow"]["unmet_cash_demand_bdt"]),
-        "v2_phase1_shortage_events": (biz["calculations"]["policies"]["agentflow_v2_phase1_ranking"]["customer"]["shortage_agent_hours"], p["agentflow_v2"]["shortage_events"]),
-        "v2_phase1_transfers": (biz["calculations"]["policies"]["agentflow_v2_phase1_ranking"]["operations"]["peer_transfers"], p["agentflow_v2"]["interventions"]),
+        "v2_unmet": (bp["agentflow_v2"]["customer"]["unmet_cash_out_bdt"], p["agentflow_v2"]["unmet_cash_demand_bdt"]),
+        "v2_shortage_events": (bp["agentflow_v2"]["customer"]["shortage_agent_hours"], p["agentflow_v2"]["shortage_events"]),
+        "v2_transfers": (bp["agentflow_v2"]["operations"]["peer_transfers"], p["agentflow_v2"]["interventions"]),
     }
     if "agentflow_v2" in p2:
-        checks["v2_peer_logistics_cost"] = (biz["calculations"]["policies"]["agentflow_v2"]["operations"]["peer_logistics_cost_bdt"],
+        checks["v2_peer_logistics_cost"] = (bp["agentflow_v2"]["operations"]["peer_logistics_cost_bdt"],
                                             p2["agentflow_v2"]["peer_transfer_logistics_cost_bdt"])
+    exp = p2.get("agentflow_v2_logistics_ranking_experiment")
+    if exp and "agentflow_v2_logistics_ranking_experiment" in bp:
+        e = bp["agentflow_v2_logistics_ranking_experiment"]
+        checks["experiment_shortage_events"] = (e["customer"]["shortage_agent_hours"], exp["shortage_events"])
+        checks["experiment_peer_logistics_cost"] = (e["operations"]["peer_logistics_cost_bdt"], exp["peer_transfer_logistics_cost_bdt"])
     return {k: {"business_layer": a, "impact_json": b, "match": abs(float(a) - float(b)) < 0.01} for k, (a, b) in checks.items()}

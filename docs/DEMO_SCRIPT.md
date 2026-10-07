@@ -45,8 +45,7 @@ The **Judge demo** strip (6 steps, live values) is your route map. Click a step 
 > "AgentFlow forecasts every agent's cash needs for the next 6 hours."
 
 Point at: **25 at-risk, 7 critical**, **projected service readiness 71.5% → 77.5% with the V2 plan**,
-**14 peer transfers, BDT 4.5 lakh** (Phase-2 V2 ranks donors by the synthetic logistics-cost proxy; with the
-Phase-1 ranking this was BDT 4.7 lakh).
+**14 peer transfers, BDT 4.7 lakh**.
 *Transition:* "That's intraday risk. But AgentFlow also acts before the day starts."
 
 **1b. Morning Plan (25 s)** (guide step 2). Open **Morning Plan**, dated Mon 31 Aug 2026.
@@ -92,9 +91,14 @@ Point at AG-0171 **HIGH 53 → LOW 5** and network at-risk **25 → 24**.
 
 *Optional (+20 s), Business Impact card on the same page:*
 > "In business terms, and all synthetic: V2 served about BDT 38 lakh of cash-out that would have failed,
-> roughly 2,460 transactions by our estimate. At an illustrative 50 basis-point commission that doesn't
+> roughly 2,470 transactions by our estimate. At an illustrative 50 basis-point commission that doesn't
 > pay for the field logistics on its own, and we show that openly. The value is customers served, and V2
 > does it for about BDT 85 of logistics per protected transaction against 116 for V1. We don't claim an ROI."
+
+*If asked about safety:* "Approval is enforced by the server, not just the checkbox: without an explicit
+acknowledgement the API refuses. Every simulated approval goes into a hash-chained, tamper-evident log, and
+an agent with manufactured activity is held for review instead of being sent cash. These are prototype
+controls; real identity and a governed audit store come before production."
 
 **Close (10 s):**
 > "Synthetic data, explainable risk, human-approved simulations, and a held-out evaluation we can reproduce."

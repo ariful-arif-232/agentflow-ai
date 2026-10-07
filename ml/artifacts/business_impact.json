@@ -1,6 +1,7 @@
 {
   "label": "Synthetic simulated estimate \u2014 not measured upay performance.",
-  "version": "phase2-business-1",
+  "version": "phase2-business-2",
+  "version_note": "phase2-business-2: 'agentflow_v2' is the serving V2 (proven Phase-1 ranking), costed with the Phase-2 logistics proxy. The logistics-ranked V2 is kept separately as 'agentflow_v2_logistics_ranking_experiment' and is never combined with the serving figures.",
   "synthetic_data": true,
   "simulated_estimate": true,
   "product_story": "Same liquidity. Placed ahead of demand.",
@@ -89,8 +90,8 @@
   "policy_labels": {
     "status_quo": "Without AgentFlow (status quo)",
     "agentflow_v1": "AgentFlow V1",
-    "agentflow_v2_phase1_ranking": "AgentFlow V2, Phase-1 ranking (published Phase-1 evidence)",
-    "agentflow_v2": "AgentFlow V2, logistics-cost ranking (current default)"
+    "agentflow_v2": "AgentFlow V2 (serving default: Phase-1 ranking; costs from the Phase-2 proxy)",
+    "agentflow_v2_logistics_ranking_experiment": "EXPERIMENT (not adopted): V2 ranked by the logistics-cost proxy"
   },
   "calculations": {
     "policies": {
@@ -142,7 +143,7 @@
           "distributor_trips_cost_unavailable": 0
         }
       },
-      "agentflow_v2_phase1_ranking": {
+      "agentflow_v2": {
         "customer": {
           "requested_cash_out_bdt": 387071360.0,
           "served_cash_out_bdt": 381380420.0,
@@ -166,7 +167,7 @@
           "distributor_trips_cost_unavailable": 0
         }
       },
-      "agentflow_v2": {
+      "agentflow_v2_logistics_ranking_experiment": {
         "customer": {
           "requested_cash_out_bdt": 387071360.0,
           "served_cash_out_bdt": 381372070.0,
@@ -241,7 +242,7 @@
           "label": "Synthetic simulated estimate \u2014 not measured upay performance."
         }
       },
-      "agentflow_v2_phase1_ranking": {
+      "agentflow_v2": {
         "customer": {
           "cash_out_value_protected_bdt": 3845990.0,
           "shortage_agent_hours_avoided": 794,
@@ -290,7 +291,7 @@
           "label": "Synthetic simulated estimate \u2014 not measured upay performance."
         }
       },
-      "agentflow_v2": {
+      "agentflow_v2_logistics_ranking_experiment": {
         "customer": {
           "cash_out_value_protected_bdt": 3837640.0,
           "shortage_agent_hours_avoided": 788,
@@ -476,124 +477,124 @@
         {
           "cost_multiplier": 0.5,
           "agent_commission_bps": 25.0,
-          "illustrative_commission_protected_bdt": 9594.1,
-          "operational_logistics_cost_bdt": 104305.95,
-          "net_illustrative_value_bdt": -94711.85,
-          "benefit_cost_ratio": 0.09198037120605297,
-          "break_even_commission_bps": 271.79712010506455
+          "illustrative_commission_protected_bdt": 9614.98,
+          "operational_logistics_cost_bdt": 104740.83,
+          "net_illustrative_value_bdt": -95125.85,
+          "benefit_cost_ratio": 0.09179777360939378,
+          "break_even_commission_bps": 272.33775958855847
         },
         {
           "cost_multiplier": 0.5,
           "agent_commission_bps": 50.0,
-          "illustrative_commission_protected_bdt": 19188.2,
-          "operational_logistics_cost_bdt": 104305.95,
-          "net_illustrative_value_bdt": -85117.75,
-          "benefit_cost_ratio": 0.18396074241210594,
-          "break_even_commission_bps": 271.79712010506455
+          "illustrative_commission_protected_bdt": 19229.95,
+          "operational_logistics_cost_bdt": 104740.83,
+          "net_illustrative_value_bdt": -85510.88,
+          "benefit_cost_ratio": 0.18359554721878757,
+          "break_even_commission_bps": 272.33775958855847
         },
         {
           "cost_multiplier": 0.5,
           "agent_commission_bps": 100.0,
-          "illustrative_commission_protected_bdt": 38376.4,
-          "operational_logistics_cost_bdt": 104305.95,
-          "net_illustrative_value_bdt": -65929.55,
-          "benefit_cost_ratio": 0.3679214848242119,
-          "break_even_commission_bps": 271.79712010506455
+          "illustrative_commission_protected_bdt": 38459.9,
+          "operational_logistics_cost_bdt": 104740.83,
+          "net_illustrative_value_bdt": -66280.93,
+          "benefit_cost_ratio": 0.36719109443757514,
+          "break_even_commission_bps": 272.33775958855847
         },
         {
           "cost_multiplier": 0.5,
           "agent_commission_bps": 200.0,
-          "illustrative_commission_protected_bdt": 76752.8,
-          "operational_logistics_cost_bdt": 104305.95,
-          "net_illustrative_value_bdt": -27553.15,
-          "benefit_cost_ratio": 0.7358429696484238,
-          "break_even_commission_bps": 271.79712010506455
+          "illustrative_commission_protected_bdt": 76919.8,
+          "operational_logistics_cost_bdt": 104740.83,
+          "net_illustrative_value_bdt": -27821.03,
+          "benefit_cost_ratio": 0.7343821888751503,
+          "break_even_commission_bps": 272.33775958855847
         },
         {
           "cost_multiplier": 1.0,
           "agent_commission_bps": 25.0,
-          "illustrative_commission_protected_bdt": 9594.1,
-          "operational_logistics_cost_bdt": 208611.9,
-          "net_illustrative_value_bdt": -199017.8,
-          "benefit_cost_ratio": 0.045990185603026486,
-          "break_even_commission_bps": 543.5942402101291
+          "illustrative_commission_protected_bdt": 9614.98,
+          "operational_logistics_cost_bdt": 209481.66,
+          "net_illustrative_value_bdt": -199866.68,
+          "benefit_cost_ratio": 0.04589888680469689,
+          "break_even_commission_bps": 544.6755191771169
         },
         {
           "cost_multiplier": 1.0,
           "agent_commission_bps": 50.0,
-          "illustrative_commission_protected_bdt": 19188.2,
-          "operational_logistics_cost_bdt": 208611.9,
-          "net_illustrative_value_bdt": -189423.7,
-          "benefit_cost_ratio": 0.09198037120605297,
-          "break_even_commission_bps": 543.5942402101291
+          "illustrative_commission_protected_bdt": 19229.95,
+          "operational_logistics_cost_bdt": 209481.66,
+          "net_illustrative_value_bdt": -190251.71,
+          "benefit_cost_ratio": 0.09179777360939378,
+          "break_even_commission_bps": 544.6755191771169
         },
         {
           "cost_multiplier": 1.0,
           "agent_commission_bps": 100.0,
-          "illustrative_commission_protected_bdt": 38376.4,
-          "operational_logistics_cost_bdt": 208611.9,
-          "net_illustrative_value_bdt": -170235.5,
-          "benefit_cost_ratio": 0.18396074241210594,
-          "break_even_commission_bps": 543.5942402101291
+          "illustrative_commission_protected_bdt": 38459.9,
+          "operational_logistics_cost_bdt": 209481.66,
+          "net_illustrative_value_bdt": -171021.76,
+          "benefit_cost_ratio": 0.18359554721878757,
+          "break_even_commission_bps": 544.6755191771169
         },
         {
           "cost_multiplier": 1.0,
           "agent_commission_bps": 200.0,
-          "illustrative_commission_protected_bdt": 76752.8,
-          "operational_logistics_cost_bdt": 208611.9,
-          "net_illustrative_value_bdt": -131859.1,
-          "benefit_cost_ratio": 0.3679214848242119,
-          "break_even_commission_bps": 543.5942402101291
+          "illustrative_commission_protected_bdt": 76919.8,
+          "operational_logistics_cost_bdt": 209481.66,
+          "net_illustrative_value_bdt": -132561.86,
+          "benefit_cost_ratio": 0.36719109443757514,
+          "break_even_commission_bps": 544.6755191771169
         },
         {
           "cost_multiplier": 1.5,
           "agent_commission_bps": 25.0,
-          "illustrative_commission_protected_bdt": 9594.1,
-          "operational_logistics_cost_bdt": 312917.85,
-          "net_illustrative_value_bdt": -303323.75,
-          "benefit_cost_ratio": 0.03066012373535099,
-          "break_even_commission_bps": 815.3913603151938
+          "illustrative_commission_protected_bdt": 9614.98,
+          "operational_logistics_cost_bdt": 314222.49,
+          "net_illustrative_value_bdt": -304607.52,
+          "benefit_cost_ratio": 0.03059925786979793,
+          "break_even_commission_bps": 817.0132787656754
         },
         {
           "cost_multiplier": 1.5,
           "agent_commission_bps": 50.0,
-          "illustrative_commission_protected_bdt": 19188.2,
-          "operational_logistics_cost_bdt": 312917.85,
-          "net_illustrative_value_bdt": -293729.65,
-          "benefit_cost_ratio": 0.06132024747070198,
-          "break_even_commission_bps": 815.3913603151938
+          "illustrative_commission_protected_bdt": 19229.95,
+          "operational_logistics_cost_bdt": 314222.49,
+          "net_illustrative_value_bdt": -294992.54,
+          "benefit_cost_ratio": 0.06119851573959586,
+          "break_even_commission_bps": 817.0132787656754
         },
         {
           "cost_multiplier": 1.5,
           "agent_commission_bps": 100.0,
-          "illustrative_commission_protected_bdt": 38376.4,
-          "operational_logistics_cost_bdt": 312917.85,
-          "net_illustrative_value_bdt": -274541.45,
-          "benefit_cost_ratio": 0.12264049494140396,
-          "break_even_commission_bps": 815.3913603151938
+          "illustrative_commission_protected_bdt": 38459.9,
+          "operational_logistics_cost_bdt": 314222.49,
+          "net_illustrative_value_bdt": -275762.59,
+          "benefit_cost_ratio": 0.12239703147919172,
+          "break_even_commission_bps": 817.0132787656754
         },
         {
           "cost_multiplier": 1.5,
           "agent_commission_bps": 200.0,
-          "illustrative_commission_protected_bdt": 76752.8,
-          "operational_logistics_cost_bdt": 312917.85,
-          "net_illustrative_value_bdt": -236165.05,
-          "benefit_cost_ratio": 0.24528098988280791,
-          "break_even_commission_bps": 815.3913603151938
+          "illustrative_commission_protected_bdt": 76919.8,
+          "operational_logistics_cost_bdt": 314222.49,
+          "net_illustrative_value_bdt": -237302.69,
+          "benefit_cost_ratio": 0.24479406295838343,
+          "break_even_commission_bps": 817.0132787656754
         }
       ],
       "break_even_commission_bps_by_cost_multiplier": [
         {
           "cost_multiplier": 0.5,
-          "break_even_commission_bps": 271.79712010506455
+          "break_even_commission_bps": 272.33775958855847
         },
         {
           "cost_multiplier": 1.0,
-          "break_even_commission_bps": 543.5942402101291
+          "break_even_commission_bps": 544.6755191771169
         },
         {
           "cost_multiplier": 1.5,
-          "break_even_commission_bps": 815.3913603151938
+          "break_even_commission_bps": 817.0132787656754
         }
       ],
       "label": "Synthetic simulated estimate \u2014 not measured upay performance."
@@ -619,17 +620,32 @@
       "impact_json": 5827590.0,
       "match": true
     },
-    "v2_phase1_shortage_events": {
+    "v2_unmet": {
+      "business_layer": 5690940.0,
+      "impact_json": 5690940.0,
+      "match": true
+    },
+    "v2_shortage_events": {
       "business_layer": 1223,
       "impact_json": 1223,
       "match": true
     },
-    "v2_phase1_transfers": {
+    "v2_transfers": {
       "business_layer": 345,
       "impact_json": 345,
       "match": true
     },
     "v2_peer_logistics_cost": {
+      "business_layer": 209481.66,
+      "impact_json": 209481.66,
+      "match": true
+    },
+    "experiment_shortage_events": {
+      "business_layer": 1229,
+      "impact_json": 1229,
+      "match": true
+    },
+    "experiment_peer_logistics_cost": {
       "business_layer": 208611.9,
       "impact_json": 208611.9,
       "match": true

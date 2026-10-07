@@ -160,7 +160,9 @@ function Phase2LogisticsCard({ p2 }: { p2: Phase2Logistics }) {
       />
       <div className="space-y-4 px-5 py-4">
         <div>
-          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">V2 peer transfers, 14 held-out days ({num(v2.interventions)} transfers)</div>
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            V2 peer transfers (serving Phase-1 ranking), 14 held-out days ({num(v2.interventions)} transfers)
+          </div>
           <CostEquation parts={v2.peer_cost_components_bdt} total={v2.peer_transfer_logistics_cost_bdt} />
         </div>
         <div className="overflow-x-auto">
@@ -184,11 +186,11 @@ function Phase2LogisticsCard({ p2 }: { p2: Phase2Logistics }) {
           </table>
         </div>
         <p className="rounded-lg bg-slate-50 px-3 py-2.5 text-[13px] text-slate-700">
-          <b>V2 now ranks donors by this richer cost.</b> On the same held-out days it changed {num(ch.transfer_legs_changed)} of {num(o.interventions ?? 0)} transfers:
-          shortage events {num(o.shortage_events)} → {num(n.shortage_events)}, unmet demand {bdt(o.unmet_cash_demand_bdt)} → {bdt(n.unmet_cash_demand_bdt)}, donor
-          shortage events {num(o.donor_shortage_events_after_transfer)} → {num(n.donor_shortage_events_after_transfer)}, unnecessary-transfer share{" "}
-          {pct(o.unnecessary_interventions_pct, 1)} → {pct(n.unnecessary_interventions_pct, 1)}. V2 parameters are unchanged; the fixed deployment rule still selects{" "}
-          {p2.deployment_rule_recheck.default_policy.toUpperCase()}.
+          <b>Experiment, not adopted.</b> Ranking V2 donors by this richer cost changed {num(ch.transfer_legs_changed)} of {num(o.interventions ?? 0)} held-out
+          transfers and was slightly worse: shortage events {num(o.shortage_events)} → {num(n.shortage_events)}, unmet demand {bdt(o.unmet_cash_demand_bdt)} →{" "}
+          {bdt(n.unmet_cash_demand_bdt)}, donor shortage events {num(o.donor_shortage_events_after_transfer)} → {num(n.donor_shortage_events_after_transfer)}
+          (unnecessary-transfer share {pct(o.unnecessary_interventions_pct, 1)} → {pct(n.unnecessary_interventions_pct, 1)}). The serving V2 therefore keeps
+          the proven Phase-1 ranking; this cost proxy is used to cost its transfers, as shown above.
         </p>
         <CostProxyNote />
       </div>

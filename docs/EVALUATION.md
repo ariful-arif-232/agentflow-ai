@@ -341,7 +341,7 @@ BDT 456.
 
 **Derived held-out metrics** (same 14 days and simulations as §5; `impact.json` → `phase2_logistics`):
 
-| Synthetic cost proxy | Naive forecast | AgentFlow V1 | V2, Phase-1 ranking | **V2, logistics ranking** |
+| Synthetic cost proxy | Naive forecast | AgentFlow V1 | **V2 (serving, Phase-1 ranking)** | V2, logistics ranking (experiment) |
 |---|---:|---:|---:|---:|
 | Transfers | 384 | 501 | 345 | 345 |
 | Peer-transfer logistics cost | BDT 2,16,239 | BDT 2,79,996 | BDT 2,09,482 | **BDT 2,08,612** |
@@ -359,9 +359,9 @@ BDT 456.
   the simulation, so the "per BDT 1,000 of total cost" ratio is deliberately conservative.
 * The daily 08:00 drawer reset is common to every policy and is not costed.
 
-**V2 ranked by the richer cost.** V2's donor ranking now divides risk points removed by the total cost
-proxy instead of BDT 150 + BDT 25/km. Cost ranks only candidates that already passed every safety check,
-so no safety rule changed. On the held-out period this changed 13 of 345 transfers:
+**Ranking experiment (not adopted).** As an experiment, V2's donor ranking divided risk points removed by
+the total cost proxy instead of BDT 150 + BDT 25/km. Cost ranks only candidates that already passed every
+safety check, so no safety rule changed. On the held-out period this changed 13 of 345 transfers:
 
 | V2 held-out metric | Phase-1 ranking | Logistics-proxy ranking |
 |---|---:|---:|
@@ -372,12 +372,14 @@ so no safety rule changed. On the held-out period this changed 13 of 345 transfe
 | Transfers / total rebalanced | 345 / BDT 75.1 lakh | 345 / BDT 75.3 lakh |
 | Escalated need (summed over decisions) | BDT 69.9 lakh | BDT 70.1 lakh |
 
-The richer cost makes V2 slightly cheaper per unit of benefit on the peer-transfer cost and very
-slightly less effective overall. These differences are small, from one synthetic world, and not
-evidence either way for real operations. V2's tunable parameters were **not** re-selected: they are the
-Phase-1 values, chosen on training-period validation folds with the Phase-1 cost. Re-applied to these
-results, with cost efficiency measured by the peer-transfer cost proxy for both V1 and V2, the fixed
-deployment rule still selects V2.
+The richer ranking was slightly cheaper per unit of benefit on the peer-transfer cost but slightly less
+effective overall (more shortage events, more unmet demand, one more donor shortage). **The serving V2
+therefore keeps the proven Phase-1 ranking** (`ranking_cost_model="phase1_simple"`, the default); the
+proxy is used only to *cost* its transfers. The logistics ranking is available only when requested
+explicitly and is stored as `phase2_logistics.policies.agentflow_v2_logistics_ranking_experiment`
+(artifact version `phase2-logistics-2`; the keys were renamed from version 1 to make this unambiguous,
+and the values are unchanged). These differences are small and from one synthetic world. V2's tunable
+parameters were not re-selected.
 
 **Before any production use:** governed per-trip, per-km and staff-time rates (per district and vehicle
 type); real distributor and branch locations and road distances; cash-in-transit insurance or security
@@ -388,10 +390,10 @@ validation data. Governed rates replace the defaults through configuration, with
 
 > **Synthetic simulated estimate — not measured upay performance.** This layer translates the held-out
 > simulation into customer, agent and distributor terms. It is additive and versioned separately
-> (`ml/artifacts/business_impact.json`, `phase2-business-1`, `GET /api/business-impact`). `impact.json`,
-> including §1–§9, is byte-for-byte unchanged, and a reconciliation block proves the layer reuses the same
-> simulations (status-quo and V1 unmet demand, V2's 1,223 events and 345 transfers, and the Phase-2 V2
-> peer logistics cost all match).
+> (`ml/artifacts/business_impact.json`, `phase2-business-2`, `GET /api/business-impact`). The Phase-1
+> results in `impact.json` are unchanged, and a reconciliation block proves the layer reuses the same
+> simulations (status-quo, V1 and V2 unmet demand, V2's 1,223 events and 345 transfers, the serving V2's
+> peer logistics cost, and the separate logistics-ranking experiment all match).
 
 **Direct vs estimated.**
 
@@ -426,20 +428,22 @@ distributor break-even fee per trip = distributor cost proxy ÷ escalated agent-
 No customer-retention, lifetime-value or provider-revenue assumption is used, so **no ROI is reported**.
 No distributor profit is computed unless a fee is supplied (`AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT`).
 
-**Results (14 held-out days, 200 synthetic agents; V2 = current default, logistics-cost ranking).**
+**Results (14 held-out days, 200 synthetic agents; V2 = the serving Phase-1-ranked plan, costed with the
+Phase-2 proxy).** The logistics-ranked experiment is kept separately in the artifact
+(`agentflow_v2_logistics_ranking_experiment`) and is never mixed into these figures.
 
 | KPI vs status quo | AgentFlow V1 | **AgentFlow V2** |
 |---|---:|---:|
-| Shortage agent-hours avoided (direct) | 762 | **788** |
-| Cash-out value protected (direct) | BDT 37,09,340 | **BDT 38,37,640** |
-| Est. cash-out transactions protected (range A–B) | ≈ 2,408 (2,371–2,408) | **≈ 2,459 (2,433–2,459)** |
-| Illustrative agent commission protected at 50 bps | BDT 18,547 | BDT 19,188 |
-| Peer transfers · logistics cost proxy · per transfer | 501 · BDT 2,79,996 · BDT 559 | 345 · BDT 2,08,612 · BDT 605 |
+| Shortage agent-hours avoided (direct) | 762 | **794** |
+| Cash-out value protected (direct) | BDT 37,09,340 | **BDT 38,45,990** |
+| Est. cash-out transactions protected (range A–B) | ≈ 2,408 (2,371–2,408) | **≈ 2,466 (2,438–2,466)** |
+| Illustrative agent commission protected at 50 bps | BDT 18,547 | BDT 19,230 |
+| Peer transfers · logistics cost proxy · per transfer | 501 · BDT 2,79,996 · BDT 559 | 345 · BDT 2,09,482 · BDT 607 |
 | Peer logistics cost per est. transaction protected | BDT 116 | **BDT 85** |
-| Distributor workload: escalation events · agent-days | 305 · 161 | 297 · 153 |
-| Distributor cost proxy (one trip per agent-day) · break-even fee per trip | BDT 2,36,353 · BDT 1,468 | BDT 2,34,216 · BDT 1,531 |
-| Net illustrative value (commission − peer cost) | −BDT 2,61,449 | −BDT 1,89,424 |
-| Benefit-cost ratio · break-even commission | 0.07 · 755 bps | 0.09 · 544 bps |
+| Distributor workload: escalation events · agent-days | 305 · 161 | 297 · 154 |
+| Distributor cost proxy (one trip per agent-day) · break-even fee per trip | BDT 2,36,353 · BDT 1,468 | BDT 2,34,703 · BDT 1,524 |
+| Net illustrative value (commission − peer cost) | −BDT 2,61,449 | −BDT 1,90,252 |
+| Benefit-cost ratio · break-even commission | 0.07 · 755 bps | 0.09 · 545 bps |
 
 Status quo: BDT 95.4 lakh unmet of BDT 38.71 crore requested (97.54% filled), ≈ 6,680 estimated failed
 transactions (Method B 6,335) of 2,36,319 requested.
@@ -448,14 +452,14 @@ transactions (Method B 6,335) of 2,36,319 requested.
 
 | Logistics cost | 25 bps | 50 bps | 100 bps | 200 bps | Break-even |
 |---|---:|---:|---:|---:|---:|
-| ×0.5 | −94,712 | −85,118 | −65,930 | −27,553 | 272 bps |
-| ×1.0 | −1,99,018 | −1,89,424 | −1,70,236 | −1,31,859 | 544 bps |
-| ×1.5 | −3,03,324 | −2,93,730 | −2,74,541 | −2,36,165 | 815 bps |
+| ×0.5 | −95,126 | −85,511 | −66,281 | −27,821 | 272 bps |
+| ×1.0 | −1,99,867 | −1,90,252 | −1,71,022 | −1,32,562 | 545 bps |
+| ×1.5 | −3,04,608 | −2,94,993 | −2,75,763 | −2,37,303 | 817 bps |
 
 **Honest reading.** Under these illustrative rates, agent commission on the protected cash-out does not
 pay for dedicated field-officer transfers anywhere on the grid: even at half the cost proxy, commission would
-need about 2.7% to break even. The business case therefore rests on customers served (≈ 2,460 estimated
-transactions and BDT 38.4 lakh of cash-out completed over 14 days) and on cheaper delivery: V2 uses 27% less
+need about 2.7% to break even. The business case therefore rests on customers served (≈ 2,466 estimated
+transactions and BDT 38.5 lakh of cash-out completed over 14 days) and on cheaper delivery: V2 uses 27% less
 logistics cost per protected transaction than V1. Whether that service is worth its logistics cost depends on
 real operator economics (fee split, retention, cheaper agent-run transfers) that a synthetic prototype cannot
 measure.
@@ -469,5 +473,5 @@ sensitivity re-prices a fixed plan; no ROI, retention or lifetime-value claim.
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 164 tests
+python -m pytest -q                 # 192 tests
 ```

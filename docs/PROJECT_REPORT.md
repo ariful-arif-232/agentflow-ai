@@ -195,13 +195,13 @@ The demo defaults (BDT 100 handling, ×2 round trip, BDT 12/km, 15 km/h, 15 min 
 code changes. Escalations get a distributor-trip proxy from a synthetic district hub (district centroid;
 no real distributor location is implied).
 
-* V2 now ranks eligible donors by risk points removed per BDT 100 of the total cost proxy; no safety rule
-  changed. On the held-out period this changed 13 of 345 transfers: shortage events 1,223 → 1,229, unmet
-  demand −40.3% → −40.2% vs status quo, donor shortage events 14 → 15. V2 parameters were not re-selected,
-  and the fixed deployment rule still selects V2.
-* Derived held-out metrics for V2 (logistics ranking): peer-transfer cost proxy BDT 2.09 lakh (BDT 605
-  per transfer, cash-in-transit BDT 7,525), distributor escalation proxy BDT 4.69 lakh (upper bound), total
-  BDT 6.78 lakh, BDT 18,396 of unmet demand avoided per BDT 1,000 of peer-transfer cost.
+* **The serving V2 keeps the proven Phase-1 ranking**; the proxy costs its transfers. As an experiment,
+  ranking donors by the proxy changed 13 of 345 held-out transfers and was slightly worse (shortage events
+  1,223 → 1,229, unmet demand −40.3% → −40.2% vs status quo, donor shortage events 14 → 15), so it was not
+  adopted. It is kept as labelled experimental evidence and runs only when requested explicitly.
+* Derived held-out metrics for the serving V2: peer-transfer cost proxy BDT 2.09 lakh (BDT 607 per
+  transfer, cash-in-transit BDT 7,512), distributor escalation proxy BDT 4.69 lakh (upper bound), total
+  BDT 6.78 lakh, BDT 18,360 of unmet demand avoided per BDT 1,000 of peer-transfer cost.
 * The Phase-1 table above is unchanged and remains reproducible. Details: `EVALUATION.md` §9.
 
 *Simulated operational-cost proxy — replace assumptions with governed operator rates for deployment.*
@@ -210,19 +210,39 @@ no real distributor location is implied).
 
 *Synthetic simulated estimate — not measured upay performance.* A separate, versioned layer
 (`business_impact.json`, `GET /api/business-impact`) translates the same held-out simulation into
-business terms without changing any earlier number. Over 14 held-out days, V2 against the status quo:
+business terms without changing any earlier number. Over 14 held-out days, the serving V2 (Phase-1
+ranking) against the status quo:
 
-* **Customers:** BDT 38.4 lakh of requested cash-out served that was unmet (direct); ≈ 2,459 cash-out
-  transactions protected (**estimate**: unmet BDT ÷ average synthetic ticket; range 2,433–2,459); 788 fewer
+* **Customers:** BDT 38.5 lakh of requested cash-out served that was unmet (direct); ≈ 2,466 cash-out
+  transactions protected (**estimate**: unmet BDT ÷ average synthetic ticket; range 2,438–2,466); 794 fewer
   shortage agent-hours.
-* **Agents:** illustrative commission protected BDT 19,188 at an **assumed 50 bps** (not upay's or any
+* **Agents:** illustrative commission protected BDT 19,230 at an **assumed 50 bps** (not upay's or any
   provider's rate; configurable).
-* **Distributor and logistics:** 345 peer transfers (cost proxy BDT 2.09 lakh, BDT 605 each); 153
-  escalated agent-days (distributor trip proxy BDT 2.34 lakh, break-even fee BDT 1,531 per trip).
-* **Economics:** commission does not cover the peer logistics proxy (net −BDT 1.89 lakh; break-even
-  ≈ 544 bps), and a 25–200 bps × 0.5–1.5× cost sensitivity grid stays negative. The value lies in customers
+* **Distributor and logistics:** 345 peer transfers (cost proxy BDT 2.09 lakh, BDT 607 each); 154
+  escalated agent-days (distributor trip proxy BDT 2.35 lakh, break-even fee BDT 1,524 per trip).
+* **Economics:** commission does not cover the peer logistics proxy (net −BDT 1.90 lakh; break-even
+  ≈ 545 bps), and a 25–200 bps × 0.5–1.5× cost sensitivity grid stays negative. The value lies in customers
   served and in cheaper delivery: BDT 85 of logistics per protected transaction for V2 against BDT 116 for
   V1. No ROI is claimed. Details: `EVALUATION.md` §10.
+
+## 11c. Phase-2 security, approval and manipulation guardrails (prototype controls)
+
+* **Server-enforced approval:** `POST /api/rebalancing/simulate` now requires `reviewer_acknowledged: true`
+  (strict boolean); the Morning Plan endpoint already did. A direct API call cannot bypass it.
+* **Replay guard:** a deterministic fingerprint of what is approved (decision time, policy, recommendations;
+  or the Morning Plan date) means a repeated approval returns the original audit record.
+* **Rate limiting:** process-local sliding window on the two simulation endpoints only (default 20 per 60 s
+  per client; HTTP 429 with `Retry-After`). Not an enterprise WAF.
+* **Tamper-evident audit:** each simulated approval is SHA-256 hash-chained (`previous_hash`,
+  `record_hash`) and verified; edits break the chain and new approvals are refused (fail closed). Optional
+  append-only JSONL file (`AGENTFLOW_AUDIT_LOG_PATH`), re-verified at start-up. Not production-grade
+  immutable storage; durability needs a persistent volume or an external governed audit store.
+* **Manipulation guardrail evidence:** with the unchanged Phase-1 detector and thresholds, a manufactured
+  4-hour transaction surge on an at-risk agent raises it to ANOMALOUS, and both policies then hold it for
+  manual review with no peer-liquidity recommendation. Milder manipulation can stay below the thresholds,
+  and WATCH-level at-risk agents are not held; both are documented limitations.
+* **Authentication:** not implemented (no secret is placed in the browser). Enterprise identity and
+  role-based approval remain production requirements.
 
 ## 12. Responsible AI
 

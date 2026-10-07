@@ -15,9 +15,9 @@ arrive one hour later (field logistics delay). Rebalancing is peer-to-peer, so t
 in the network is identical across policies — any gain comes from *where* cash sits.
 
 Phase-2 logistics metrics (``phase2_logistics`` block) re-cost every simulated transfer and every
-distributor escalation with the synthetic operational cost proxy in ``logistics.py`` and add the
-held-out result of V2 ranked by that richer cost. The Phase-1 ``policies`` block is unchanged and
-still uses the Phase-1 V2 ranking cost (BDT 150 + BDT 25/km), so Phase-1 evidence stays auditable.
+distributor escalation with the synthetic operational cost proxy in ``logistics.py``, and keep the
+held-out result of the *experimental* V2 ranked by that richer cost (not adopted). The Phase-1
+``policies`` block is unchanged and uses the serving Phase-1 V2 ranking (BDT 150 + BDT 25/km).
 
 Synthetic held-out simulation — not a measured real-world upay result.
 """
@@ -237,8 +237,17 @@ def logistics_metrics(sim: dict, sq_unmet_bdt: float) -> dict:
     }
 
 
+EXPERIMENT_STATUS = ("EXPERIMENTAL — not adopted. Ranking V2 donors by the logistics-cost proxy did not improve "
+                     "held-out outcomes (more shortage events, more unmet demand, one more donor shortage), so the "
+                     "serving default keeps the Phase-1 ranking. The proxy is still used to cost every transfer.")
+
+
 def phase2_logistics(sims: dict, policies: dict, v2_logistics_sim: dict, v2_cfg) -> dict:
-    """Phase-2 block: Phase-1 simulations re-costed, plus V2 ranked by the richer logistics cost."""
+    """Phase-2 block: the Phase-1 simulations re-costed with the proxy, plus the ranking experiment.
+
+    ``policies.agentflow_v2`` is the serving V2 (Phase-1 ranking); the logistics-ranked V2 is kept as
+    ``policies.agentflow_v2_logistics_ranking_experiment`` and is never mixed into the serving figures.
+    """
     from . import policy_selection
 
     base = sims["status_quo"]["unmet"]
@@ -249,8 +258,8 @@ def phase2_logistics(sims: dict, policies: dict, v2_logistics_sim: dict, v2_cfg)
     out_pol = {
         "naive_rebalancing": logistics_metrics(sims["naive_rebalancing"], sq_unmet),
         "agentflow": logistics_metrics(sims["agentflow"], sq_unmet),
-        "agentflow_v2_phase1_ranking": logistics_metrics(sims["agentflow_v2"], sq_unmet),
-        "agentflow_v2": {**v2l, **logistics_metrics(v2_logistics_sim, sq_unmet)},
+        "agentflow_v2": logistics_metrics(sims["agentflow_v2"], sq_unmet),
+        "agentflow_v2_logistics_ranking_experiment": {**v2l, **logistics_metrics(v2_logistics_sim, sq_unmet)},
     }
     core = ("shortage_events", "unmet_cash_demand_bdt", "agents_with_shortage", "service_availability_pct",
             "demand_fill_rate_pct", "interventions", "total_rebalanced_bdt", "unnecessary_interventions_pct",
@@ -263,15 +272,22 @@ def phase2_logistics(sims: dict, policies: dict, v2_logistics_sim: dict, v2_cfg)
         return 100 * (a - b) / a if a else 0.0
 
     v1l = {**policies["agentflow"], "unmet_avoided_per_1000_cost_bdt": out_pol["agentflow"]["unmet_avoided_per_1000_peer_logistics_cost_bdt"]}
-    v2d = {**v2l, "unmet_avoided_per_1000_cost_bdt": out_pol["agentflow_v2"]["unmet_avoided_per_1000_peer_logistics_cost_bdt"]}
+    v2d = {**v2l, "unmet_avoided_per_1000_cost_bdt":
+           out_pol["agentflow_v2_logistics_ranking_experiment"]["unmet_avoided_per_1000_peer_logistics_cost_bdt"]}
     return {
         "label": "Phase-2 logistics metrics — synthetic operational cost proxy, not upay measured cost",
-        "version": "phase2-logistics-1",
+        "version": "phase2-logistics-2",
+        "changes_from_phase2_logistics_1": (
+            "Keys renamed so the serving default is unambiguous: policies.agentflow_v2_phase1_ranking -> "
+            "policies.agentflow_v2 (serving, Phase-1 ranking); policies.agentflow_v2 (logistics ranking) -> "
+            "policies.agentflow_v2_logistics_ranking_experiment. All values are unchanged."),
         "assumptions": logistics.describe(),
         "metric_definitions": PHASE2_METRIC_DEFINITIONS,
-        "v2_ranking_cost_model": v2_cfg.ranking_cost_model,
+        "serving_v2_ranking_cost_model": rebalance_v2.SERVING_RANKING_COST_MODEL,
+        "experiment_ranking_cost_model": v2_cfg.ranking_cost_model,
+        "experiment_status": EXPERIMENT_STATUS,
         "v2_parameters_note": ("V2 tunable parameters are unchanged: selected on Phase-1 training-period validation "
-                               "folds with the Phase-1 cost. Only the cost term of the donor ranking changed."),
+                               "folds with the Phase-1 cost. The experiment changed only the cost term of the ranking."),
         "not_costed": "The daily 08:00 drawer reset is common to every policy and is not costed.",
         "policies": out_pol,
         "v2_ranking_change": {
@@ -287,8 +303,9 @@ def phase2_logistics(sims: dict, policies: dict, v2_logistics_sim: dict, v2_cfg)
         },
         "deployment_rule_recheck": {
             **policy_selection.deployment_decision(v1l, v2d),
-            "note": ("Same pre-registered rule, re-applied to V2 ranked by the logistics proxy, with cost efficiency "
-                     "measured by the peer-transfer logistics cost proxy for both V1 and V2."),
+            "note": ("Same pre-registered rule, re-applied to the logistics-ranked V2 experiment, with cost efficiency "
+                     "measured by the peer-transfer logistics cost proxy for both V1 and V2. Passing this rule does not "
+                     "make the experiment better than the Phase-1-ranked V2, which remains the serving default."),
         },
     }
 
@@ -325,7 +342,8 @@ def run_impact(feats, agents, preds, hist_rate, anomaly_status=None, demand_mult
     from . import policy_selection
 
     v2_cfg = v2_cfg or rebalance_v2.selected_config()
-    v2_phase1_cfg = replace(v2_cfg, ranking_cost_model="phase1_simple")  # Phase-1 evidence, unchanged
+    v2_phase1_cfg = replace(v2_cfg, ranking_cost_model="phase1_simple")  # serving default = Phase-1 evidence
+    v2_experiment_cfg = replace(v2_cfg, ranking_cost_model=rebalance_v2.EXPERIMENT_RANKING_COST_MODEL)  # explicit
     sims = {
         "status_quo": simulate_policy(feats, agents, None, hist_rate, forecast_source="none",
                                       demand_multiplier=demand_multiplier),
@@ -337,7 +355,7 @@ def run_impact(feats, agents, preds, hist_rate, anomaly_status=None, demand_mult
                                         demand_multiplier=demand_multiplier, policy="v2", policy_cfg=v2_phase1_cfg),
     }
     v2_logistics_sim = simulate_policy(feats, agents, preds, hist_rate, anomaly_status, "ml",
-                                       demand_multiplier=demand_multiplier, policy="v2", policy_cfg=v2_cfg)
+                                       demand_multiplier=demand_multiplier, policy="v2", policy_cfg=v2_experiment_cfg)
     base = sims["status_quo"]["unmet"]
     policies = {k: summarize(v, base) for k, v in sims.items()}
     sq, af, af2 = policies["status_quo"], policies["agentflow"], policies["agentflow_v2"]
@@ -377,5 +395,5 @@ def run_impact(feats, agents, preds, hist_rate, anomaly_status=None, demand_mult
         "deployment_decision": policy_selection.deployment_decision(af, af2),
         "daily": daily_series(sims),
         "groups": group_breakdown(sims, agents),
-        "phase2_logistics": phase2_logistics(sims, policies, v2_logistics_sim, v2_cfg),
+        "phase2_logistics": phase2_logistics(sims, policies, v2_logistics_sim, v2_experiment_cfg),
     }

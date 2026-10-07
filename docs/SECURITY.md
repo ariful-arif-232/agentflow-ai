@@ -22,9 +22,11 @@ production version would need. It is not a claim of production readiness.
 | No code execution from input | Request data is never evaluated, executed or used to build shell commands or file paths. | `apps/api/app/` |
 | Deterministic decisions | The risk score is a fixed, bounded formula and rebalancing V1/V2 are deterministic rule-based optimisers. The same inputs always produce the same output (tested). | `ml/agentflow/risk.py`, `rebalance.py`, `rebalance_v2.py`, `tests/test_rebalance_v2.py` |
 | No LLM in the decision path | Explanations (English and Bangla) are fixed templates filled with computed numbers. No generative model is called anywhere in the product. | `ml/agentflow/risk.py` |
-| Human review | The UI enables **Approve Simulation** only after the reviewer ticks "I have reviewed the evidence above". This is a UI control only; the API itself has no authentication (see B). | `apps/web/src/app/rebalancing/page.tsx` |
+| Human review | The UI enables **Approve Simulation** only after the reviewer ticks "I have reviewed the evidence above", **and the API enforces it**: `POST /api/rebalancing/simulate` requires `reviewer_acknowledged: true` (strict boolean; missing → 422, false → 400), like the Morning Plan endpoint. The API still has no user authentication (see B). | `apps/web/src/app/rebalancing/page.tsx`, `apps/api/app/schemas.py`, `apps/api/app/main.py`, `tests/test_security.py` |
 | Simulation only | `/api/rebalancing/simulate` returns `simulation_only: true` and does not change the live state (tested). No payment instruction or transfer API exists. | `apps/api/app/service.py`, `tests/test_demo_path.py` |
-| Audit trail | Each simulated approval is written to an audit log (newest 200 entries) with recommendation IDs, policy and reviewer note. | `apps/api/app/service.py` |
+| Audit trail | Each simulated approval (intraday and Morning Plan) is written once to a **SHA-256 hash-chained** audit log (`previous_hash`, `record_hash`) with recommendation IDs or date, policy and reviewer note. The chain is verified on every write path; a failed verification blocks new approvals (HTTP 503). A repeated identical approval returns the original record (replay guard). | `apps/api/app/audit.py`, `tests/test_security.py` |
+| Rate limiting | Process-local sliding-window limit on the two POST simulation endpoints (default 20 requests per 60 s per client; HTTP 429 + `Retry-After`). Read-only GET traffic is not limited. | `apps/api/app/security.py`, `tests/test_security.py` |
+| Manipulation guardrail | At-risk agents whose behaviour is ANOMALOUS are held for manual review and get no automatic peer-liquidity recommendation (tested with a manufactured transaction surge scored by the unchanged Phase-1 detector). | `ml/agentflow/rebalance.py`, `rebalance_v2.py`, `tests/test_gaming_guardrails.py` |
 | Donor safety | Donors stay LOW risk, transfers never exceed the donor's safe surplus, balances never go negative, and the V2 donor reserve is never weaker than V1 (tested). | `tests/test_rebalance.py`, `tests/test_rebalance_v2.py` |
 | Anomaly handling | Agents with anomalous activity are held for manual review and get no automatic support. Anomaly is never labelled as fraud (tested). | `tests/test_rebalance.py`, `tests/test_rebalance_v2.py`, `tests/test_demo_path.py` |
 | Frontend resilience | API calls time out after 20 s. Failures show a safe error message with Retry and never display stale numbers as live data. | `apps/web/src/lib/api.ts`, `apps/web/src/components/ui.tsx` |
@@ -52,15 +54,38 @@ production version would need. It is not a claim of production readiness.
 
 * **No authentication or authorisation.** Anyone who can reach the API can read the synthetic data
   and run simulations. This is acceptable only because no real data or money is involved.
-* **No rate limiting** or abuse protection on the public API.
-* **In-memory audit log.** It resets when the API restarts, is not tamper-evident and records a free-text
-  note, not a verified reviewer identity.
-* **Approval acknowledgement is client-side.** The checkbox guards the UI, not the API.
+* **Rate limiting is prototype-grade.** It is per API process, resets on restart and is keyed by client
+  address (behind a shared proxy many users can share one key; `AGENTFLOW_RATE_LIMIT_TRUST_FORWARDED_FOR=1`
+  only behind a trusted proxy). It is not a distributed limiter or a WAF.
+* **The audit log is tamper-evident, not tamper-proof.** Edits, deletions and reordering are detected, but
+  anyone who can rewrite the whole store can recompute the chain. It is in memory unless
+  `AGENTFLOW_AUDIT_LOG_PATH` is set; even then the JSONL file is process-local and survives redeploys only
+  on a persistent volume. Production needs an external, governed, append-only audit store with signing or
+  anchoring. It records a free-text note, not a verified reviewer identity.
+* **Acknowledgement is not identity.** The server enforces that the reviewer acknowledged the evidence,
+  but not *who* the reviewer is.
+* **Manipulation detection has limits.** Only ANOMALOUS at-risk agents are held; WATCH-level agents still
+  receive recommendations (flagged URGENT_REVIEW), and milder or slower manipulation can stay below the
+  thresholds.
 * **No Content-Security-Policy** header yet; the other web headers listed above are set.
 * **Models are loaded from local artifacts** built inside the container (joblib). Only trusted,
   self-built artifacts may be loaded.
 * **Synthetic data only.** Forecast, risk and impact numbers are not validated on real operations.
 * **No dependency or container vulnerability scanning** is configured in CI.
+
+## B2. Phase-2 safeguards (prototype controls, not enterprise IAM)
+
+| Safeguard | Configuration | Notes |
+|---|---|---|
+| Server-side acknowledgement | always on | Intraday and Morning Plan simulations require `reviewer_acknowledged: true` |
+| Replay guard | always on | Fingerprint = SHA-256 of what is approved; duplicates return `replayed: true` and the original record |
+| Rate limiting | `AGENTFLOW_RATE_LIMIT_SIMULATIONS` (default 20, 0 = off), `AGENTFLOW_RATE_LIMIT_WINDOW_SECONDS` (default 60), `AGENTFLOW_RATE_LIMIT_TRUST_FORWARDED_FOR` (default off) | Invalid values stop the API at start-up |
+| Tamper-evident audit | `AGENTFLOW_AUDIT_LOG_PATH` (optional JSONL file) | Verified at start-up and on every approval; fails closed (HTTP 503) |
+| Read-only status | `GET /api/security/status` | Shows the controls in force; contains no secrets |
+
+**Authentication was deliberately not added.** A shared write key would have to live in the browser
+(`NEXT_PUBLIC_*`), which would expose it. Real identity needs SSO/OAuth with server-side sessions, which is
+out of scope for this prototype.
 
 ## C. Production hardening path
 

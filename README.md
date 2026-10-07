@@ -181,9 +181,11 @@ without code changes. Details: [docs/EVALUATION.md §9](docs/EVALUATION.md#9-pha
 * A distributor replenishment proxy for every escalation, measured from a **synthetic distributor hub**
   (the district centroid of the synthetic data generator, not a real distributor location). Missing
   inputs are reported as unavailable, never guessed.
-* Policy V2 now ranks eligible donors by risk points removed per BDT 100 of this **total** cost proxy.
-  Every safety rule is unchanged: same district, ≤ 15 km, LOW-risk non-anomalous donors, dynamic
-  reserve, minimum-benefit gate, LOW after the plan, ≤ 2 donors, human-reviewed simulation only.
+* **Serving default: V2 keeps the proven Phase-1 ranking** (risk points removed per BDT 100 of
+  BDT 150 + BDT 25/km). The richer proxy is used to **cost** every recommended transfer and escalation.
+  Ranking donors by the proxy (`ranking_cost_model="logistics_proxy"`) is kept as an explicit, labelled
+  **experiment that was not adopted**, because it did not improve held-out outcomes (below). Every
+  safety rule is unchanged either way.
 * `GET /api/logistics/assumptions`, cost fields on every recommendation, escalation and simulation,
   an "Operational cost breakdown" on the Rebalancing page and review drawer, and a Phase-2 card on the
   Impact page. All are labelled *Simulated operational-cost proxy — replace assumptions with governed
@@ -192,12 +194,13 @@ without code changes. Details: [docs/EVALUATION.md §9](docs/EVALUATION.md#9-pha
   `policies` block is unchanged** (V2 there still uses the Phase-1 ranking cost, BDT 150 + BDT 25/km),
   so every Phase-1 number stays auditable.
 
-**Held-out effect of the richer V2 ranking (synthetic held-out simulation).** It changed 13 of 345
-transfers. Shortage events 1,223 → 1,229, unmet cash demand BDT 56,90,940 → BDT 56,99,290
-(−40.3% → −40.2% vs status quo), donor shortage events 14 → 15, unnecessary-transfer share
-24.3% → 24.1%. V2 parameters were not re-selected; the fixed deployment rule still picks V2. At the
-default demo time, the V2 plan is still 14 transfers (including RB-013), now BDT 4.5 lakh, with BDT 5.2
-lakh escalated (Phase-1 ranking: BDT 4.7 lakh and BDT 5.0 lakh).
+**Ranking experiment, not adopted (synthetic held-out simulation).** Ranking V2 donors by the richer
+proxy changed 13 of 345 transfers and was slightly worse: shortage events 1,223 → 1,229, unmet cash
+demand BDT 56,90,940 → BDT 56,99,290 (−40.3% → −40.2% vs status quo), donor shortage events 14 → 15
+(unnecessary-transfer share 24.3% → 24.1%). The serving V2 therefore stays on the Phase-1 ranking, and the
+default demo plan is unchanged from Phase 1 (14 transfers including RB-013, BDT 4.7 lakh recommended, BDT
+5.0 lakh escalated). Costed with the proxy, the serving V2's 345 held-out transfers come to BDT 2,09,482
+(BDT 607 each).
 
 **Synthetic assumptions (illustrative demo defaults, not upay or distributor rates):** BDT 100
 handling per trip, round trip (×2), BDT 12 per km, 15 km/h average field speed, 15 minutes handling,
@@ -228,14 +231,37 @@ measured upay performance.** `impact.json` and all Phase-1 and Phase-2 logistics
   profit is shown only if `AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT` is set; otherwise the
   break-even fee per trip is reported.
 
-V2 over the 14 held-out days, against the status quo: **BDT 38.4 lakh** of cash-out served that was
-unmet, **≈ 2,459 estimated transactions** protected (range 2,433–2,459), 788 fewer shortage agent-hours,
-345 peer transfers and 153 distributor agent-day trips. At 50 bps the illustrative commission protected
-(BDT 19,188) does **not** cover the peer logistics cost proxy (BDT 2,08,612); break-even needs about
-544 bps. A small sensitivity grid (25–200 bps × 0.5–1.5× cost) stays negative throughout. The case rests on
+V2 (the serving Phase-1-ranked plan) over the 14 held-out days, against the status quo: **BDT 38.5
+lakh** of cash-out served that was unmet, **≈ 2,466 estimated transactions** protected (range
+2,438–2,466), 794 fewer shortage agent-hours, 345 peer transfers and 154 distributor agent-day trips. At
+50 bps the illustrative commission protected (BDT 19,230) does **not** cover the peer logistics cost proxy
+(BDT 2,09,482); break-even needs about 545 bps. The logistics-ranked experiment is reported separately
+and never mixed into these figures. A small sensitivity grid (25–200 bps × 0.5–1.5× cost) stays negative throughout. The case rests on
 customers served and on cheaper delivery (V2: BDT 85 of logistics per protected transaction vs BDT 116
 for V1). **No ROI is claimed**, because one would need retention, lifetime-value or provider-revenue data
 that a synthetic prototype does not have. Details: [docs/EVALUATION.md §10](docs/EVALUATION.md#10-phase-2-business-impact-synthetic-simulated-estimate).
+
+## Phase-2 security, approval and manipulation guardrails
+
+Prototype controls that answer the judges' security gaps. **They are not enterprise IAM or banking-grade
+infrastructure.** Details: [docs/SECURITY.md](docs/SECURITY.md).
+
+* **Server-enforced approval:** intraday `POST /api/rebalancing/simulate` requires
+  `reviewer_acknowledged: true` (strict boolean), like the Morning Plan endpoint. Bypassing the dashboard
+  does not bypass the check.
+* **Replay guard:** the same approval submitted twice returns the original audit record (`replayed: true`).
+* **Rate limiting:** process-local sliding window on the two simulation endpoints only (default 20 per
+  60 s per client; HTTP 429 with `Retry-After`). Dashboard reads are never limited.
+* **Tamper-evident audit:** SHA-256 hash chain (`previous_hash`, `record_hash`) over every simulated
+  approval, verified before each write; a broken chain blocks new approvals. Optional append-only JSONL file
+  via `AGENTFLOW_AUDIT_LOG_PATH`, re-verified at start-up. Durability across containers needs a persistent
+  volume or an external governed audit store.
+* **Manipulation guardrail:** tests show that a manufactured transaction surge on an at-risk agent is
+  flagged ANOMALOUS by the unchanged Phase-1 detector and then held for review with no peer liquidity.
+  Anomaly is never labelled fraud. Limitations: milder manipulation can stay below the thresholds, and
+  WATCH-level agents are not held.
+* **Authentication:** not implemented; no secret is exposed to the browser. Enterprise identity and
+  role-based approval remain production requirements.
 
 ## Synthetic-data strategy
 
@@ -263,7 +289,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (164 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (192 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -332,12 +358,15 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 | `AGENTFLOW_AS_OF` | API | `2026-08-31T13:00` | default decision time |
 | `NEXT_PUBLIC_API_URL` | web | `http://localhost:8000` | API base URL seen by the browser |
 | `AGENTFLOW_BUSINESS_AGENT_COMMISSION_BPS` / `AGENTFLOW_BUSINESS_DISTRIBUTOR_FEE_PER_TRIP_BDT` | API / ML | 50 / unset | illustrative business-impact rates (numbers only; synthetic simulated estimate) |
+| `AGENTFLOW_RATE_LIMIT_SIMULATIONS` / `AGENTFLOW_RATE_LIMIT_WINDOW_SECONDS` | API | 20 / 60 | prototype rate limit on simulation endpoints (0 disables) |
+| `AGENTFLOW_RATE_LIMIT_TRUST_FORWARDED_FOR` | API | off | `1` = key clients by X-Forwarded-For (only behind a trusted proxy) |
+| `AGENTFLOW_AUDIT_LOG_PATH` | API | unset (in memory) | optional append-only JSONL file for the tamper-evident simulation audit |
 | `AGENTFLOW_LOGISTICS_<FIELD>` | API / ML | synthetic demo values | override one logistics-cost assumption, e.g. `AGENTFLOW_LOGISTICS_CASH_IN_TRANSIT_BPS=10` (numbers only) |
 
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 164 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, policy selection, impact, API, contract, Morning Plan)
+python -m pytest -q                       # from repo root: 192 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, business impact, security safeguards, gaming guardrails, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 
@@ -387,7 +416,7 @@ Security & prototype threat model: [docs/SECURITY.md](docs/SECURITY.md)
 * The intraday simulator assumes exogenous demand, 1-hour transfers and simple costs. In this legacy
   environment, e-float is tracked but is not a binding constraint. Only the separate Morning Plan
   environment treats e-float as binding.
-* Audit log is in memory (resets when the API restarts); no authentication (out of scope for the prototype).
+* The audit log is tamper-evident but in memory by default (optional JSONL file on a persistent volume); rate limiting is process-local; there is no authentication (out of scope for the prototype).
 * **Morning Plan:**
   * The demo is a synthetic fixture (one world, 14 dates), and its evidence comes from the same
     synthetic world family.

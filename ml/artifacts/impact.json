@@ -408,7 +408,8 @@
   },
   "phase2_logistics": {
     "label": "Phase-2 logistics metrics \u2014 synthetic operational cost proxy, not upay measured cost",
-    "version": "phase2-logistics-1",
+    "version": "phase2-logistics-2",
+    "changes_from_phase2_logistics_1": "Keys renamed so the serving default is unambiguous: policies.agentflow_v2_phase1_ranking -> policies.agentflow_v2 (serving, Phase-1 ranking); policies.agentflow_v2 (logistics ranking) -> policies.agentflow_v2_logistics_ranking_experiment. All values are unchanged.",
     "assumptions": {
       "assumption_label": "Synthetic operational cost proxy \u2014 not upay measured cost",
       "deployment_note": "Simulated operational-cost proxy \u2014 replace assumptions with governed operator rates for deployment.",
@@ -438,8 +439,10 @@
       "unmet_avoided_per_1000_peer_logistics_cost_bdt": "Unmet cash demand avoided vs. status quo per BDT 1,000 of the peer-transfer logistics cost proxy.",
       "unmet_avoided_per_1000_total_logistics_cost_bdt": "Unmet cash demand avoided vs. status quo per BDT 1,000 of the total operational logistics cost proxy (conservative: includes escalation trips whose benefit is not simulated)."
     },
-    "v2_ranking_cost_model": "logistics_proxy",
-    "v2_parameters_note": "V2 tunable parameters are unchanged: selected on Phase-1 training-period validation folds with the Phase-1 cost. Only the cost term of the donor ranking changed.",
+    "serving_v2_ranking_cost_model": "phase1_simple",
+    "experiment_ranking_cost_model": "logistics_proxy",
+    "experiment_status": "EXPERIMENTAL \u2014 not adopted. Ranking V2 donors by the logistics-cost proxy did not improve held-out outcomes (more shortage events, more unmet demand, one more donor shortage), so the serving default keeps the Phase-1 ranking. The proxy is still used to cost every transfer.",
+    "v2_parameters_note": "V2 tunable parameters are unchanged: selected on Phase-1 training-period validation folds with the Phase-1 cost. The experiment changed only the cost term of the ranking.",
     "not_costed": "The daily 08:00 drawer reset is common to every policy and is not costed.",
     "policies": {
       "naive_rebalancing": {
@@ -482,7 +485,7 @@
         "unmet_avoided_per_1000_peer_logistics_cost_bdt": 13247.845833066513,
         "unmet_avoided_per_1000_total_logistics_cost_bdt": 4955.966155069631
       },
-      "agentflow_v2_phase1_ranking": {
+      "agentflow_v2": {
         "interventions": 345,
         "peer_transfer_logistics_cost_bdt": 209481.66,
         "average_cost_per_transfer_bdt": 607.19,
@@ -502,7 +505,7 @@
         "unmet_avoided_per_1000_peer_logistics_cost_bdt": 18359.554721878754,
         "unmet_avoided_per_1000_total_logistics_cost_bdt": 5669.470791852739
       },
-      "agentflow_v2": {
+      "agentflow_v2_logistics_ranking_experiment": {
         "shortage_events": 1229,
         "unmet_cash_demand_bdt": 5699290.0,
         "agents_with_shortage": 137,
@@ -587,7 +590,7 @@
         "strictly_better_on_at_least_two": true
       },
       "default_policy": "v2",
-      "note": "Same pre-registered rule, re-applied to V2 ranked by the logistics proxy, with cost efficiency measured by the peer-transfer logistics cost proxy for both V1 and V2."
+      "note": "Same pre-registered rule, re-applied to the logistics-ranked V2 experiment, with cost efficiency measured by the peer-transfer logistics cost proxy for both V1 and V2. Passing this rule does not make the experiment better than the Phase-1-ranked V2, which remains the serving default."
     }
   }
 }

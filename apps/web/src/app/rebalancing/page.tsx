@@ -247,7 +247,13 @@ function ReviewPanel({
     setBusy(true);
     setErr(null);
     try {
-      const res = await apiPost<SimulationResult>("/api/rebalancing/simulate", { recommendation_ids: [rec.id], reviewer_note: note || null, as_of: asOf, policy });
+      const res = await apiPost<SimulationResult>("/api/rebalancing/simulate", {
+        recommendation_ids: [rec.id],
+        reviewer_acknowledged: ack, // the API rejects approvals without explicit acknowledgement
+        reviewer_note: note || null,
+        as_of: asOf,
+        policy,
+      });
       onApproved(res);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Simulation failed");
@@ -375,7 +381,10 @@ function ReviewPanel({
             />
             <p className="text-xs text-slate-500">
               Phase-1 estimate for comparison: {bdt(rec.estimated_cost_bdt)} (BDT 150 + BDT 25/km).
-              {isV2 && rec.candidate_rank_key?.ranking_cost_model === "logistics_proxy" && " V2 ranks donors by risk points removed per BDT 100 of this cost proxy."}
+              {isV2 &&
+                (rec.candidate_rank_key?.ranking_cost_model === "logistics_proxy"
+                  ? " This plan ranks donors by the cost proxy (experimental ranking)."
+                  : " V2 ranks donors with the proven Phase-1 cost; this proxy is used for operational costing.")}
             </p>
             <CostProxyNote />
           </section>
@@ -424,7 +433,7 @@ function SimulationCard({ sim, onClose }: { sim: SimulationResult; onClose: () =
     <Card className="af-confirm mb-4 border-emerald-300">
       <CardHeader
         title={`Simulation approved — no money moved (${sim.simulation_id})`}
-        subtitle={`Human-approved simulation of ${sim.recommendation_ids.join(", ")} · ${bdt(sim.total_amount)} · ${dateTime(sim.created_at)} · recorded in the audit log`}
+        subtitle={`Human-approved simulation of ${sim.recommendation_ids.join(", ")} · ${bdt(sim.total_amount)} · ${dateTime(sim.created_at)} · ${sim.replayed ? "already approved: original audit record shown, no duplicate written" : "recorded in the audit log"}`}
         right={
           <div className="flex items-center gap-2">
             <SourceTag kind="sim" />
@@ -699,7 +708,7 @@ function RebalancingInner() {
           </ul>
         </Card>
         <Card>
-          <CardHeader title="Simulation audit log" subtitle="Every simulated approval is recorded (in-memory, this API session)" />
+          <CardHeader title="Simulation audit log" subtitle="Every simulated approval is recorded once in a tamper-evident, hash-chained log (prototype; process-local)" />
           <ul className="divide-y divide-slate-100 text-sm">
             {(audit.data?.simulations.length ?? 0) === 0 && <li className="px-5 py-3 text-slate-500">No simulations yet.</li>}
             {audit.data?.simulations.slice(0, 8).map((a) => (

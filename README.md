@@ -164,6 +164,52 @@ A decision-time selector (top bar) lets you replay any hour of the held-out peri
 
 No LLM is used in the decision path; the core system has no external API dependency.
 
+## Phase-2 logistics economics
+
+Phase-1 judge feedback asked us to bring distributor transport and cash-in-transit costs into the
+rebalancing loss function. We have no governed upay logistics rates, so Phase 2 adds a transparent,
+configurable **synthetic operational-cost proxy** that is ready to accept governed operator rates
+without code changes. Details: [docs/EVALUATION.md §9](docs/EVALUATION.md#9-phase-2-logistics-economics-synthetic-operational-cost-proxy).
+
+**What was added**
+* One shared module, `ml/agentflow/logistics.py`, used by rebalancing V1, V2 and the impact simulator.
+  Every recommended transfer now carries a cost breakdown:
+
+  `total = handling + billable km × per-km cost + (billable km ÷ field speed + handling time) × hourly
+  field-officer cost + amount × cash-in-transit bps ÷ 10,000`, where billable km = one-way km × distance
+  multiplier (round trip by default). The parts always add up exactly to the total.
+* A distributor replenishment proxy for every escalation, measured from a **synthetic distributor hub**
+  (the district centroid of the synthetic data generator, not a real distributor location). Missing
+  inputs are reported as unavailable, never guessed.
+* Policy V2 now ranks eligible donors by risk points removed per BDT 100 of this **total** cost proxy.
+  Every safety rule is unchanged: same district, ≤ 15 km, LOW-risk non-anomalous donors, dynamic
+  reserve, minimum-benefit gate, LOW after the plan, ≤ 2 donors, human-reviewed simulation only.
+* `GET /api/logistics/assumptions`, cost fields on every recommendation, escalation and simulation,
+  an "Operational cost breakdown" on the Rebalancing page and review drawer, and a Phase-2 card on the
+  Impact page. All are labelled *Simulated operational-cost proxy — replace assumptions with governed
+  operator rates for deployment.*
+* A separately versioned `phase2_logistics` block in `ml/artifacts/impact.json`. **The Phase-1
+  `policies` block is unchanged** (V2 there still uses the Phase-1 ranking cost, BDT 150 + BDT 25/km),
+  so every Phase-1 number stays auditable.
+
+**Held-out effect of the richer V2 ranking (synthetic held-out simulation).** It changed 13 of 345
+transfers. Shortage events 1,223 → 1,229, unmet cash demand BDT 56,90,940 → BDT 56,99,290
+(−40.3% → −40.2% vs status quo), donor shortage events 14 → 15, unnecessary-transfer share
+24.3% → 24.1%. V2 parameters were not re-selected; the fixed deployment rule still picks V2. At the
+default demo time, the V2 plan is still 14 transfers (including RB-013), now BDT 4.5 lakh, with BDT 5.2
+lakh escalated (Phase-1 ranking: BDT 4.7 lakh and BDT 5.0 lakh).
+
+**Synthetic assumptions (illustrative demo defaults, not upay or distributor rates):** BDT 100
+handling per trip, round trip (×2), BDT 12 per km, 15 km/h average field speed, 15 minutes handling,
+BDT 250 per field-officer hour, 10 bps cash-in-transit exposure; distributor trips BDT 150 handling
+and ×2. Override any of them with `AGENTFLOW_LOGISTICS_<FIELD>` environment variables (numbers only,
+validated; see `.env.example`).
+
+**Still required before production:** governed per-trip, per-km and staff-time rates per district
+and vehicle type; real distributor and branch locations and road distances; cash-in-transit insurance
+or security rates and limits; field-officer capacity and service windows; then re-selection of V2
+parameters on real validation data.
+
 ## Synthetic-data strategy
 
 200 agents × 76 days × hourly (364,800 rows) across 8 districts, 3 location clusters and 3 volume
@@ -190,7 +236,7 @@ Details and rationale for each layer: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 * **ML / data:** Python 3.11, pandas, NumPy, scikit-learn, PyArrow, joblib
 * **API:** FastAPI, Pydantic v2, Uvicorn
 * **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react
-* **Quality:** pytest (103 tests), ESLint, `tsc`, GitHub Actions CI
+* **Quality:** pytest (148 tests), ESLint, `tsc`, GitHub Actions CI
 
 ## Repository structure
 
@@ -258,11 +304,12 @@ Copy `.env.example` and adjust as needed (no secrets are required):
 | `AGENTFLOW_CORS_ORIGINS` | API | `http://localhost:3000` | comma-separated allowed browser origins |
 | `AGENTFLOW_AS_OF` | API | `2026-08-31T13:00` | default decision time |
 | `NEXT_PUBLIC_API_URL` | web | `http://localhost:8000` | API base URL seen by the browser |
+| `AGENTFLOW_LOGISTICS_<FIELD>` | API / ML | synthetic demo values | override one logistics-cost assumption, e.g. `AGENTFLOW_LOGISTICS_CASH_IN_TRANSIT_BPS=10` (numbers only) |
 
 ## Testing and build
 
 ```bash
-python -m pytest -q                       # from repo root: 103 tests (data, leakage, models, risk, rebalancing V1/V2, policy selection, impact, API, contract, Morning Plan)
+python -m pytest -q                       # from repo root: 148 tests (data, leakage, models, risk, rebalancing V1/V2, logistics cost proxy, policy selection, impact, API, contract, Morning Plan)
 cd apps/web && npm run lint && npm run typecheck && npm run build
 ```
 

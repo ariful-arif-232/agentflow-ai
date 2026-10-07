@@ -162,6 +162,12 @@ def scenario(req: ScenarioRequest):
     return svc.scenario(as_of, req.demand_shock_pct, req.district, req.regional_shock_pct)
 
 
+@app.get("/api/logistics/assumptions")
+def logistics_assumptions():
+    """Phase-2 logistics-cost proxy: formula and the synthetic, configurable demo assumptions in use."""
+    return get_service().logistics_assumptions()
+
+
 @app.get("/api/impact")
 def impact():
     imp = get_service().impact

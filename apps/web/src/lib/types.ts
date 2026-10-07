@@ -36,6 +36,46 @@ export interface RiskSnapshot {
   coverage_ratio: number | null;
 }
 
+/** Phase-2 synthetic operational cost proxy (not a measured upay cost). */
+export interface LogisticsCost {
+  travel_distance_km: number;
+  distance_multiplier: number;
+  billable_distance_km: number;
+  travel_time_minutes: number;
+  handling_time_minutes: number;
+  base_handling_bdt: number;
+  distance_cost_bdt: number;
+  time_cost_bdt: number;
+  cash_in_transit_cost_bdt: number;
+  total_estimated_cost_bdt: number;
+  assumption_label: string;
+}
+
+export type ReplenishmentCost =
+  | ({ available: true; hub: string; hub_assumption: string; replenishment_amount_bdt: number } & LogisticsCost)
+  | { available: false; unavailable_reason: string; hub_assumption: string; assumption_label: string };
+
+export interface LogisticsAssumptions {
+  assumption_label: string;
+  deployment_note: string;
+  hub_assumption: string;
+  formula: string;
+  phase1_formula: string;
+  override: string;
+  assumptions: Record<string, number>;
+}
+
+export interface PlanLogistics extends LogisticsAssumptions {
+  peer_transfer_cost_bdt: number;
+  peer_cash_in_transit_cost_bdt: number;
+  average_cost_per_transfer_bdt: number | null;
+  escalation_replenishment_cost_bdt: number;
+  escalation_cash_in_transit_cost_bdt: number;
+  escalations_costed: number;
+  escalations_cost_unavailable: number;
+  total_operational_cost_bdt: number;
+}
+
 export interface Recommendation {
   id: string;
   source_agent: string;
@@ -43,7 +83,9 @@ export interface Recommendation {
   recommended_amount: number;
   district: string;
   distance_km: number;
+  /** Phase-1 estimate (BDT 150 + BDT 25/km), kept for auditability. */
   estimated_cost_bdt: number;
+  logistics_cost: LogisticsCost;
   donor_rank: number;
   source_cash_before: number;
   source_cash_after: number;
@@ -75,6 +117,8 @@ export interface Recommendation {
     risk_points_per_bdt100_cost: number;
     donor_margin_ratio_after: number;
     distance_km: number;
+    ranking_cost_bdt?: number;
+    ranking_cost_model?: "logistics_proxy" | "phase1_simple";
   };
 }
 
@@ -83,6 +127,7 @@ export interface Escalation {
   district: string;
   risk_score: number;
   unresolved_need: number;
+  replenishment_cost?: ReplenishmentCost;
   reason: string;
 }
 
@@ -101,6 +146,7 @@ export interface PlanSummary {
   escalated_amount: number;
   n_held_for_review: number;
   estimated_cost_bdt: number;
+  logistics?: PlanLogistics;
 }
 
 export type PolicyName = "v1" | "v2";
@@ -307,6 +353,44 @@ export interface ImpactResponse {
   };
   daily: Record<string, number | string>[];
   groups: Record<string, Record<string, Record<string, { unmet_cash_demand_bdt: number; shortage_events: number }>>>;
+  phase2_logistics?: Phase2Logistics;
+}
+
+export interface Phase2PolicyLogistics {
+  interventions: number;
+  peer_transfer_logistics_cost_bdt: number;
+  average_cost_per_transfer_bdt: number | null;
+  peer_cost_components_bdt: { base_handling_bdt: number; distance_cost_bdt: number; time_cost_bdt: number; cash_in_transit_cost_bdt: number };
+  peer_cash_in_transit_cost_bdt: number;
+  distributor_escalation_cost_proxy_bdt: number;
+  distributor_escalation_events_costed: number;
+  distributor_escalation_events_unavailable: number;
+  total_operational_logistics_cost_proxy_bdt: number;
+  unmet_avoided_bdt: number;
+  unmet_avoided_per_1000_peer_logistics_cost_bdt: number | null;
+  unmet_avoided_per_1000_total_logistics_cost_bdt: number | null;
+}
+
+export interface Phase2Logistics {
+  label: string;
+  version: string;
+  assumptions: LogisticsAssumptions;
+  metric_definitions: Record<string, string>;
+  v2_ranking_cost_model: string;
+  v2_parameters_note: string;
+  policies: {
+    naive_rebalancing: Phase2PolicyLogistics;
+    agentflow: Phase2PolicyLogistics;
+    agentflow_v2_phase1_ranking: Phase2PolicyLogistics;
+    agentflow_v2: Phase2PolicyLogistics & PolicyMetrics;
+  };
+  v2_ranking_change: {
+    phase1_ranking: Partial<PolicyMetrics>;
+    logistics_proxy_ranking: Partial<PolicyMetrics>;
+    transfer_legs_changed: number;
+    v2_vs_status_quo: Record<"phase1_ranking" | "logistics_proxy_ranking", { shortage_events_reduction_pct: number; unmet_demand_reduction_pct: number }>;
+  };
+  deployment_rule_recheck: { default_policy: PolicyName; checks: Record<string, boolean>; note: string };
 }
 
 export interface RegressionMetrics {

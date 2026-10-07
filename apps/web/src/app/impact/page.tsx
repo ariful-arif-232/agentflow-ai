@@ -4,7 +4,8 @@ import { Fragment } from "react";
 import { ArrowRight, CheckCircle2, FlaskConical, XCircle } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { bdt, bdtCompact, num, pct, titleCase } from "@/lib/format";
-import type { ImpactResponse, MetricsResponse, MorningPlanEvidence, PolicyMetrics } from "@/lib/types";
+import type { ImpactResponse, MetricsResponse, MorningPlanEvidence, Phase2Logistics, PolicyMetrics } from "@/lib/types";
+import { CostEquation, CostProxyNote } from "@/components/LogisticsCost";
 import { MorningEvidencePanel } from "@/components/MorningEvidence";
 import { CompareBars, DailyImpactChart } from "@/components/charts";
 import { Card, CardHeader, ErrorState, Eyebrow, Loading, PageHeader, SourceTag, cx } from "@/components/ui";
@@ -131,6 +132,65 @@ function V1V2Glance({ v1, v2 }: { v1: PolicyMetrics; v2: PolicyMetrics }) {
         <b>Honest limitation:</b> V2 makes fewer transfers overall, so the absolute number of unnecessary transfers falls ({num(n1)} → {num(n2)}), even
         though their share is slightly higher. V2 does not improve every metric; it is also slightly worse than V1 for rural agents.
       </p>
+    </Card>
+  );
+}
+
+function Phase2LogisticsCard({ p2 }: { p2: Phase2Logistics }) {
+  const v1 = p2.policies.agentflow;
+  const v2 = p2.policies.agentflow_v2;
+  const ch = p2.v2_ranking_change;
+  const o = ch.phase1_ranking;
+  const n = ch.logistics_proxy_ranking;
+  const rows: { label: string; a: string; b: string }[] = [
+    { label: "Peer-transfer logistics cost", a: bdtCompact(v1.peer_transfer_logistics_cost_bdt), b: bdtCompact(v2.peer_transfer_logistics_cost_bdt) },
+    { label: "Average cost per transfer", a: bdt(v1.average_cost_per_transfer_bdt), b: bdt(v2.average_cost_per_transfer_bdt) },
+    { label: "Cash-in-transit component", a: bdt(v1.peer_cash_in_transit_cost_bdt), b: bdt(v2.peer_cash_in_transit_cost_bdt) },
+    { label: "Distributor escalation proxy (upper bound)", a: bdtCompact(v1.distributor_escalation_cost_proxy_bdt), b: bdtCompact(v2.distributor_escalation_cost_proxy_bdt) },
+    { label: "Total operational logistics cost proxy", a: bdtCompact(v1.total_operational_logistics_cost_proxy_bdt), b: bdtCompact(v2.total_operational_logistics_cost_proxy_bdt) },
+    { label: "Unmet demand avoided per BDT 1,000 of total cost", a: bdt(v1.unmet_avoided_per_1000_total_logistics_cost_bdt), b: bdt(v2.unmet_avoided_per_1000_total_logistics_cost_bdt) },
+  ];
+  return (
+    <Card className="mt-4">
+      <CardHeader
+        title="Operational cost breakdown · Phase-2 logistics economics"
+        subtitle="Every held-out transfer re-costed as handling + round-trip distance + field time + cash-in-transit exposure, plus a distributor trip proxy for each escalation. The Phase-1 results above are unchanged."
+        right={<SourceTag kind="sim" />}
+      />
+      <div className="space-y-4 px-5 py-4">
+        <div>
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">V2 peer transfers, 14 held-out days ({num(v2.interventions)} transfers)</div>
+          <CostEquation parts={v2.peer_cost_components_bdt} total={v2.peer_transfer_logistics_cost_bdt} />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px]">
+            <thead className="text-left text-xs text-slate-500">
+              <tr>
+                <th className="py-1.5 pr-3 font-medium">Synthetic cost proxy</th>
+                <th className="py-1.5 pr-3 text-right font-medium">AgentFlow V1</th>
+                <th className="py-1.5 text-right font-medium">AgentFlow V2</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((r) => (
+                <tr key={r.label}>
+                  <td className="py-1.5 pr-3 text-slate-700">{r.label}</td>
+                  <td className="num py-1.5 pr-3 text-right">{r.a}</td>
+                  <td className="num py-1.5 text-right font-semibold text-slate-900">{r.b}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="rounded-lg bg-slate-50 px-3 py-2.5 text-[13px] text-slate-700">
+          <b>V2 now ranks donors by this richer cost.</b> On the same held-out days it changed {num(ch.transfer_legs_changed)} of {num(o.interventions ?? 0)} transfers:
+          shortage events {num(o.shortage_events)} → {num(n.shortage_events)}, unmet demand {bdt(o.unmet_cash_demand_bdt)} → {bdt(n.unmet_cash_demand_bdt)}, donor
+          shortage events {num(o.donor_shortage_events_after_transfer)} → {num(n.donor_shortage_events_after_transfer)}, unnecessary-transfer share{" "}
+          {pct(o.unnecessary_interventions_pct, 1)} → {pct(n.unnecessary_interventions_pct, 1)}. V2 parameters are unchanged; the fixed deployment rule still selects{" "}
+          {p2.deployment_rule_recheck.default_policy.toUpperCase()}.
+        </p>
+        <CostProxyNote />
+      </div>
     </Card>
   );
 }
@@ -279,6 +339,7 @@ export default function ImpactPage() {
       </p>
 
       <V1V2Glance v1={p.agentflow} v2={p.agentflow_v2} />
+      {imp.data.phase2_logistics && <Phase2LogisticsCard p2={imp.data.phase2_logistics} />}
 
       <Card className="mt-4">
         <CardHeader

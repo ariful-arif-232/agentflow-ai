@@ -22,7 +22,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "ml"))
 
-from agentflow import config, engine, rebalance, rebalance_v2, risk  # noqa: E402
+from agentflow import config, engine, logistics, rebalance, rebalance_v2, risk  # noqa: E402
 from agentflow.engine import DEFAULT_AS_OF  # noqa: E402
 
 DATA_LABEL = "Synthetic data for hackathon prototyping — not production upay data"
@@ -320,6 +320,12 @@ class AgentFlowService:
                       "default_policy": self.default_policy, "available_policies": ["v2", "v1"],
                       "simulation_only": True})
 
+    def logistics_assumptions(self) -> dict:
+        return clean({**logistics.describe(), "v2_ranking_cost_model": self.v2_cfg.ranking_cost_model,
+                      "simulation_only": True,
+                      "note": "Illustrative assumptions for a synthetic prototype. No money is moved and no "
+                              "operator rate is measured."})
+
     def simulate(self, as_of, ids: list[str], reviewer_note: str | None, policy: str | None = None) -> dict:
         policy = self.resolve_policy(policy)
         plan = self.plan(as_of, policy)
@@ -353,6 +359,8 @@ class AgentFlowService:
                  "created_at": datetime.now(timezone.utc).isoformat(), "as_of": as_of.isoformat(),
                  "recommendation_ids": ids, "policy": policy,
                  "total_amount": float(sum(r["recommended_amount"] for r in chosen)),
+                 "logistics_cost_proxy_bdt": round(sum(r["logistics_cost"]["total_estimated_cost_bdt"] for r in chosen), 2),
+                 "logistics_assumption_label": logistics.ASSUMPTION_LABEL,
                  "reviewer_note": reviewer_note, "status": "SIMULATED — no money moved"}
         with self._lock:
             self.audit_log.insert(0, entry)

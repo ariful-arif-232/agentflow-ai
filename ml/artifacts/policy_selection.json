@@ -800,6 +800,7 @@
     "history_reserve_weight": 0.5,
     "history_scale": 0.15,
     "min_shortfall_cut_frac": 0.5,
-    "donor_max_level_after": "LOW"
+    "donor_max_level_after": "LOW",
+    "ranking_cost_model": "phase1_simple"
   }
 }

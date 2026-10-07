@@ -24,6 +24,7 @@
       "min_risk_drop": 20.0,
       "require_p50_shortfall": false
     },
+    "v2_ranking_cost_model_in_this_block": "phase1_simple (BDT 150 + BDT 25/km); see phase2_logistics",
     "v2_parameters_selected_on": "training-period policy-validation folds (see policy_selection.json)",
     "cash_neutral": true,
     "demand_multiplier": 1.0,
@@ -39,7 +40,7 @@
     "total_rebalanced_bdt": "Total cash moved between agents by simulated transfers.",
     "unnecessary_interventions_pct": "Share of transfers whose recipient would NOT have had any shortage in the following 6 hours under the status-quo policy (false alerts).",
     "donor_shortage_events_after_transfer": "Shortage events at donor agents within 6 hours after they gave cash (safety check; should be ~0).",
-    "estimated_logistics_cost_bdt": "Sum of per-transfer cost estimates (fixed BDT 150 + BDT 25/km).",
+    "estimated_logistics_cost_bdt": "Sum of per-transfer cost estimates (Phase-1 estimate: fixed BDT 150 + BDT 25/km).",
     "escalated_need_bdt": "Sum, over all decision points, of at-risk need that peer rebalancing could not cover (handed to distributor replenishment; the same agent can be counted at several decisions).",
     "unmet_avoided_per_transfer_bdt": "Unmet cash demand avoided vs. status quo divided by the number of transfers.",
     "unmet_avoided_per_1000_cost_bdt": "Unmet cash demand avoided vs. status quo per BDT 1,000 of estimated logistics cost.",
@@ -403,6 +404,190 @@
           "shortage_events": 613
         }
       }
+    }
+  },
+  "phase2_logistics": {
+    "label": "Phase-2 logistics metrics \u2014 synthetic operational cost proxy, not upay measured cost",
+    "version": "phase2-logistics-1",
+    "assumptions": {
+      "assumption_label": "Synthetic operational cost proxy \u2014 not upay measured cost",
+      "deployment_note": "Simulated operational-cost proxy \u2014 replace assumptions with governed operator rates for deployment.",
+      "hub_assumption": "Synthetic distributor-hub proxy: the district centroid of the synthetic data generator. It is not the location of any real upay distributor.",
+      "formula": "total = base handling + billable km \u00d7 per-km cost + (billable km \u00f7 speed + handling time) \u00d7 hourly field-officer cost + amount \u00d7 cash-in-transit bps \u00f7 10,000; billable km = one-way km \u00d7 distance multiplier",
+      "phase1_formula": "BDT 150 + BDT 25 per one-way km (Phase-1 estimate, kept for auditability)",
+      "override": "set AGENTFLOW_LOGISTICS_<FIELD> environment variables (numbers only)",
+      "assumptions": {
+        "base_handling_bdt": 100.0,
+        "distance_multiplier": 2.0,
+        "per_km_operating_cost_bdt": 12.0,
+        "average_field_speed_kmh": 15.0,
+        "handling_time_minutes": 15.0,
+        "field_officer_cost_per_hour_bdt": 250.0,
+        "cash_in_transit_bps": 10.0,
+        "distributor_base_handling_bdt": 150.0,
+        "distributor_distance_multiplier": 2.0
+      }
+    },
+    "metric_definitions": {
+      "peer_transfer_logistics_cost_bdt": "Sum over simulated peer transfers of the synthetic operational cost proxy (handling + round-trip distance + field-officer time + cash-in-transit).",
+      "average_cost_per_transfer_bdt": "Peer-transfer logistics cost proxy divided by the number of transfers.",
+      "peer_cost_components_bdt": "The peer-transfer cost proxy split into handling, distance, time and cash-in-transit.",
+      "peer_cash_in_transit_cost_bdt": "Cash-in-transit exposure component of the peer-transfer cost proxy (bps of amount moved).",
+      "distributor_escalation_cost_proxy_bdt": "Upper-bound proxy: one distributor trip from the synthetic district hub for every escalation at every decision point (the same agent can be escalated at several decision points). Escalations are not executed in the simulation, so they avoid no unmet demand here.",
+      "total_operational_logistics_cost_proxy_bdt": "Peer-transfer cost proxy + distributor escalation cost proxy.",
+      "unmet_avoided_per_1000_peer_logistics_cost_bdt": "Unmet cash demand avoided vs. status quo per BDT 1,000 of the peer-transfer logistics cost proxy.",
+      "unmet_avoided_per_1000_total_logistics_cost_bdt": "Unmet cash demand avoided vs. status quo per BDT 1,000 of the total operational logistics cost proxy (conservative: includes escalation trips whose benefit is not simulated)."
+    },
+    "v2_ranking_cost_model": "logistics_proxy",
+    "v2_parameters_note": "V2 tunable parameters are unchanged: selected on Phase-1 training-period validation folds with the Phase-1 cost. Only the cost term of the donor ranking changed.",
+    "not_costed": "The daily 08:00 drawer reset is common to every policy and is not costed.",
+    "policies": {
+      "naive_rebalancing": {
+        "interventions": 384,
+        "peer_transfer_logistics_cost_bdt": 216239.09,
+        "average_cost_per_transfer_bdt": 563.12,
+        "peer_cost_components_bdt": {
+          "base_handling_bdt": 38400.0,
+          "distance_cost_bdt": 62007.75,
+          "time_cost_bdt": 110121.84,
+          "cash_in_transit_cost_bdt": 5709.5
+        },
+        "peer_cash_in_transit_cost_bdt": 5709.5,
+        "distributor_escalation_cost_proxy_bdt": 326340.78,
+        "distributor_escalation_cash_in_transit_bdt": 4603.0,
+        "distributor_escalation_events_costed": 208,
+        "distributor_escalation_events_unavailable": 0,
+        "total_operational_logistics_cost_proxy_bdt": 542579.87,
+        "unmet_avoided_bdt": 2774690.0,
+        "unmet_avoided_per_1000_peer_logistics_cost_bdt": 12831.583780712359,
+        "unmet_avoided_per_1000_total_logistics_cost_bdt": 5113.883049144451
+      },
+      "agentflow": {
+        "interventions": 501,
+        "peer_transfer_logistics_cost_bdt": 279995.71,
+        "average_cost_per_transfer_bdt": 558.87,
+        "peer_cost_components_bdt": {
+          "base_handling_bdt": 50100.0,
+          "distance_cost_bdt": 79963.42,
+          "time_cost_bdt": 142372.79,
+          "cash_in_transit_cost_bdt": 7559.5
+        },
+        "peer_cash_in_transit_cost_bdt": 7559.5,
+        "distributor_escalation_cost_proxy_bdt": 468463.8,
+        "distributor_escalation_cash_in_transit_bdt": 7048.0,
+        "distributor_escalation_events_costed": 305,
+        "distributor_escalation_events_unavailable": 0,
+        "total_operational_logistics_cost_proxy_bdt": 748459.51,
+        "unmet_avoided_bdt": 3709340.0,
+        "unmet_avoided_per_1000_peer_logistics_cost_bdt": 13247.845833066513,
+        "unmet_avoided_per_1000_total_logistics_cost_bdt": 4955.966155069631
+      },
+      "agentflow_v2_phase1_ranking": {
+        "interventions": 345,
+        "peer_transfer_logistics_cost_bdt": 209481.66,
+        "average_cost_per_transfer_bdt": 607.19,
+        "peer_cost_components_bdt": {
+          "base_handling_bdt": 34500.0,
+          "distance_cost_bdt": 61077.65,
+          "time_cost_bdt": 106392.51,
+          "cash_in_transit_cost_bdt": 7511.5
+        },
+        "peer_cash_in_transit_cost_bdt": 7511.5,
+        "distributor_escalation_cost_proxy_bdt": 468886.77,
+        "distributor_escalation_cash_in_transit_bdt": 6993.0,
+        "distributor_escalation_events_costed": 297,
+        "distributor_escalation_events_unavailable": 0,
+        "total_operational_logistics_cost_proxy_bdt": 678368.43,
+        "unmet_avoided_bdt": 3845990.0,
+        "unmet_avoided_per_1000_peer_logistics_cost_bdt": 18359.554721878754,
+        "unmet_avoided_per_1000_total_logistics_cost_bdt": 5669.470791852739
+      },
+      "agentflow_v2": {
+        "shortage_events": 1229,
+        "unmet_cash_demand_bdt": 5699290.0,
+        "agents_with_shortage": 137,
+        "service_availability_pct": 97.93877551020408,
+        "demand_fill_rate_pct": 98.52758674782862,
+        "interventions": 345,
+        "total_rebalanced_bdt": 7525000.0,
+        "estimated_logistics_cost_bdt": 114971.0,
+        "escalated_need_bdt": 7011500.0,
+        "donor_shortage_events_after_transfer": 15,
+        "unnecessary_interventions_pct": 24.057971014492754,
+        "unmet_avoided_bdt": 3837640.0,
+        "unmet_avoided_per_transfer_bdt": 11123.59420289855,
+        "unmet_avoided_per_1000_cost_bdt": 33379.19997216689,
+        "shortage_events_avoided_per_100_transfers": 228.40579710144928,
+        "peer_transfer_logistics_cost_bdt": 208611.9,
+        "average_cost_per_transfer_bdt": 604.67,
+        "peer_cost_components_bdt": {
+          "base_handling_bdt": 34500.0,
+          "distance_cost_bdt": 60707.91,
+          "time_cost_bdt": 105878.99,
+          "cash_in_transit_cost_bdt": 7525.0
+        },
+        "peer_cash_in_transit_cost_bdt": 7525.0,
+        "distributor_escalation_cost_proxy_bdt": 469137.26,
+        "distributor_escalation_cash_in_transit_bdt": 7011.5,
+        "distributor_escalation_events_costed": 297,
+        "distributor_escalation_events_unavailable": 0,
+        "total_operational_logistics_cost_proxy_bdt": 677749.16,
+        "unmet_avoided_per_1000_peer_logistics_cost_bdt": 18396.074241210594,
+        "unmet_avoided_per_1000_total_logistics_cost_bdt": 5662.330883597111
+      }
+    },
+    "v2_ranking_change": {
+      "phase1_ranking": {
+        "shortage_events": 1223,
+        "unmet_cash_demand_bdt": 5690940.0,
+        "agents_with_shortage": 137,
+        "service_availability_pct": 97.94642857142857,
+        "demand_fill_rate_pct": 98.52974397279097,
+        "interventions": 345,
+        "total_rebalanced_bdt": 7511500.0,
+        "unnecessary_interventions_pct": 24.347826086956523,
+        "donor_shortage_events_after_transfer": 14,
+        "escalated_need_bdt": 6993000.0
+      },
+      "logistics_proxy_ranking": {
+        "shortage_events": 1229,
+        "unmet_cash_demand_bdt": 5699290.0,
+        "agents_with_shortage": 137,
+        "service_availability_pct": 97.93877551020408,
+        "demand_fill_rate_pct": 98.52758674782862,
+        "interventions": 345,
+        "total_rebalanced_bdt": 7525000.0,
+        "unnecessary_interventions_pct": 24.057971014492754,
+        "donor_shortage_events_after_transfer": 15,
+        "escalated_need_bdt": 7011500.0
+      },
+      "transfer_legs_changed": 13,
+      "v2_vs_status_quo": {
+        "phase1_ranking": {
+          "shortage_events_reduction_pct": 39.365394149727315,
+          "unmet_demand_reduction_pct": 40.32733804274541
+        },
+        "logistics_proxy_ranking": {
+          "shortage_events_reduction_pct": 39.067922657412,
+          "unmet_demand_reduction_pct": 40.23978366203799
+        }
+      }
+    },
+    "deployment_rule_recheck": {
+      "rule": "V2 default iff retains >=95% of V1 unmet-demand avoided, donor shortage events <= V1, and strictly better on >=2 of {unnecessary %, donor events, unmet avoided per BDT 1,000 cost}",
+      "retention_vs_v1": 1.0345883634285344,
+      "strictly_better": {
+        "unnecessary_interventions_pct": false,
+        "donor_shortage_events_after_transfer": true,
+        "unmet_avoided_per_1000_cost_bdt": true
+      },
+      "checks": {
+        "retains_95pct_of_v1_unmet_avoided": true,
+        "donor_events_not_worse": true,
+        "strictly_better_on_at_least_two": true
+      },
+      "default_policy": "v2",
+      "note": "Same pre-registered rule, re-applied to V2 ranked by the logistics proxy, with cost efficiency measured by the peer-transfer logistics cost proxy for both V1 and V2."
     }
   }
 }

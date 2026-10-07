@@ -30,6 +30,14 @@ production version would need. It is not a claim of production readiness.
 | Frontend resilience | API calls time out after 20 s. Failures show a safe error message with Retry and never display stale numbers as live data. | `apps/web/src/lib/api.ts`, `apps/web/src/components/ui.tsx` |
 | Reproducible evaluation | A time-based purged split, a feature-leakage test, a fixed seed and pinned dependencies and base image. With the pinned project environment, the evaluated decision outputs, business-impact metrics and demo values reproduce; runtime `fit_seconds` metadata is excluded, and tiny cross-machine floating-point variation may occur in internal anomaly thresholds. V2 parameters were selected on training-period validation folds, never on the test window. | `ml/scripts/run_pipeline.py`, `requirements.txt`, `Dockerfile`, `tests/test_data.py`, `ml/agentflow/policy_selection.py` |
 
+**Phase-2 logistics-cost proxy** (`ml/agentflow/logistics.py`, `GET /api/logistics/assumptions`):
+* Assumptions are numeric only. `AGENTFLOW_LOGISTICS_<FIELD>` overrides are parsed as numbers and
+  validated (finite, ≥ 0, speed > 0, distance multipliers ≥ 1); an invalid value stops the service at
+  start-up instead of producing invalid costs. No secret is involved.
+* The endpoint is read-only and every cost carries the label *"Synthetic operational cost proxy — not
+  upay measured cost"*. Cost only ranks candidates that already passed every safety rule; it never moves
+  money and never relaxes a constraint.
+
 **Morning Liquidity Plan endpoints** (`apps/api/app/morning_plan.py`, `schemas.MorningPlanSimulateRequest`):
 * **Date validation:** dates must match `YYYY-MM-DD` and exist in the fixture (otherwise 404 or 422).
 * **Simulation request:** extra fields are rejected and notes are capped at 500 characters. An

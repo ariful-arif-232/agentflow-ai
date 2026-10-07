@@ -45,7 +45,8 @@ The **Judge demo** strip (6 steps, live values) is your route map. Click a step 
 > "AgentFlow forecasts every agent's cash needs for the next 6 hours."
 
 Point at: **25 at-risk, 7 critical**, **projected service readiness 71.5% → 77.5% with the V2 plan**,
-**14 peer transfers, BDT 4.7 lakh**.
+**14 peer transfers, BDT 4.5 lakh** (Phase-2 V2 ranks donors by the synthetic logistics-cost proxy; with the
+Phase-1 ranking this was BDT 4.7 lakh).
 *Transition:* "That's intraday risk. But AgentFlow also acts before the day starts."
 
 **1b. Morning Plan (25 s)** (guide step 2). Open **Morning Plan**, dated Mon 31 Aug 2026.

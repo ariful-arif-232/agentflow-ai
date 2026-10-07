@@ -8,7 +8,8 @@
 > occur in internal anomaly thresholds.
 >
 > Sections 1–7 cover the **legacy intraday environment**, where e-float is tracked but is not a
-> binding constraint. Section 8 covers the separate Morning Plan environment.
+> binding constraint. Section 8 covers the separate Morning Plan environment. Section 9 adds the
+> Phase-2 logistics-cost proxy without changing any Phase-1 result.
 
 ## 1. Dataset and split
 
@@ -306,10 +307,86 @@ Pooled P90 coverage is 85.2% for cash and 88.0% for e-float. Low-volume agents d
 4 of 5 audit worlds. **This is synthetic held-out evidence, not measured upay performance, and not an
 expected saving for any demo date.** Details: [MORNING_PLAN.md](MORNING_PLAN.md).
 
+## 9. Phase-2 logistics economics (synthetic operational-cost proxy)
+
+> **Simulated operational-cost proxy — replace assumptions with governed operator rates for deployment.**
+> No governed upay logistics rates were available. Every rate below is a synthetic, illustrative demo
+> assumption, not a measured upay or distributor cost. Sections 1–8 are unchanged: the Phase-1 `policies`
+> block of `impact.json` still uses the Phase-1 V2 ranking cost (BDT 150 + BDT 25/km), and every Phase-1
+> number reproduces exactly.
+
+**Cost proxy** (`ml/agentflow/logistics.py`, shared by V1, V2 and the simulator). For a peer transfer of
+amount *A* over a one-way distance *d*:
+
+| Component | Formula | Default demo assumption |
+|---|---|---|
+| Handling | fixed per trip | BDT 100 |
+| Billable distance | *d* × distance multiplier | ×2 (round trip) |
+| Distance cost | billable km × per-km operating cost | BDT 12/km |
+| Travel time | billable km ÷ average field speed | 15 km/h |
+| Field time cost | (travel time + handling time) × hourly field-officer cost | 15 min; BDT 250/h |
+| Cash-in-transit exposure | *A* × bps ÷ 10,000 | 10 bps |
+| **Total** | sum of the four rounded cost parts (adds up exactly) | |
+
+Distributor replenishment for an escalation uses the same formula from a **synthetic distributor hub**:
+the district centroid of the synthetic data generator, with BDT 150 handling and a ×2 round trip. It is
+not the location of any real upay distributor. If an input is missing the cost is reported as
+unavailable (none were missing in this evaluation). All assumptions live in one `LogisticsCostConfig`
+and can be overridden with `AGENTFLOW_LOGISTICS_<FIELD>` environment variables.
+
+Example (RB-013 at the default demo time, 12.25 km, BDT 38,500): handling 100.00 + distance 294.06
+(24.5 km) + field time 470.91 (113 min) + cash-in-transit 38.50 = **BDT 903.47**. The Phase-1 estimate was
+BDT 456.
+
+**Derived held-out metrics** (same 14 days and simulations as §5; `impact.json` → `phase2_logistics`):
+
+| Synthetic cost proxy | Naive forecast | AgentFlow V1 | V2, Phase-1 ranking | **V2, logistics ranking** |
+|---|---:|---:|---:|---:|
+| Transfers | 384 | 501 | 345 | 345 |
+| Peer-transfer logistics cost | BDT 2,16,239 | BDT 2,79,996 | BDT 2,09,482 | **BDT 2,08,612** |
+| Average cost per transfer | BDT 563 | BDT 559 | BDT 607 | BDT 605 |
+| … of which cash-in-transit | BDT 5,710 | BDT 7,560 | BDT 7,512 | BDT 7,525 |
+| Distributor escalation proxy (upper bound) | BDT 3,26,341 | BDT 4,68,464 | BDT 4,68,887 | BDT 4,69,137 |
+| Total operational logistics cost proxy | BDT 5,42,580 | BDT 7,48,460 | BDT 6,78,368 | BDT 6,77,749 |
+| Unmet demand avoided per BDT 1,000 of peer cost | BDT 12,832 | BDT 13,248 | BDT 18,360 | **BDT 18,396** |
+| Unmet demand avoided per BDT 1,000 of total cost | BDT 5,114 | BDT 4,956 | BDT 5,669 | BDT 5,662 |
+
+* Field time is the largest component (about half of the peer-transfer cost); cash-in-transit exposure
+  is small at 10 bps (about 3.6%).
+* The escalation proxy counts one distributor trip per escalation at every decision point (the same
+  agent can be escalated several times a day), so it is an upper bound. Escalations are not delivered in
+  the simulation, so the "per BDT 1,000 of total cost" ratio is deliberately conservative.
+* The daily 08:00 drawer reset is common to every policy and is not costed.
+
+**V2 ranked by the richer cost.** V2's donor ranking now divides risk points removed by the total cost
+proxy instead of BDT 150 + BDT 25/km. Cost ranks only candidates that already passed every safety check,
+so no safety rule changed. On the held-out period this changed 13 of 345 transfers:
+
+| V2 held-out metric | Phase-1 ranking | Logistics-proxy ranking |
+|---|---:|---:|
+| Shortage events | 1,223 (−39.4%) | 1,229 (−39.1%) |
+| Unmet cash demand | BDT 56,90,940 (−40.3%) | BDT 56,99,290 (−40.2%) |
+| Donor shortage events within 6 h | 14 | 15 |
+| Unnecessary-transfer share | 24.3% | 24.1% |
+| Transfers / total rebalanced | 345 / BDT 75.1 lakh | 345 / BDT 75.3 lakh |
+| Escalated need (summed over decisions) | BDT 69.9 lakh | BDT 70.1 lakh |
+
+The richer cost makes V2 slightly cheaper per unit of benefit on the peer-transfer cost and very
+slightly less effective overall. These differences are small, from one synthetic world, and not
+evidence either way for real operations. V2's tunable parameters were **not** re-selected: they are the
+Phase-1 values, chosen on training-period validation folds with the Phase-1 cost. Re-applied to these
+results, with cost efficiency measured by the peer-transfer cost proxy for both V1 and V2, the fixed
+deployment rule still selects V2.
+
+**Before any production use:** governed per-trip, per-km and staff-time rates (per district and vehicle
+type); real distributor and branch locations and road distances; cash-in-transit insurance or security
+rates and limits; field-officer capacity and service windows; then re-selection of V2 parameters on real
+validation data. Governed rates replace the defaults through configuration, with no code change.
+
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
 python ml/scripts/run_pipeline.py   # generate -> train -> select V2 policy (validation folds) -> evaluate (~4 min on 4 cores)
-python -m pytest -q                 # 103 tests
+python -m pytest -q                 # 148 tests
 ```

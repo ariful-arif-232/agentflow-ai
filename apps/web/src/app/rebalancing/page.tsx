@@ -9,6 +9,7 @@ import { useAsOf } from "@/lib/asof";
 import { bdt, bdtCompact, dateTime, pct } from "@/lib/format";
 import type { Plan, PolicyName, Recommendation, SimulationResult } from "@/lib/types";
 import { Card, CardHeader, ErrorState, Eyebrow, Kpi, Loading, PageHeader, RiskBadge, SourceTag, cx } from "@/components/ui";
+import { CostEquation, CostProxyNote, bdt2, sumParts } from "@/components/LogisticsCost";
 
 interface AuditEntry {
   simulation_id: string;
@@ -105,7 +106,7 @@ function gateChecks(rec: Recommendation, approved: boolean): GateCheck[] {
     },
     {
       label: "Logistics considered",
-      detail: `${rec.distance_km.toFixed(1)} km · est. ${bdt(rec.estimated_cost_bdt)}`,
+      detail: `${rec.distance_km.toFixed(1)} km · cost proxy ${bdt(rec.logistics_cost.total_estimated_cost_bdt)}`,
       state: "pass",
     },
     {
@@ -114,6 +115,41 @@ function gateChecks(rec: Recommendation, approved: boolean): GateCheck[] {
       state: approved ? "pass" : "pending",
     },
   ];
+}
+
+function PlanCostCard({ recs, lg, phase1 }: { recs: Recommendation[]; lg: NonNullable<Plan["summary"]["logistics"]>; phase1: number }) {
+  const parts = sumParts(recs.map((r) => r.logistics_cost));
+  const a = lg.assumptions;
+  return (
+    <Card className="mt-4">
+      <CardHeader
+        title="Operational cost breakdown"
+        subtitle="distance + field time + handling + cash-in-transit exposure = estimated logistics cost, for every recommended transfer in this plan."
+        right={<SourceTag kind="calc" />}
+      />
+      <div className="space-y-3 px-5 py-4">
+        <CostEquation parts={parts} total={lg.peer_transfer_cost_bdt} />
+        <div className="grid grid-cols-1 gap-x-6 gap-y-1 text-[13px] text-slate-700 sm:grid-cols-3">
+          <div>
+            Peer transfers: <b className="num">{recs.length}</b> · average <b className="num">{bdt2(lg.average_cost_per_transfer_bdt)}</b>
+          </div>
+          <div>
+            Distributor escalations (proxy): <b className="num">{bdt2(lg.escalation_replenishment_cost_bdt)}</b> · {lg.escalations_costed} trips
+            {lg.escalations_cost_unavailable > 0 && ` · ${lg.escalations_cost_unavailable} unavailable`}
+          </div>
+          <div>
+            Total operational cost proxy: <b className="num">{bdt2(lg.total_operational_cost_bdt)}</b>
+          </div>
+        </div>
+        <p className="text-xs text-slate-500">
+          Assumptions: BDT {a.base_handling_bdt} handling · round trip ×{a.distance_multiplier} · BDT {a.per_km_operating_cost_bdt}/km · {a.average_field_speed_kmh} km/h ·{" "}
+          {a.handling_time_minutes} min handling · BDT {a.field_officer_cost_per_hour_bdt}/h field time · cash-in-transit {a.cash_in_transit_bps} bps. Escalations are
+          costed from a synthetic district hub (district centroid), not a real distributor location. Phase-1 estimate for the same transfers: {bdt(phase1)}.
+        </p>
+        <CostProxyNote />
+      </div>
+    </Card>
+  );
 }
 
 function SafetyGate({ rec, approved = false, compact = false }: { rec: Recommendation; approved?: boolean; compact?: boolean }) {
@@ -261,7 +297,7 @@ function ReviewPanel({
             <div className="text-center">
               <div className="num text-lg font-semibold">{bdt(rec.recommended_amount)}</div>
               <div className="flex items-center justify-center gap-1 text-xs text-slate-500">
-                <ArrowRight className="h-3 w-3" aria-hidden /> {rec.distance_km.toFixed(1)} km · {rec.district} · est. {bdt(rec.estimated_cost_bdt)}
+                <ArrowRight className="h-3 w-3" aria-hidden /> {rec.distance_km.toFixed(1)} km · {rec.district} · cost proxy {bdt(rec.logistics_cost.total_estimated_cost_bdt)}
               </div>
             </div>
             <div className="text-right text-sm">
@@ -324,10 +360,25 @@ function ReviewPanel({
               {bdt(rec.recommended_amount)}
               {rec.legs_for_destination > 1 ? ` (1 of ${rec.legs_for_destination} transfers)` : coversNeed ? " (covers the need in one transfer)" : ""}
             </Row>
-            <Row k="Logistics">
-              {rec.distance_km.toFixed(1)} km · est. {bdt(rec.estimated_cost_bdt)} <span className="text-xs text-slate-500">(BDT 150 + 25/km)</span>
-            </Row>
           </Evidence>
+
+          <section className="space-y-2 rounded-lg border border-slate-200 p-4" aria-labelledby="cost-title">
+            <h3 id="cost-title" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Operational cost breakdown</h3>
+            <CostEquation
+              parts={rec.logistics_cost}
+              total={rec.logistics_cost.total_estimated_cost_bdt}
+              details={{
+                distance_cost_bdt: `${rec.logistics_cost.billable_distance_km.toFixed(1)} km (${rec.logistics_cost.travel_distance_km.toFixed(1)} km × ${rec.logistics_cost.distance_multiplier})`,
+                time_cost_bdt: `${Math.round(rec.logistics_cost.travel_time_minutes + rec.logistics_cost.handling_time_minutes)} min`,
+                cash_in_transit_cost_bdt: `on ${bdt(rec.recommended_amount)}`,
+              }}
+            />
+            <p className="text-xs text-slate-500">
+              Phase-1 estimate for comparison: {bdt(rec.estimated_cost_bdt)} (BDT 150 + BDT 25/km).
+              {isV2 && rec.candidate_rank_key?.ranking_cost_model === "logistics_proxy" && " V2 ranks donors by risk points removed per BDT 100 of this cost proxy."}
+            </p>
+            <CostProxyNote />
+          </section>
 
           <details className="rounded-lg border border-slate-200 p-3 text-sm">
             <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-slate-500">Full deterministic explanation</summary>
@@ -498,7 +549,7 @@ function RebalancingInner() {
         <Kpi label="Recommended value" value={bdtCompact(s.total_recommended_amount)} tone="good" sub="peer-to-peer, cash-neutral" />
         <Kpi label="Escalations" value={s.n_escalations} tone="warn" sub={`${bdtCompact(s.escalated_amount)} needs distributor top-up`} />
         <Kpi label="Held for review" value={s.n_held_for_review} sub="unusual activity — no auto-support" />
-        <Kpi label="Est. logistics cost" value={bdt(s.estimated_cost_bdt)} sub="BDT 150 + BDT 25/km per transfer" />
+        <Kpi label="Logistics cost proxy" value={bdt(s.logistics?.peer_transfer_cost_bdt ?? s.estimated_cost_bdt)} sub="peer transfers · synthetic estimate" />
       </div>
 
       {sim && (
@@ -605,6 +656,8 @@ function RebalancingInner() {
         </div>
       </Card>
 
+      {s.logistics && <PlanCostCard recs={recs} lg={s.logistics} phase1={s.estimated_cost_bdt} />}
+
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card>
           <CardHeader title="Escalate to distributor" subtitle="No eligible peer surplus within 15 km in the same district" />
@@ -616,7 +669,14 @@ function RebalancingInner() {
                   {e.agent_id}
                 </Link>
                 <span className="text-xs text-slate-500">{e.district}</span>
-                <span className="num">{bdt(e.unresolved_need)}</span>
+                <span className="num text-right">
+                  {bdt(e.unresolved_need)}
+                  <span className="block text-[11px] text-slate-500">
+                    {e.replenishment_cost?.available
+                      ? `trip proxy ${bdt(e.replenishment_cost.total_estimated_cost_bdt)} · ${e.replenishment_cost.travel_distance_km.toFixed(1)} km from synthetic hub`
+                      : "trip cost unavailable"}
+                  </span>
+                </span>
               </li>
             ))}
           </ul>

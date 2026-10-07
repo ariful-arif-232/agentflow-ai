@@ -180,6 +180,32 @@ is slightly worse than V1 for rural agents. It became the default under a fixed 
 selected on training-period validation folds only. Rebalancing fed by a naive forecast achieves −26.5% events, isolating the ML
 contribution.
 
+## 11a. Phase-2 logistics economics (synthetic operational-cost proxy)
+
+Phase-1 judges asked for distributor transport and cash-in-transit costs in the rebalancing loss
+function. Without governed upay rates, Phase 2 adds a transparent, configurable **synthetic
+operational-cost proxy** (`ml/agentflow/logistics.py`), shared by V1, V2 and the simulator:
+
+`total = handling + round-trip km × per-km cost + (round-trip km ÷ field speed + handling time) ×
+hourly field-officer cost + amount × cash-in-transit bps`
+
+The demo defaults (BDT 100 handling, ×2 round trip, BDT 12/km, 15 km/h, 15 min handling, BDT 250/h,
+10 bps) are illustrative, not upay or distributor rates. They can be overridden with
+`AGENTFLOW_LOGISTICS_<FIELD>` environment variables, so governed operator rates can replace them without
+code changes. Escalations get a distributor-trip proxy from a synthetic district hub (district centroid;
+no real distributor location is implied).
+
+* V2 now ranks eligible donors by risk points removed per BDT 100 of the total cost proxy; no safety rule
+  changed. On the held-out period this changed 13 of 345 transfers: shortage events 1,223 → 1,229, unmet
+  demand −40.3% → −40.2% vs status quo, donor shortage events 14 → 15. V2 parameters were not re-selected,
+  and the fixed deployment rule still selects V2.
+* Derived held-out metrics for V2 (logistics ranking): peer-transfer cost proxy BDT 2.09 lakh (BDT 605
+  per transfer, cash-in-transit BDT 7,525), distributor escalation proxy BDT 4.69 lakh (upper bound), total
+  BDT 6.78 lakh, BDT 18,396 of unmet demand avoided per BDT 1,000 of peer-transfer cost.
+* The Phase-1 table above is unchanged and remains reproducible. Details: `EVALUATION.md` §9.
+
+*Simulated operational-cost proxy — replace assumptions with governed operator rates for deployment.*
+
 ## 12. Responsible AI
 
 Synthetic data and tested absence of PII; deterministic, evidence-based explanations; source tags
